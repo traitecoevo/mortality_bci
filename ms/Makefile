@@ -6,7 +6,7 @@ all:  $(TARGETS) figs
 
 figs: $(FIGURES_pdf) $(FIGURES_png)
 
-MS.pdf: MS.md include.tex $(FIGURES) style.csl
+MS.pdf: MS.md include.tex $(FIGURES) style.csl figs
 	pandoc $< --csl=style.csl --filter pandoc-citeproc --bibliography=refs.bib --template=include.tex --variable mainfont="Times New Roman" --variable sansfont=Arial --variable fontsize=12pt --latex-engine=xelatex -o $@
 
 style.csl:
