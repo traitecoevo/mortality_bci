@@ -1,4 +1,3 @@
-
 to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
   if(!file.exists(dirname(filename)))
     dir.create(dirname(filename), recursive=TRUE)
@@ -12,6 +11,85 @@ to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
 to.pdf <- function(expr, filename, ..., verbose=TRUE) {
   to.dev(expr, pdf, filename, ..., verbose=verbose)
 }
+
+# Simulates coefficient values based on its mean and standard deviation
+sim.coeff <- function(jagsfit, params) {
+  if(!require(jagstools)) {
+    require(devtools)
+    install_github(repo='jagstools', username='johnbaums')
+  }
+  as.data.frame(apply(jagsresults(jagsfit, params), 1, function(x) rnorm(1000, x['mean'], x['sd'])))}
+
+# Provides the mean, standard deviation, 95%,80% and 50% quantiles of desired covariates.
+data.summary <- function(x, covariates){
+  as.data.frame(x)
+  if(ncol(x) ==1) {
+    as.data.frame(apply(x,2, function(x) c(mean= mean(x), std= sd(x), 
+                                           quantile(x,c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9,0.975)))))}
+  else {
+    df <- x[, c(covariates)]
+    as.data.frame(apply(df,2, function(x) c(mean= mean(x), std= sd(x),
+                                            quantile(x,c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9,0.975)))))}}
+
+# Produces a JAGS coefficient plot with credible intervals
+coeff.plot <- function(jagsfit, params, labels=NULL, conf=c(95, 50), xlab='Effect size') {
+  
+  if(!require(jagstools)) {
+    require(devtools)
+    install_github(repo='jagstools', username='johnbaums')
+  }
+  
+  conf <- unique(as.numeric(conf))
+  if (!all(conf %in% c(95, 50))) 
+    stop('conf must be a vector of one or more of 95 and 50.')
+  dat <- jagsresults(jagsfit, params)
+  dat <- dat[match(params, row.names(dat)), ]
+  if (is.null(labels)) labels <- row.names(dat)
+  opar <- par(mai=c(1, max(strwidth(labels, 'inches')) + 0.3, 0.5, 0.5))
+  on.exit(par(opar))
+  plot(dat[, '50%'], seq_len(nrow(dat)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
+       xlim=range(pretty(range(dat[, c(paste0((100 - max(conf))/2, '%'), 
+                                       paste0(100 - (100 - max(conf))/2, '%'))]))),
+       
+       panel.first={
+         abline(v=0, lty=3)
+         if(length(conf) == 1) {
+           segments(dat[, paste0((100 - conf)/2, '%')], seq_len(nrow(dat)),
+                    x1=dat[, paste0(100 - (100 - conf)/2, '%')], lend=1)
+         } else {
+           segments(dat[, '2.5%'], seq_len(nrow(dat)), x1=dat[, '97.5%'], lwd=1, lend=1)
+           segments(dat[, '25%'], seq_len(nrow(dat)), x1=dat[, '75%'], lwd=3, lend=1)
+         }
+       })
+  axis(2, at=seq_len(nrow(dat)), labels=labels, las=1)
+  box()
+  mtext(xlab, side = 1, line=2.5)
+}
+
+
+#3-dimensional plot
+
+plot.3d <- function(jagsfit, x, xmean, xstd, y, ymean, ystd, xlab='x', ylab='y', zlab='z', theta=110, phi=20) { 
+  require(VGAM)
+  
+  z <- outer(x,y,function(x,y) cloglog(jagsfit$BUGSoutput$mean$GM + 
+                                         jagsfit$BUGSoutput$mean$b.1 * ((x - xmean) / (2 * xstd)) 
+                                       + jagsfit$BUGSoutput$mean$b.2 * ((y - ymean) / (2 * ystd))
+                                       + jagsfit$BUGSoutput$mean$b.2 * (((x - xmean)/ (2 * xstd)) * ((y - ymean) / (2 * ystd))), inverse=T))
+  
+  nrz <- nrow(z)
+  ncz <- ncol(z)
+  jet.colors <- colorRampPalette(c('blue','yellow','orange', 'red'))
+  # Generate the desired number of colors from this palette
+  nbcol <- 1000
+  color <- jet.colors(nbcol)
+  # Compute the z-value at the facet centres
+  zfacet <- z[-1, -1] + z[-1, -ncz] + z[-nrz, -1] + z[-nrz, -ncz]
+  # Recode facet z-values into color indices
+  facetcol <- cut(zfacet, nbcol)
+  persp(x, y, z, col = color[facetcol], xlab= xlab, ylab=ylab, zlab=zlab, theta = theta, phi =phi)
+}
+
 
 # returns 10^x as expression. useful for labelling axes
 powerTenExpression<-function(x){
