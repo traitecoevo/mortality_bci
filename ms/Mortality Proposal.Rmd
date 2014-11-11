@@ -1,0 +1,189 @@
+---
+title: "Mortality Notes"
+author: "J Camac"
+date: "9 July 2014"
+output: pdf_document
+---
+
+###Background
+
+Mortality rates vary both spatially and temporally, and as such, are critical to accurately predict vegetation dynamics. However, few models of vegetation dynamics explicitly account for changes in mortality rates (e.g. REFS). Instead, most models used simplifed assumptions such as constant mortality (REF), no mortality (REF) or that mortality varies as a function of some arbitary set of rules (REF). These simplifcations are predominately a consequence of our limited understanding of what governs mortality rates and how it varies temporally, spatially and within and between species. This limited knowledge is partly due to ecologists placing greater emphasis on examining plant growth and how it affects community (REF) and population dynamics (REF). But also because of difficulties associated with modelling mortality. Mortality is highly variable and episodic (REF). As such, it requires individuals to be monitoried for sufficiently long periods of time, ideally from birth to death, which is problematic for long-lived species. Mortality rates are also affected by multiple biotic and abiotic factors, as well as the frequency (REF) and severity (REF) of multiple hazards (e.g. fire, wind, drought), which may or may not be dependent on one another (REF).  
+
+This complexity has led to the widespread use of phenomological models to describe patterns in plant mortality. In a review of more than 150 woody plant mortality models, Hawke (2000) found that 93% were phenomological and only 7% were mechanistic; further highlighting the paucity of process-based information about mortality. The mechanistic models all assumed that mortality occured when carbon supply was insufficient for growth (e.g. Friend et al. 1997, Bossel 1986, Weinstein et al 1991, Bugmann et al 1997). As such, none incorporated differential mortality rates among species, or how different hazards may these rates. Phenomological models also 
+
+How many data are needed on mortality? When and where should they be ob- tained? This is a general criticism of Friend et al. (1997), who claim these problems render valida- tion of mechanistic models useless. Also, data sources for mortality testing are often flawed. Bugmann (1996) points out that monitoring pro- grammes are usually shorter than many plants’ lifespans, while palaeo data does not provide the necessary resolution. And the potential variation between sizes, classes, ages etc. is so high that even a large sample will not provide the statistical significance required.
+
+Mechanistic models are constructed with al- gorithms that describe biological processes, as opposed to an empirical data set or predefined relationship. Thus mechanistic algorithms require no calibration, and are inherently deterministic.
+
+Furthermore, ecologists must also asertain when an individual died and what caused its death, the determination of which is inherently difficult in plants.
+
+#How have people attempted modelling mortality?
+- In order to capture the U-shaped mortality researchers have used a variety of models to capture broad patterns. These include running seperate models for small and large plants, the use of polynomials, or the use of non-parameteric approaches that do not assume an underlying curve.
+- They have often constructed these models to determine the effects of competition, size or ...
+- However, the problem with such approaches is that they do not attempt to explain the underlying mechanisms that result in U-shaped mortality.
+- Some have suggested that certain hazards influence different parts of the U-shape curve. For example, competitive process influence mortality when individuals are small and less so when they are large. Whereas the oppose is true for events such as windthrow.
+- Furthermore, the vast majority of these empirical models have been conducted for individual species, and thus are of limited use for more applying to applying to other species.
+
+
+#What do we know about mortality in plants?
+Evidence suggests that mortality is U-shaped for most plants.
+We also know that plant survival is influenced by multiple hazards (fire, herbivory, climate, drought, competition and windthrow)
+
+#Traits
+More recently ecologists have used traits in an attempt to obtain more generality. The vast majority of this research has focused on how traits influence growth rates, with very few studies examining trait effects on mortality.
+Those that have, have reported that traits such as wood density can significantly influence rates of mortality. The logic here is that wood density conveys additional resources into structural properties and thus makes plants more resistant to breakage and invertebrate attack. However, as far as I am aware, all these studies have assumed that the effect of traits remains constant and does not change with size.
+
+#Solution
+
+Many modellers have called for more mechanistic al- gorithms in plant growth models and see the path
+towards improvement as a reformulation of mor- tality algorithms to better reflect the physiological base of a plant (e.g. Loehle and LeBlanc, 1996). (Hawke)
+
+
+
+
+Based on the information above I have three primary objectives:
+
+1) Scour the literature on how traits and size influence mortality rates under common hazards
+2) Build an integrated process-based model that incorporates multiple hazards that can be used to determine how the combination of size and traits governs instantenous mortality rates.
+3) Apply model to multiple datasets.
+
+#Objective 1
+
+As far as I am aware, there does not appear to be an integrated review of how traits influence various hazards, or how they vary with size.
+Most trait analysis of mortality has either ignored the cause of death or has been related to very specific forms of mortality. For example, there are several studies that highlight suite of traits that minimise death by fire, but less so on other hazards such as wind throw and climatatic extremes.
+In order to remedy this. I am to write a brief literature review highlighting the primary hazards plants are exposed to and how various traits have been linked to decreased or increased susceptibility.
+
+In order to achieve this I plan to use google scholar and...
+
+#Objective 2
+Include maths here
+
+#Objective 3
+Preliminary thoughts
+
+Modelling survival and mortality within a population is of fundamental importance in ecology, epidemiology, demography, engineering and economics. It is particularly
+
+Burgman et al. (1994) points out the significance of tree mortality for forest yield and growth rates, and Pacala et al. (1996) shows the importance of species mortality rates in forest succession.What is clear is that mortality is very difficult to model owing to its variable and episodic nature (Burgman et al., 1994) (Hawke)
+
+#Difficulty in modelling mortality
+The complexity of environmental stresses and lack of process information of woody plant mortality has however led to the wide use of empirical algorithms.These have many problems, including data intensity and spatial and temporal specificity. Such problems render mortality simulation prone to error and weak in response to environmental change.  (Hawke)
+
+Describing size-specific mortality patterns can be especially difficult, due to few trees in larger size classes. (Hurst)
+
+
+
+###Aim:
+1. Determine traits influence the likelihood of a particular hazard resulting in death.
+2. Determine whether instantaneous mortality rates are commonly U-shaped as a function of dbh.
+3. Examine whether trait effects on instantaneous mortality rates vary with individual size and growth rate
+4. Build a process-based mortality model that encapsulates how the combination of various hazards and traits can result in various mortality curves.
+
+###Hypotheses
+1. The most common hazards that can result in plant death are all size dependent and include:
+**Competition**: This hazard will most strongly affect smaller individuals because they are more at risk of being shaded compared to larger plants. Traits affecting the likelihood of competition resulting in death will be correlated with shade tolerance such as *LMA* and *wood density*.
+
+**Herbivory**: This hazard will most strongly affect small individuals more susceptible to complete foliage loss or being consumed entirely. Traits affecting the liklihood of herbivory resulting in death will be correlated with herbivory preference (e.g. *leaf nitrogen*), resistance (e.g. *wood density*) and persistance (*resprouting capabilities*).
+
+**Fire**: This hazard is likely to be size dependent with small individuals more suspectible to fire compared to larger plants. This is because for small/juvenile plants will are less likely to have developed fire-resistant traits. They are also lower in stature making their leaves exposed to both low severity and high severity fires. Traits affecting the likelihood of fire resulting in death will be correlated with fire-resistance (e.g. bark thickness) and persistance (e.g. resprouting)
+
+**Drought/Extreme heat/ Extreme cold**: These hazard is likely t
+  - Extreme temperatures
+  - Windthrow
+  - Neighbour falling
+  - Disease
+
+
+Below are some excerpts from William Morris's thesis on mortality of trees.
+
+The **finite mortality rate**, $M$, ignoring recruitment, is the complement of the ratio of final populatio size, $N_T$, to initial population size, $N_0$, divided by the length of the observation period, $T$,
+
+
+\begin{equation} \label{eq:FiniteMort}
+M = 1 -\frac{N_T/N_0}{T}
+\end{equation}
+
+However, in order to infer an unbiased expected proportion of dying individuals for periods shorter or longer than that used to calculate finite mortality one must calculate the **instantaneous mortality**, $M_T$:
+
+\begin{equation} \label{eq:InstMort}
+M_T = 1-\textrm{exp}(-\lambda T)
+\end{equation}
+
+where 
+
+\begin{equation} \label{eq:lambda}
+\lambda = - \frac{\textrm{log}_e(1-M)}{T}.
+\end{equation}
+
+This function is widely used to describe the loss of individuals from a population over time. Here, when $M_T$ and $\lambda$ are more or less equivilent mortality rates are low.
+
+Calculating mortality rate is made more complicated when multiple censuses (a period of time in which mortality risk is being assessed, where census interval = $T$) are considered, partlicalrly when census interval lengths vary. In such cases equations \ref{eq:FiniteMort} and \ref{eq:InstMort} cannot be used because $T$ is not dixed and substituting $T$ with average interval length has been shown to underestimate mortality (Kubo et al., 2000). This is a particular problem with large-scale monitoring programs such as BCI where the period of time between revisits of individual trees varies within a signle census because there are too many individuals for observations to be made simultaneously. Datasets such as BCI can take more than a year to complete an entire census.
+
+When $T$ varies within a mortality dataset, estimates of population mortality rate will be biased if this variation is not accounted for (e.g. by assuming a mean value for $T$ and using equation \ref{eq:InstMort}. In order to achieve an unbiased estimate of $M_T$ and $\lambda$ when census length varies, maximum likelihood (Kubo et al, 2000) or Bayesian (He, 2003) methods can be used, which allow $T$ to be considered a continous variable.
+
+The methods so far assume $\lambda$ is fixed in space and time, between individuals and over the lifespan of an individual. Often these assumptions are not met because individual hazard rates vary. Heterogeneous hazard biases estimates of population mortality rates (Sheil & May 1996) and this bias is greater for longer census intervals (Zens & Peart 2003). The need for unbiased estimates of mortality, despite the hazard heterogeneity present in data from forests and woodlands, has lead to the development and application of methods that move beyond considering mortality at the population level and directly modelling hazard of individual trees (Zens & Peart, 2003).
+
+The logistic regression family of methods are the most common individual-based approach used to analyse tree mortality data (see Breece, Kolb & Dickson, 2008, Carus 2010, Flewelling & Monserud, 2002). Logistic regression models consider tree death, $\textrm{Pr}(y_i = 1)$, as a series of binomially distributed data with the probability of observing a death as function of a set of covariates, $X_i$, and associated coefficients, $\beta$ related to data via the logit link function.
+
+\begin{equation} \label{eq:logit}
+\textrm{Pr}(y_{i} = 1) = \textrm{logit}^{-1}(\beta X_i)
+\end{equation}
+
+The logit function, $\textrm{log}_e(p/(1 - p))$, transforms a quantity bound within the unit interval, such as probability, $p$, to cary between negative infinity and infinity. By relating mortality to covariates that can explain differences in death rate, individual based methods such as logistic regression can reduce the bias found in population rate estimates when individuals have variable hazard (Zens & Peart, 2003).
+
+The complementary log-log (cloglog) link, $\textrm{log}_e(-\textrm{log}_e(1-p))$, is another link that can be used to estimate mortality rates.
+The advantage of the cloglog link is that it is equivalent to standard survival analysis... NEED MORE INFO. It also reduces bias due to long and variable census intervals (BY?).
+By adding the census interval $T$ to equation \ref{eq:logit} and substituting the logit link with a cloglog link yields
+
+\begin{equation} \label{eq:cloglog}
+\textrm{Pr}(y_{i} = 1) = \textrm{cloglog}^{-1}(\beta X_{i} + \textrm{log}(T))
+\end{equation}
+
+
+y = log(-log(1-P))
+
+y = log(e) + log(1/(1-P)))
+e^y = (1/(1-P))
+e^y*(1-P) = 1
+e^y - Pe^y = 1
+
+
+-e(e^y) + 1
+
+1 - e(e^y)
+
+
+
+### MULTI-LEVEL NOTES:
+
+####From Hedeker et al 2014
+
+Nice summary of why multi-level models are essential for accounting for non-independence in nested datasets.
+
+"An important question is then to determine the degree to which covariates are related to substance use initiation. In these studies it is often of interest to model the student outcomes while controlling for the nesting of students in classrooms and/or schools. In analysis of such grouped-time initiation (or survival) data, use of grouped-time regression models that assume independence of observations [Thompson, 1977; Prentice & Gloeckler, 1978; Allison, 1982] is therefore problematic because of this clustering of students. More generally, this same issue arises for other types of clustered datasets in which subjects are observed nested within various types of clusters (e.g., hospitals, firms, clinics, counties), and thus cannot be assumed to be independent. To account for the data clustering, multilevel models (also called hierarchical linear or mixed models) provide a useful approach for simultaneously estimating the parameters of the regression model and the variance components that account for the data clustering [Goldstein, 1995; Raudenbush & Bryk, 2002]."
+
+## TWO REVIEW PAPERS TO READ Pickles et al 1995 & Hougaard 1995 ###
+
+Lee et al 1992 has developed continuous0time survival models. However, the application of these models to grouped or discrete-time survival data is generally not recommended because of the large number of ties that result.
+
+Instead, models specifically developed for grouped or discrete-time survival data have been proposed.
+
+Both Han & Hausman (1990) and Scheike & Jensen (1997) have described proportional hazards models incorporating a log-gamma distribution specification of heterogeneity. Furthermore, Ten Have (1996) developed a discrete-time proportional hazards survival model incorporating a log-gamma random effects distribution, additionally allowing for ordinal survival and failure categories. Ten Have & Uttal (1994) used Gibbs samplng to fit a continuation ratio logit model with multiple normally distributed random effects.
+
+## IMPORTANT NOTE ON link function
+
+Doksum & Gasko (1990) note, that large amounts of high quality data are often necessary for link function selections to be relevant. McCullagh (1980) notes that the link function choice should be based primarily on ease of interpretation.
+
+## Multilevel model that treats each individual's survival time as a set of dichotomous observations indicating whether or not an individual failed in each time unti until a person either experiences the event or is censored. This type of model is extensively described in Singer & Willett (2003) & is illustrated in Reardon et al (2002).
+
+This approach is particularly useful for handling time-dependent covariates and fitting non-proportional hazards models because the covariate values can change across each individual's Tij timepoints.
+
+
+
+
+
+
+
+
+
+
+
