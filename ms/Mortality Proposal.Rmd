@@ -86,13 +86,84 @@ Describing size-specific mortality patterns can be especially difficult, due to 
 
 **Fire**: This hazard is likely to be size dependent with small individuals more suspectible to fire compared to larger plants. This is because for small/juvenile plants will are less likely to have developed fire-resistant traits. They are also lower in stature making their leaves exposed to both low severity and high severity fires. Traits affecting the likelihood of fire resulting in death will be correlated with fire-resistance (e.g. bark thickness) and persistance (e.g. resprouting)
 
-**Drought/Extreme heat/ Extreme cold**: These hazard is likely t
-  - Extreme temperatures
-  - Windthrow
-  - Neighbour falling
-  - Disease
+**Drought/Extreme heat/ Extreme cold**: These hazard is likely to..
+
+###Factors influencing small individuals
+```{r, echo=FALSE}
+par(xaxs='i', yaxs='i', mfrow= c(3,2))
+curve(1/(1+((1/0.99)-1)*exp(5*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by fire', lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+
+curve(1/(1+((1/0.99)-1)*exp(7*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by drought',lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+
+curve(1/(1+((1/0.99)-1)*exp(7*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by high temperatures',lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+
+curve(1/(1+((1/0.99)-1)*exp(7*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by low temperatures',lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+
+curve(1/(1+((1/0.99)-1)*exp(7*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by herbivory',lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+
+curve(1/(1+((1/0.99)-1)*exp(15*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by light competition', lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+```
+
+###Factors influencing large individuals
+```{r, echo=FALSE}
+par(xaxs='i', yaxs='i',mfrow=c(1,3))
+curve(1/(1+((1/0.02)-1)*exp(-10*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by wind fall', lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+
+curve(0.9/(1+((0.9/0.2)-1)*exp(-7*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by falling neighbour',lwd=2)
+axis(1, at=c(0,1.2), labels=c('Small', 'Large'))
+
+curve(1/(1+((1/0.001)-1)*exp(-8*x)), ylim=c(0,1), xlim=c(0, 1.2), xaxt='n', ylab= 'Mortality rate', xlab='Time', main='Death by disease',lwd=2)
+axis(1, at=c(0,1.2), labels=c('0', 'infinity'))
+```
+
+###Traits are likely to affect shape of these hazard rates
+```{r, echo=FALSE}
+par(xaxs='i', yaxs='i', mfrow=c(1,2))
+curve(1/(1+((1/0.02)-1)*exp(-10*x)), ylim=c(0,1), xlim=c(0, 2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by wind fall')
+curve(1/(1+((1/0.02)-1)*exp(-5*x)), ylim=c(0,1), xlim=c(0, 2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by wind fall', add=T, col='red', lty=2, lwd=2)
+axis(1, at=c(0,2), labels=c('Small', 'Large'))
+legend(0.7,0.2, legend = c('low wd', 'high wd'), col=c('black','red'), lty=c(1,2), bty = 'n', lwd=2, cex=2,)
+
+curve(1/(1+((1/0.02)-1)*exp(-10*x)), ylim=c(0,1), xlim=c(0, 2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by wind fall')
+curve(1/(1+((1/0.02)-1)*exp(-5*x)), ylim=c(0,1), xlim=c(0, 2), xaxt='n', ylab= 'Mortality rate', xlab='Size', main='Death by wind fall', add=T, col='red', lty=2, lwd=2)
+axis(1, at=c(0,2), labels=c('Small', 'Large'))
+legend(0.7,0.2, legend = c('low severity', 'high severity'), col=c('black','red'), lty=c(1,2), bty = 'n', lwd=2, cex=2,)
+```
+
+## Survival analysis
+
+- Most people model survival curves
+- However, here we are interested in determining how trait alter hazards.
+
+The survival function is intimately related to the **hazard** or **instantaneous mortality function**,  denoted $\lambda(t)$, which gives the event rate at time $t$ conditional on survival until time $t$:
+
+\begin{equation} \label{eq:lambda} \lambda(t) = \lim_{dt \rightarrow 0} \frac{\Pr(t \leq T < t+dt)}{dt\cdot S(t)} = -\frac{S'(t)}{S(t)}.\end{equation}
+
+This means that:
+\begin{equation}
+Survival(t) = \lambda_1(t) \times \lambda_2(t) \times \lambda_3(t)... \times \lambda_n
+\end{equation}
+
+### Here I plan to model hazards by...
+####EG Fire
+
+\begin{equation}
+\lambda(t) = f(age)^{-1} \times \int_{0}^{\infty} p(intensity|age) \times \Pr(\textrm{Death in fire of intensity}\, i) \, \textrm{d}i
+\end{equation}
+
+\begin{equation}
+\Pr(Death)  = \alpha + \beta_1 \times Size + \beta_2 \times Resprouter + \beta_3 \times Bark thickness
+\end{equation}
 
 
+##OTHER STUFF
 Below are some excerpts from William Morris's thesis on mortality of trees.
 
 The **finite mortality rate**, $M$, ignoring recruitment, is the complement of the ratio of final populatio size, $N_T$, to initial population size, $N_0$, divided by the length of the observation period, $T$,
