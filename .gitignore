@@ -1,5 +1,8 @@
+.maker
 output
-figs
+figure*
 .Rproj.user
 *.Rproj
-
+*.csl
+*.md
+*.pdf

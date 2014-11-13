@@ -3,15 +3,19 @@ title: "Mortality Notes"
 author: "J Camac"
 date: "9 July 2014"
 output: pdf_document
+bibliography: data/refs.bib
+csl: downloads/style.csl
 ---
 
 ###Background
 
-Mortality rates vary both spatially and temporally, and as such, are critical to accurately predict vegetation dynamics. However, few models of vegetation dynamics explicitly account for changes in mortality rates (e.g. REFS). Instead, most models used simplifed assumptions such as constant mortality (REF), no mortality (REF) or that mortality varies as a function of some arbitary set of rules (REF). These simplifcations are predominately a consequence of our limited understanding of what governs mortality rates and how it varies temporally, spatially and within and between species. This limited knowledge is partly due to ecologists placing greater emphasis on examining plant growth and how it affects community (REF) and population dynamics (REF). But also because of difficulties associated with modelling mortality. Mortality is highly variable and episodic (REF). As such, it requires individuals to be monitoried for sufficiently long periods of time, ideally from birth to death, which is problematic for long-lived species. Mortality rates are also affected by multiple biotic and abiotic factors, as well as the frequency (REF) and severity (REF) of multiple hazards (e.g. fire, wind, drought), which may or may not be dependent on one another (REF).  
+[@kleinbaum_survival_2005]
+
+Mortality rates vary both spatially and temporally, and as such, are critical to accurately predict vegetation dynamics. However, few models of vegetation dynamics explicitly account for changes in mortality rates (e.g. REFS). Instead, most models used simplifed assumptions such as constant mortality (REF), no mortality (REF) or that mortality varies as a function of some arbitary set of rules (REF). These simplifcations are predominately a consequence of our limited understanding of what governs mortality rates and how it varies temporally, spatially and within and between species. This limited knowledge is partly due to ecologists placing greater emphasis on examining plant growth and how it affects community (REF) and population dynamics (REF). But also because of difficulties associated with modelling mortality. Mortality is highly variable and episodic (REF). As such, it requires individuals to be monitoried for sufficiently long periods of time, ideally from birth to death, which is problematic for long-lived species. Mortality rates are also affected by multiple biotic and abiotic factors, as well as the frequency (REF) and severity (REF) of multiple hazards (e.g. fire, wind, drought), which may or may not be dependent on one another (REF).
 
 This complexity has led to the widespread use of phenomological models to describe patterns in plant mortality. In a review of more than 150 woody plant mortality models, Hawke (2000) found that 93% were phenomological and only 7% were mechanistic; further highlighting the paucity of process-based information about mortality. These phenological models....
 
-These mechanistic models all assumed that mortality occured when carbon supply was insufficient for growth (e.g. Friend et al. 1997, Bossel 1986, Weinstein et al 1991, Bugmann et al 1997). As such, none incorporated differential mortality rates among species, or how different hazards may alter these rates. Phenomological model on the other hand, have attempted to explain mortality as a function of competitive interactions, abiotic conditions as well as size. One finding that appears to 
+These mechanistic models all assumed that mortality occured when carbon supply was insufficient for growth (e.g. Friend et al. 1997, Bossel 1986, Weinstein et al 1991, Bugmann et al 1997). As such, none incorporated differential mortality rates among species, or how different hazards may alter these rates. Phenomological model on the other hand, have attempted to explain mortality as a function of competitive interactions, abiotic conditions as well as size. One finding that appears to
 
 How many data are needed on mortality? When and where should they be ob- tained? This is a general criticism of Friend et al. (1997), who claim these problems render valida- tion of mechanistic models useless. Also, data sources for mortality testing are often flawed. Bugmann (1996) points out that monitoring pro- grammes are usually shorter than many plants’ lifespans, while palaeo data does not provide the necessary resolution. And the potential variation between sizes, classes, ages etc. is so high that even a large sample will not provide the statistical significance required.
 
@@ -181,7 +185,7 @@ However, in order to infer an unbiased expected proportion of dying individuals 
 M_T = 1-\textrm{exp}(-\lambda T)
 \end{equation}
 
-where 
+where
 
 \begin{equation} \label{eq:lambda}
 \lambda = - \frac{\textrm{log}_e(1-M)}{T}.
@@ -251,7 +255,7 @@ Doksum & Gasko (1990) note, that large amounts of high quality data are often ne
 This approach is particularly useful for handling time-dependent covariates and fitting non-proportional hazards models because the covariate values can change across each individual's Tij timepoints.
 
 
-
+# REFERENCES
 
 
 

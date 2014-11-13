@@ -1,17 +1,3 @@
-to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
-  if(!file.exists(dirname(filename)))
-    dir.create(dirname(filename), recursive=TRUE)
-  if ( verbose )
-    cat(sprintf("Creating %s\n", filename))
-  dev(filename, ...)
-  on.exit(dev.off())
-  eval.parent(substitute(expr))
-}
-
-to.pdf <- function(expr, filename, ..., verbose=TRUE) {
-  to.dev(expr, pdf, filename, ..., verbose=verbose)
-}
-
 # Simulates coefficient values based on its mean and standard deviation
 sim.coeff <- function(jagsfit, params) {
   if(!require(jagstools)) {
@@ -24,7 +10,7 @@ sim.coeff <- function(jagsfit, params) {
 data.summary <- function(x, covariates){
   as.data.frame(x)
   if(ncol(x) ==1) {
-    as.data.frame(apply(x,2, function(x) c(mean= mean(x), std= sd(x), 
+    as.data.frame(apply(x,2, function(x) c(mean= mean(x), std= sd(x),
                                            quantile(x,c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9,0.975)))))}
   else {
     df <- x[, c(covariates)]
@@ -33,14 +19,14 @@ data.summary <- function(x, covariates){
 
 # Produces a JAGS coefficient plot with credible intervals
 coeff.plot <- function(jagsfit, params, labels=NULL, conf=c(95, 50), xlab='Effect size') {
-  
+
   if(!require(jagstools)) {
     require(devtools)
     install_github(repo='jagstools', username='johnbaums')
   }
-  
+
   conf <- unique(as.numeric(conf))
-  if (!all(conf %in% c(95, 50))) 
+  if (!all(conf %in% c(95, 50)))
     stop('conf must be a vector of one or more of 95 and 50.')
   dat <- jagsresults(jagsfit, params)
   dat <- dat[match(params, row.names(dat)), ]
@@ -48,9 +34,9 @@ coeff.plot <- function(jagsfit, params, labels=NULL, conf=c(95, 50), xlab='Effec
   opar <- par(mai=c(1, max(strwidth(labels, 'inches')) + 0.3, 0.5, 0.5))
   on.exit(par(opar))
   plot(dat[, '50%'], seq_len(nrow(dat)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
-       xlim=range(pretty(range(dat[, c(paste0((100 - max(conf))/2, '%'), 
+       xlim=range(pretty(range(dat[, c(paste0((100 - max(conf))/2, '%'),
                                        paste0(100 - (100 - max(conf))/2, '%'))]))),
-       
+
        panel.first={
          abline(v=0, lty=3)
          if(length(conf) == 1) {
@@ -69,14 +55,14 @@ coeff.plot <- function(jagsfit, params, labels=NULL, conf=c(95, 50), xlab='Effec
 
 #3-dimensional plot
 
-plot.3d <- function(jagsfit, x, xmean, xstd, y, ymean, ystd, xlab='x', ylab='y', zlab='z', theta=110, phi=20) { 
+plot.3d <- function(jagsfit, x, xmean, xstd, y, ymean, ystd, xlab='x', ylab='y', zlab='z', theta=110, phi=20) {
   require(VGAM)
-  
-  z <- outer(x,y,function(x,y) cloglog(jagsfit$BUGSoutput$mean$GM + 
-                                         jagsfit$BUGSoutput$mean$b.1 * ((x - xmean) / (2 * xstd)) 
+
+  z <- outer(x,y,function(x,y) cloglog(jagsfit$BUGSoutput$mean$GM +
+                                         jagsfit$BUGSoutput$mean$b.1 * ((x - xmean) / (2 * xstd))
                                        + jagsfit$BUGSoutput$mean$b.2 * ((y - ymean) / (2 * ystd))
                                        + jagsfit$BUGSoutput$mean$b.2 * (((x - xmean)/ (2 * xstd)) * ((y - ymean) / (2 * ystd))), inverse=T))
-  
+
   nrz <- nrow(z)
   ncz <- ncol(z)
   jet.colors <- colorRampPalette(c('blue','yellow','orange', 'red'))
@@ -98,36 +84,6 @@ powerTenExpression<-function(x){
 
 #return last element in dataframe or vector
 last <- function(x) { tail(x, n = 1) }
-
-axis.log10 <- function(side=1, horiz=FALSE, labels=TRUE, wholenumbers=TRUE, labelEnds=TRUE,las=1) {
-  fg <- par("fg")
-
-  #get range on axis
-  if(side ==1 | side ==3) {
-    r <- par("usr")[1:2]   #upper and lower limits of x-axis
-  } else {
-    r <- par("usr")[3:4] #upper and lower limits of y-axis
-  }
-
-  #make pertty intervals
-  at <- pretty(r)
-  #drop ends if desirbale
-  if(!labelEnds)
-    at <- at[at > r[1] & at < r[2]]
-  #restrict to whole numbers if desriable
-  if(wholenumbers)
-    at<-at[is.wholenumber(at)]
-
-  #make labels
-  if ( labels ) {
-    lab <- do.call(expression, lapply(at, function(i) bquote(10^.(i))))
-    axis(side, at=10^at, lab, col=if(horiz) fg else NA,
-         col.ticks=fg, las=las)
-  } else {
-    axis(side, at=10^at, FALSE, col=if(horiz) fg else NA,
-         col.ticks=fg, las=las)
-  }
-}
 
 ## Make colours semitransparent:
 make.transparent <- function(col, opacity=0.5) {
