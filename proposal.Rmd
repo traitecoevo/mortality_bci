@@ -13,19 +13,36 @@ Plant mortality and the processes affecting it are integral to understanding veg
 
 Temporal patterns in plant mortality are highly variable and episodic (Burgmann 1994). Mortality rates also vary between species and are strongly influenced by multiple biotic and abiotic factors that may interact with one another (e.g. drought and herbivory: McDowell 2011). Because of this complexity, calibrating empirical models or validating mechanistic models of plant mortality requires datasets that monitor large numbers of species and individuals across their lifespan and across multiple biotic and abiotic gradients. More importantly, it requires the cause of death to be known for each individual. However, few, if any, data meet all these requirements. Rather, most available data comes from monitoring programs that are usually shorter than many plants lifespans (Bugmann 1996), and that focus on single species at single sites. Furthermore, because of the inherent difficulty of defining the cause of death, most monitoring programs do not delimit the cause of death for each individual.
 
-Consequently, there are very few mechanistic mortality models. In a review of 61 woody plant mortality models, Hawke (2000) found that only 4 were mechanistic. In these models, mortality occurred when carbon supply was insufficient for growth (e.g. Friend et al. 1997, Bossel 1986, Weinstein et al 1991, Bugmann et al 1997). By contrast, the majority of mortality models (57) were empirical and included forest yield models (Guan and Gertner 1991), gap models (Dale et al 1985), plant-environment models (King and Grant 1996) and spatial models (Jeltsch et al 1997). These empirical mortality models spanned the range from deterministic (REFS) to stochastic (REFS) and typically included correlations of one or multiple, abiotic and biotic factors such as competition (REF) and climate (REF) as well as state variables such as age (REF), size (REF) and growth rate (REF).
+Consequently, there are very few mechanistic mortality models. In a review of 61 woody plant mortality models, Hawke (2000) found that only 4 were mechanistic. In these models, mortality occurred when carbon supply was insufficient for growth (e.g. Friend et al. 1997, Bossel 1986, Weinstein et al 1991, Bugmann et al 1997). By contrast, the majority of mortality models (57) were empirical and included forest yield models (Guan and Gertner 1991), gap models (Dale et al 1985), plant-environment models (King and Grant 1996) and spatial models (Jeltsch et al 1997). These empirical mortality models spanned the range from deterministic (REFS) to stochastic (REFS) and typically included correlations of one or multiple, abiotic and biotic factors such as competition (REF) and climate (REF) as well as state variables such as age (REF), size (Hurst et al 2011, , V) and growth rate (REF).
 
-More recently, researchers have used plant traits in an attempt to explain inter-specific variability in mortality rates. For example, ....
-However, to date, most of these studies have assumed that these trait effects are constant through time and do not interact with changing environmental conditions or individual state variables such as growth rate or size.
+More recently, plant traits have been incorporated into empirical models in order to examine inter-specific variability in mortality rates. These studies have suggest that a several traits may reduce mortality rates. For example, several studies have found that species with higher wood density exhibit reduced baseline mortality rates. This is thought to be due to higher wood density resulting in increased structural support, which in turn reduces the chance of breakage but also herbivory by wood boring herbivores. Other traits have been found to convey mortality advantages under particular hazards. For example, bark thickness has been correlated with greater survival after fire due to the bark insulating the sapwood from extreme temperatures. Or having a deciduous life form often allows for greater survival during prolonged drought by allowing plants to essentially hibernate during periods of high water stress, relative to evergreen species. However, the vast majority of these studies assume that the effects of traits remain do not interact with changing environmental conditions or individual state variables such as growth rate or size. This is despite theory suggesting otherwise. For example wood density is likely to matter more for an adult plant then a juvenile plant because adults are taller and are more prone to being knocked over by windthrow, whereas juveniles are likely to be more sheltered by surrounding taller vegetation.
 
 ###Aims
-Based on these knowledge gaps I have three primary objectives:
+In this project I aim to address three knowledge gaps in relation to traits and mortality rates.
+
 1) Examine whether the effects of wood density (and other traits) on mortality are growth & size dependent or independent.
 2) Conduct a literature review summarising how plant traits influence mortality rates under common hazards (e.g. wind throw, drought, fire, disease, herbivory).
-3) Build a process-based mortality model that incorporating the common hazard experienced by plants and how traits mediate their effects. 
+3) Build a process-based mortality model that allows trait effects to interact with the type of hazard as well as growth and size. 
+
+
+##1 - Growth dependent & independent effects of wood density
+
+The effect of wood density on plant survival is often fitted to empiricial models under the assumption that it is independent of state variables such as growth rate and size (i.e. models with no interaction terms). Here, the theory is that higher wood density equates to lower mortality rates regardless of state variables such as growth rate and size. However, wood density may actually have both dependent and independent effects on plant mortality. For example, higher wood density may reduce mortality rates via greater stem structural support and decreased wood herbivory regardless of other state and climatic variables. However, it may also interact with growth rates with high wood density and low or negative growth rates traits such as wood density may actually density may have both the effect of wood density is unl
 
 
 ##Growth dependent & independent effects of wood density
+# Current model may not be ideal. Partly because WD can never be zero and thus the model is unrealistic. Centering WD also won't work as it changes the form of the model by making it multiplicative.
+
+Potential solution is to use a different form for wood density (e.g. csWD^c1)
+Explore other model forms.
+Sub-questions:
+1) What is the best growth rate metric to use? dbh, basal area?, mass?
+2) Can we partition the effects of size and growth?
+3) What model best explains the effect mortality?
+4) Think about size related models that encapsulate increases at small and large sizes.
+RGR decreases with size. Incr.GR increases with size. By including both growth rate and size in the model we can determine whether size has additional affects that are not explained by growth.
+
+
 
 ###Example JAGS model with no random effects
 
@@ -50,16 +67,16 @@ bci.mainstem<- bci.mainstem %>%
   #Preps data for model by centering and scaling predictors and time
   data <- list(
   n_obs = nrow(bci.mainstem),
-  n_spp = length(unique(bci.mainstem$sp)),
-  spp = as.numeric(factor(bci.mainstem$sp), as.character(unique(bci.mainstem$sp))),
-  wd = scale(unique(bci.mainstem[c('sp', 'sg100c_avg')])[,'sg100c_avg'])[,1]/2,
-  dbh = scale(bci.mainstem$dbh)[,1]/2,
-  dbh_gr = scale(bci.mainstem$dbh.gr)[,1]/2,
-  dbh_rgr = scale(bci.mainstem$dbh.rgr)[,1]/2,
-  basal_area = scale(bci.mainstem$basal.area)[,1]/2,
+  #n_spp = length(unique(bci.mainstem$sp)),
+  #pp = as.numeric(factor(bci.mainstem$sp), as.character(unique(bci.mainstem$sp))),
+  wd = unique(bci.mainstem[c('sp', 'sg100c_avg')])[,'sg100c_avg'],
+  #dbh = scale(bci.mainstem$dbh)[,1]/2,
+  #dbh_gr = bci.mainstem$dbh.gr,
+  #dbh_rgr = scale(bci.mainstem$dbh.rgr)[,1]/2,
+  #basal_area = scale(bci.mainstem$basal.area)[,1]/2,
   basal_gr = scale(bci.mainstem$basal.area.gr)[,1]/2,
-  basal_rgr = scale(bci.mainstem$basal.area.rgr)[,1]/2,
-  ln_census = scale(log(bci.mainstem$census.interval))[,1]/2, #logged for model
+  #basal_rgr = scale(bci.mainstem$basal.area.rgr)[,1]/2,
+  ln_census = log(bci.mainstem$census.interval), #logged for model
   died = bci.mainstem$dead.next.census)
 
 #Actual model
@@ -89,39 +106,43 @@ mod<-     jags.parallel(model.file = model,
 ```{r, eval=FALSE}
 library(parallel)
 library(rstan)
-
+data <- list(
+  n_obs = nrow(bci.mainstem),
+  #n_spp = length(unique(bci.mainstem$sp)),
+  #pp = as.numeric(factor(bci.mainstem$sp), as.character(unique(bci.mainstem$sp))),
+  wd = bci.mainstem$sg100c_avg,
+  #dbh = scale(bci.mainstem$dbh)[,1]/2,
+  #dbh_gr = bci.mainstem$dbh.gr,
+  #dbh_rgr = bci.mainstem$dbh.rgr,
+  #basal_area = scale(bci.mainstem$basal.area)[,1]/2,
+  basal_gr = scale(bci.mainstem$basal.area.gr,center = FALSE)[,1]/2,
+  #basal_rgr = scale(bci.mainstem$basal.area.rgr)[,1]/2,
+  census_length = bci.mainstem$census.interval, #logged for model
+  died = bci.mainstem$dead.next.census)
 cat('
-  data {
-		int<lower=0> n_obs;
-		int<lower=0, upper=1> died[n_obs];
-		vector[n_obs] ln_T;
-		vector[n_obs] wd;
-		vector[n_obs] gr;
-	
-	}
-	parameters {
-		real<lower=0> c0;
-		real c1;
-		real<lower=0> c2;
-		real c3;
-		
-	} 
-	model {
-		for (it in 1:n_obs)
-			died[it] ~ bernoulli(inv_cloglog(ln_census[it] + log(c0 * exp(-c1 * wd[it]) + c2 * exp(-c3 * dbh_gr[it]))));
-	}
-', file=(StanModel <- tempfile())
-		
-			
-BCImodel <- sflist2stanfit(
-	mclapply(
-		1:4,
-		function(i) {
-			stan(file=StanModel, data=BCIdata, seed=123, chains=1, chain_id=i, refresh=-1)
-			}, 
-		mc.cores=2
-	)
-)
+    data {
+    int<lower=0> n_obs;
+    int<lower=0, upper=1> died[n_obs];
+    vector[n_obs] census_length;
+    vector[n_obs] wd;
+    vector[n_obs] basal_gr;
+    
+    }
+    parameters {
+    real<lower=0> c0;
+    real c1;
+    real<lower=0> c2;
+    real c3;
+    
+    } 
+    model {
+    for (it in 1:n_obs)
+    died[it] ~ bernoulli(inv_cloglog(log(census_length[it]) + log(c0 * exp(-c1 * wd[it]) + c2 * exp(-c3 * basal_gr[it]))));
+    }
+    ', file=(StanModel <- tempfile()))
+  				
+system.time(BCImodelbasal.gr <- sflist2stanfit(mclapply(1:1,mc.cores=1,
+		function(i) stan(file=StanModel, data=data, inter=500,seed=123, chains=1, chain_id=i, refresh=-1))))
 ```
 
 2) Examine whether the effects of wood density varies with plant size.
