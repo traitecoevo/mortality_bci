@@ -1,57 +1,134 @@
 ---
-title: "Mortality Project"
+title: "Hazard rates, growth, size and plant traits"
 author: "J Camac"
-date: "9 July 2014"
+date: "10 Dec 2014"
 output: pdf_document
 bibliography: data/refs.bib
 csl: downloads/style.csl
 ---
+##Background
 
-###Background
+Understanding who lives or dies, and why, is an integral component of natural selection, and is crucial for building better individual-based models of population and community dynamics. However, ecologists have barely begun to tap the information available in survival data. For plants, this untaped information has resulted in few mechanistic models of plant mortality (Hawkes_2000). The reason for this may be due to past and current work primarily focusing on modelling plant growth as opposed to mortality (Hawkes 2000). But it also may be a consequence of difficulties associated with modelling mortality. 
 
-Plant mortality and the processes affecting it are integral to understanding vegetation dynamics. However, few mechanistic models of vegetation dynamic explicitly simulate mortality (Hawkes_2000), and those that have, do so using little process-based information. For example, mechanistic models have accounted for plant mortality by assuming mortality rates are constant through time and space (Thorton 2007m White 2000, Delbart et al 2010) or that they change when a threshold has been surpassed (e.g. when Sitch et al 2003, Sato et al 2007). These simplifications are a result of a lack of process-based information on what causes mortality rates to vary temporally, spatially and between species (Hawkes 2000, McDowell et al 2011). In part, this is because researchers have placed a greater emphasis on modelling plant growth (Hawkes 2000). But it is also due to the difficulties associated with modelling mortality rates. 
+Plant mortality is highly variable and episodic in both space and time (Burgmann 1994). It varies between species and between individuals within a species. This variability is thought to be affected by age (REF), size (REF) and genetics (REF) but also by multiple biotic and abiotic factors which may interact with one another (e.g. drought and herbivory: McDowell 2011). Because of this complexity, calibrating empirical models or validating mechanistic models of plant mortality requires datasets that monitor large numbers of individuals across entire lifespans and across multiple biotic and abiotic gradients. Furthermore, it also requires that causes of death to be identified for each individual. However, few, if any, field datasets meet all these requirements. Instead, most plant survival data come from monitoring programs conducted at few sites, that monitor survival as a binary event, with no delimintation of cause of death, often for periods shorter than that required to capture an individual or species entire lifespan (Bugmann 1996). 
 
-Temporal patterns in plant mortality are highly variable and episodic (Burgmann 1994). Mortality rates also vary between species and are strongly influenced by multiple biotic and abiotic factors that may interact with one another (e.g. drought and herbivory: McDowell 2011). Because of this complexity, calibrating empirical models or validating mechanistic models of plant mortality requires datasets that monitor large numbers of species and individuals across their lifespan and across multiple biotic and abiotic gradients. More importantly, it requires the cause of death to be known for each individual. However, few, if any, data meet all these requirements. Rather, most available data comes from monitoring programs that are usually shorter than many plants lifespans (Bugmann 1996), and that focus on single species at single sites. Furthermore, because of the inherent difficulty of defining the cause of death, most monitoring programs do not delimit the cause of death for each individual.
+Currently, most models examining plant mortality have been correlative. In a review of 61 woody plant mortality models, Hawke (2000) found that only 4 were mechanistic and 57 were correlative. These models typically include correlations with one or multiple, abiotic and biotic factors such as competition (REF) and climate (REF) as well as state variables such as age (REF), size (Hurst et al 2011, Vieilledent et al. 2009, Yang et al. 2003) and growth rate (Vielledent et al. 2010, Wright et al 2010). More recently, plant traits have also been incorporated into such correlative models to examine inter-specific variability in mortality rates (e.g. Kitajima et al 2013, Wright et al. 2010) and improve model generality so that predictions can be made to new species outside the fitted data (REF). Trait-based mortality analysis have found that several traits are correlated with plant mortality rates. For example, wood density has been shown within BCI to be negatively correlated with mortality rates. Bark thickness (Pausas et al 2014) and being decidious (???) relative to evergreen has also been shown to reduce mortality after events such as fire and drought, respectively.
 
-Consequently, there are very few mechanistic mortality models. In a review of 61 woody plant mortality models, Hawke (2000) found that only 4 were mechanistic. In these models, mortality occurred when carbon supply was insufficient for growth (e.g. Friend et al. 1997, Bossel 1986, Weinstein et al 1991, Bugmann et al 1997). By contrast, the majority of mortality models (57) were empirical and included forest yield models (Guan and Gertner 1991), gap models (Dale et al 1985), plant-environment models (King and Grant 1996) and spatial models (Jeltsch et al 1997). These empirical mortality models spanned the range from deterministic (REFS) to stochastic (REFS) and typically included correlations of one or multiple, abiotic and biotic factors such as competition (REF) and climate (REF) as well as state variables such as age (REF), size (Hurst et al 2011, , Vieilledent et al. 2009, Yang et al. 2003) and growth rate (Vielledent et al. 2010, Wright et al 2010).
+While measures of fitness such as reproductive success have typically been quantified at the individual level, mortality is commonly quantified at the population level (Zan et al 2010, Sheil et al 1995). The finite population mortality rate, $M_{finite}$, a time discrete measure of mortality, is one common way that ecologists have examined mortality. Here, $M_{finite}$ is estimated as the complement of the ratio of final population size, $N_T$, to initial population size, $N_0$, divided by the length of the observation period, $T$,
 
-More recently, plant traits have been incorporated into empirical models in order to examine inter-specific variability in mortality rates (e.g. Kitajima et al 2013, Wright et al. 2010). Such studies have found several traits that are correlated with mortality rates. For example, several studies (Wright et al 2010) have found that species with higher wood density exhibit lower mortality rates relative to species with low wood density. This is thought to be due to higher construction costs resulting in stronger stems and branches that are less susceptible to breakage and wood herbivory (REFS). Bark thickness has also been correlated with greater survival after fire due via greater insulating properties (Pausas et al in press). Or having a deciduous life form often allows for greater survival during prolonged drought by allowing plants to essentially hibernate during periods of high water stress, relative to evergreen species. However, the vast majority of these studies assume that the effects of traits remain do not interact with changing environmental conditions or individual state variables such as growth rate or size. This is despite theory suggesting otherwise. For example wood density is likely to matter more for an adult plant then a juvenile plant because adults are taller and are more prone to being knocked over by windthrow, whereas juveniles are likely to be more sheltered by surrounding taller vegetation.
-
-Below I briefly outline three projects that attempt to improve our understanding of how plant traits can influence mortality rates.
-
-**PROJECT 1.**
-Examine whether the effects of wood density (and other traits) on mortality are growth or size dependent
-
-**PROJECT 2.**
-Examine which plant traits influence mortality rates under common hazards (e.g. wind throw, drought, fire, disease, herbivory) experienced by vegetation.
-
-**PROJECT 3.**
-Build a process-based mortality model that allows trait effects to interact with the type of hazard as well as growth and size. 
-
-
-##PROJECT 1 - Growth-Size independent and interactive effects of wood density
-
-###Brief summary
-Plant traits are often fitted to empirical mortality models without the examination of how they may interact with state variables such as size and growth rate. However, traits such as wood density are likely to influence mortality rates by both state-independent and state-dependent effects. For example, wood density may reduce wood herbivory irrespective of plant size. But it may also have additional effects on mortality rates that only become biologically significant as a plant gets larger. Higher wood density, for example, may reduce stem breakage; a hazard more likely to occur as a plant gets taller and more exposed to wind. Similarly, wood density may also interact with growth rates, whereby individuals with low growth rates and low wood density may be more susceptible to pathogens relative to individuals that have higher wood density.
-
-Here, I examine how plant traits affect mortality rates by partitioning effects into growth or size-independent effects and growth or size-dependent effects.
-
-Sub-questions:
-1) What is the best growth rate metric to use? dbh, basal area?, mass?
-2) Are trait effects predominately growth dependent or independent?
-3) Out of these series of hazards, which combination best predicts plant mortality in BCI?
-RGR decreases with size. Incr.GR increases with size. By including both growth rate and size in the model we can determine whether size has additional affects that are not explained by growth.
-
-
-####
-# Series of hazards
-GROWTH DEPENDENT & INDEPENDENT EFFECTS
-
-\begin{equation}\label{eqn:wd_grmod_inter}
-\overbrace{\log(-\log(S(i,t)))}^{\text{Survival Probability}} =
-\overbrace{\log(\Delta{t})}^{\text{census interval}} + \log\left(\lambda_0 + \lambda_1 + \lambda_2 ... \lambda_n\right). 
+\begin{equation}\label{eqn:finitepopmortrate}
+M_{finite} = 1 - \frac{N_T/N_0}{T}.
 \end{equation}
 
+However, in order to estimate the expected proportion of individuals surviving for periods shorter or longer than that used to calculate the $M_{finite}$, time must be treated as continuous, and the instantaneous population mortality rate (also known as the population hazard rate), $\lambda_{pop}$ needs to be calculated:
+
+\begin{equation}\label{eqn:poplambda}
+\lambda_{pop} = -\frac{\log_e(1 - S))}{T}.
+\end{equation}
+and 
+
+\begin{equation}\label{eqn:S}
+S = 1 - \exp{(-\lambda T)},
+\end{equation}
+
+where $S$ is the proportion of individuals that survive.
+
+In plant ecology, these functions have become common place in describing the loss of individuals from a population (e.g. Zens et al 2003, Condit, Hubbell & Fores). They have also been correlated with other covariates. For example, Wright et al (2010) quantified the finite population mortality rate for 103 tree species and then correlated these values with species level growth and wood density estimates. However, a fundamental problem with these population estimates of mortality is that they ignore individual variability and as such implicitly assume that all individuals are the same and experience the same likelihood of dying (i.e. the same hazard rate). Such an assumption violates the basic pretense of natural selection (REF). Individuals within a population are not identical, they vary genetically, typically span a range of sizes and ages, and are exposed to different levels of resources and abiotic and biotic pressures. The consequence of ignoring this important source of variability is that population estimates of mortality rates are likely to be biased and may severely limit the predictive capacity of population and community dynamic models (Zens et al 2003, Shiel et al 1995). Regardless of the method used, bias is an inevitable product of any heterogenous sample. It can, however, be reduced if the levels of heterogeneity are recognized and explicitly incorporated into analyses. 
+
+Individual-based models of mortality or survival are one way to account for variable hazards and minimise associated biases at the population level. These models have been extensively applied in other disciplines (REFS), but are only now becoming regularly used in ecology and evolution (e.g. REFs, Zens et al 2003). At the core of all survival models is a hazard function which defines the instantaneous potential per unit time, $\lambda(t)$ for the event (in this case death) to occur, given that the individual has survived up to time $t$:
+
+\begin{equation} \label{eq:lambda} \lambda(t) = \lim_{dt \rightarrow 0} \frac{\Pr(t \leq T < t+dt)}{dt\cdot S(t)} = -\frac{S'(t)}{S(t)}.\end{equation}
+
+The hazard function is intimately related to the survival function, which gives the probability $S$ that an event does not occur before a given time $T$:
+
+$$ S(t) = \Pr(T > t)$$
+where "Pr" is the probability and $T$ is a random variable denoting the time of event. For a particular individual, $S(t)$ gives the expected probability that it will survive from $0 \rightarrow t$.
+
+In ecology, individual-based survival models that have been used include mark-recapture (Pollock et al 1995), survival analysis (Cox & Oakes 1984) and logistic regression (Allison 1982). Mark-recapture methods are typically applied to animal populations when it is uncertain whether marked individuals will be reencountered and mortality rates are estimated in light of this uncertainty. By contrast, survival analysis is used when accurate estimates of time of event (i.e. death) can be obtained, which commonly is not the case for most plant census data. However, survival analysis has been applied to tree-death data, with incremement growth being used as a surrogate for the passage of time (Woodall, Grambsch & Thomas 2005).
+
+The logistic regression family of methods are the most common individual-based models used to analyse plant mortality data (e.g. Breece, Kolb & Dickson 2008, Carus 2010, Flewelling & Monserud 2002). This is because most plant-death datasets are interval-censored; that is they only record the binary state of an individual between two time points $t_1$ and $t_2$. These models consider tree death $\Pr(y_i =1)$, as a series of binomially distributed data with the probablity of observing death as function of a covariates $X_i$, associated coefficients, $\beta$, and a baseline hazard $\lambda_0$ related via a link function, typically a logit $\log_e(p/1-p)$. Here, the coefficients explain differences in individual hazards and as such reduce the bias found in population estimates (Zens & Peart 2003).
+
+\begin{equation} \label{eq:logit}
+\log(\frac{\Pr(y_i = 1)}{1 - Pr(y_i = 1)} =  \sum_{i=1}^n \beta X_i\ + \lambda_0. 
+\end{equation}
+
+Although the logit (see\ref{eq:logit}) is often used, the complimentary-log-log, $\log_e(-\log_e(1-p))$ link is more advantageous in survival analysis. This is because it makes the regression model equivalent to proportional hazards model (see below) in that coefficients are interpreted as hazard ratios. That is, the hazard for one individual relative to another(Kleinbaum et al 2012). It also reduces bias due to long and variable census intervals (Allison, 1982), which is particularly important with large-scale monitoring programs such as BCI, where the period of time between revisits of individual trees varies within a single census because there are so many individuals that they cannot be observed simulataneously (Conduit 1995).
+
+\begin{equation} \label{eq:cloglog}
+\log_e\left(\log_e\left(1-\Pr(y_i = 1)\right)\right) =  \sum_{i=1}^n \beta_i X_i\ + \lambda_0 t. 
+\end{equation}.
+
+The proportional hazards model assumes a hazard function with form:
+
+\begin{equation} \label{eq:prop_hazards} \lambda(t) =  \lambda_0(t) \exp\left(\sum_{i=1}^n \beta_i x_i\right) =   \lambda_0(t)\prod_{i=1}^n \exp\left( \beta_i x_i\right),\end{equation}
+
+where $X_1, \ldots, X_n$ are various risk factors and $\beta_1, \ldots, \beta_n$ are associated coefficients. This leads (via eq. \ref{eq:HazS2}) to the following model for survival:
+
+\begin{equation} \label{eq:prop_hazards_S}
+S(t) =  \exp\left(\exp\left(-\sum_{i=1}^n \beta_i x_i\right)\right) S_0(t), \end{equation}
+
+where $S_0(t) = \exp\left(-\int_0^t \lambda_0(t)\right)$ is the baseline survival function (i.e.
+
+A key assumption of the proportional hazards model is that the relative risk from different predictors remains constant over time. For example, if being a particular size halved your hazard at time 0, it also halves your hazard at time 1 or any value of t (Kleinbaum et al 2012). However, these models can be extended to allow for individual covariates to vary over time (Kleinbaum et al 2012) and also include additive smoothing terms or hierarchical model structures.
+
+In general, these models are applied to data where a single event is being considered. However, when there are at least two possible pathways leading to any given outcome (e.g., death from any of several causes), the problem is characterized as a competing risk problem (Kleinbaum et al 2012). For example, if there are two alternative and independent mechanisms leading to plant death such as death by insufficient carbon and wind throw. The hazard function then has form:
+
+\begin{equation} \label{eq:additive_hazards} 
+\lambda(t) =  \lambda_{carbon}(t) + \lambda_{windthrow}(t) ,
+\end{equation}
+
+leading to the survival function
+
+\begin{equation} \label{eq:additive_hazards_S} S(t) =  \exp\left( - \int_0^t \lambda_{carbon}(t) + \lambda_{windthrow}(t) \, \textrm{d} t\right) =  \exp\left( - \int_0^t \lambda_{carbon}(t) \textrm{d} t\right)\exp\left( - \int_0^t \lambda_{windthrow}(t) \textrm{d} t\right).
+\end{equation}
+
+In the same way as we did for single event, each event may  be related to a number of covariates through a proportional hazards model, such that
+
+\begin{equation} 
+\lambda_{carbon}(t) =  \lambda_{carbon,0}(t) \exp\left(\sum_{i=1}^n \beta_{i,1} x_i\right),
+\end{equation}
+and
+\begin{equation} 
+\lambda_{windthrow}(t) =  \lambda_{windthrow,0}(t) \exp\left(\sum_{i=1}^n \beta_{i,2} x_i\right).
+\end{equation}
+
+We then have a model of the form
+
+\begin{equation} \label{eq:additive_hazards_S2} 
+S(t) =  S_{0}(t) \times \exp\left(\exp\left(-\sum_{i=1}^n \beta_{i,2} x_i\right)\right) \times \exp\left(\exp\left(-\sum_{i=1}^n \beta_{i,1} x_i\right)\right),
+\end{equation}
+
+where $S_{0}(t)=\exp\left(-\int_0^t \lambda_{carbon,0}(t)\right) \exp\left(-\int_0^t \lambda_{windthrow,0}(t)\right)$ is combined baseline hazard function.
+
+If the different time-of-event is known for each event type, a competing risk analysis can be used to estimate the underlying covariates (essentially this involves partitioning the dataset into two, one for each type of event, and adjusting the population sizes to account for deaths due to the other event)(kleinbaum 2005).
+
+The challenge here is to see if we can estimate the parameters of eq.  \ref{eq:additive_hazards_S2} using interval-census data where we do not know what tree died of.
+
+
+### PROJECT 1: A competing risks problem
+Plants can be killed by 1) not assimulating enough carbon for cell maintenance (i.e. carbon starvation), or 2) by some event that fatally damages the plant (e.g. fire, herbivory, windthrow). Ecologists have attempted to model the effects of insufficient carbon on hazard rates by using various measures of plant growth as a proxy for the carbon budget (e.g. Wright et al 2010). They have also used plant size and plant traits such as wood density as predictors of mortality. 
+
+However, as far as I am aware, no study has attempted to partition these effects into a competiting risk problem, whereby death by carbon starvation is treated independently to the effect of wood density which may influence the susceptiblitly to other causes of death. Here, I attempt to do build a multiplicative and additive hazards model using interval-censored data in a logistic regression framework.
+
+This project is made up of a series of questions examining how wood density, growth rates and size influence plant mortality rates.
+
+-1 Can we use a competing risks framework to attempt to estimate cause of death? (i.e. by treating the effects of growth, size and wood density as independent causes of mortality)
+-2 How do the findings of a competing risks approach differ from standard logistic regression? Are there any additional insights that can be gleamed? 
+-3 How does wood density, growth and size influence mortality rates and how do the magnitude of effects compare?
+-4 Can interactive terms be included in a competing risk framework? Is the presence of a interaction nullify the independence assumption of competing risks?
+-5 What measure of growth or size (i.e. dbh, basal or mass - absolute or relative) best predicts mortality rates?
+
+
+#### Competing hazard models
+Here I attempt to fit a competing hazards model using interval-censored data where we don the following Bayesian logistic regression form:
+
+\begin{equation}\label{eqn:wd_grmod_inter}
+\overbrace{\log(-\log(1 -\Pr(y_{i,t} = 1)))}^{\text{Survival Probability}} =
+\overbrace{\log(\Delta{t})}^{\text{census interval}} + \log\left(\lambda_0 + \lambda_1 + \lambda_2 \ldots \lambda_n\right). 
+\end{equation}
+
+**Hazards currently fitted to data**
+Below I assume negative exponential relationships between mortality and growth rate, wood density and size. In these models the $\alpha$'s refer to the intercept and the $\beta$'s refer to the rate of change. In a competing risks framework each $\lambda$ is assumed to be independent of eachother. I've ran these models with different variants of growth (e.g. incremental dbh and basal growth and relative growth rates of each) in an attempt to determine which is the best predictor of mortality.
 
 \begin{equation}\label{eqn:indhaz}\begin{array}{ll}
 \lambda_0 = &
@@ -60,182 +137,76 @@ GROWTH DEPENDENT & INDEPENDENT EFFECTS
 \\
 
 \lambda_1 = &
-\overbrace{\alpha_1 \times \exp{(-\beta_1 \times gr)}}^{\text{growth dependent}} 
+\overbrace{\alpha_1 \times \exp{(-\beta_1 \times gr)}}^{\text{growth dependent hazard}} 
 \\
 \\
 
 \lambda_2 = &
-\overbrace{\alpha_2 \times \exp{(-\beta_2 \times \log(wd))}}^{\text{wd dependent}} 
+\overbrace{\alpha_2 \times \exp{(-\beta_2 \times \log(wd))}}^{\text{wd dependent hazard}} 
 \\
 \\
-
-\lambda_3 = &
-\overbrace{\alpha_3 \times \exp{(-\beta_3 \times \log(wd) + -\beta_4 \times gr)}}^{\text{wd independent and dependent}} 
-\\
-\\
-
-SIZE DEPENDENCY
-
-\begin{equation}\label{eqn:wd_grmod_inter}
-\overbrace{\log(-\log(S(i,t)))}^{\text{Survival Probability}} =
-\overbrace{\log(\Delta{t})}^{\text{census interval}} + \log\left(\lambda_1 + \lambda_2 ... \lambda_n\right). 
-\end{equation}
-
-\begin{equation}\label{eqn:indhaz}\begin{array}{ll}
-\lambda_1 = &
-\overbrace{\alpha_0}^{\text{baseline/unexplained}} 
-\\
-\\
-
-\lambda_2 = &
-\overbrace{\alpha_1 \times \exp{(-\beta_1 \times \log(size))}}^{\text{negative effect of size}} 
-\\
-\\
-
-\lambda_3 = &
-\overbrace{\alpha_2 \times \exp{(\beta_2 \times \log(wd))}}^{\text{positive effect of size}} 
-\\
-\\
-\lambda_4 = &
-\overbrace{\alpha_3 \times \exp{(-\beta_3 \times \log(wd))}}^{\text{wd effect}} 
-\\
-\\
-\lambda_5 = &
-\overbrace{\alpha_4 \times \exp{(-\beta_4 \times \log(size) + -beta_5 \times \log(wd))}}^{\text{wd-size positive effect}} 
-\\
-\\
-\lambda_6 = &
-\overbrace{\alpha_5 \times \exp{(\beta_6 \times \log(size) + \beta_7 \times \log(wd))}}^{\text{wd-size negative effect}} 
 \end{array} \end{equation}
 
-**Things to consider:** 
-How to include interactive effects... and what are their meaning?
-- Is it reasonable to assume that growth a size dependent and independent hazards have different baseline hazards?
-- Preliminary analysis suggests that the alpha's are non identifiable when multiple hazards are included.
-- Do not assume a functional form (in this case we assume an negative exponential effect), but instead use some non-parametric approach to give us ideas of about the curves. - This is partly done using the K-M plots but are difficult to interpret as typically associated with categorical predictors, whereas we have continuous.
-
-###Example JAGS model with no random effects
+**Example JAGS competing risk model with no random effects**
 
 ```{r, eval=FALSE}
-library('dplyr')
-library('R2jags')
-#Loads BCI data and attaches trait data
-load('../data_BCI/output/bci.mainstem.Rdata')
-bci.traits <- read.csv('../data_BCI/rawdata/traits/BCI_traits_20101220.csv')
-names(bci.traits) <- tolower(names(bci.traits)) # lowers trait column names for merging
-bci.traits$sp <- tolower(bci.traits$sp) # lowers species code names for merging
-bci.mainstem <- merge(bci.mainstem,bci.traits[,c('sp','sg100c_avg')],by = 'sp') #only uses species trait data exists for.
-rm(bci.traits) # trait db no longer needed
+models <- c('dbh_gr','dbh_rgr','basal_gr', 'basal_rgr')
+nmodels <-length(models)
+output <- list()
+inits <- function() {
+              list(    
+              alpha0 = rlnorm(1,-3, 0.01),
+              alpha1 = rlnorm(1,-3, 0.01),
+              alpha2 = rlnorm(1,-3, 0.01),
+              beta1 = rlnorm(1,-0.5, 0.01),
+              beta2 = rlnorm(1,0, 0.01))
+              }
 
-#Subsets data to only include species with traits and has a status record.
-#Also removes couple of rows that have 10 yr census intervals.
-#Then adds a sp.id column
-bci.mainstem<- bci.mainstem %>%
-  filter(!is.na(census.interval) & !is.na(sg100c_avg) & !is.na(dead.next.census) & census.interval< 6) %>%
-  mutate(sp.id = as.numeric(factor(sp)))
-
-  #Preps data for model by centering and scaling predictors and time
-  data <- list(
-  n_obs = nrow(bci.mainstem),
-  #n_spp = length(unique(bci.mainstem$sp)),
-  spp = as.numeric(factor(bci.mainstem$sp), as.character(unique(bci.mainstem$sp))),
-  ln_cswd = scale(log(unique(bci.mainstem[c('sp', 'sg100c_avg')])[,'sg100c_avg']),center=FALSE)[,1]/2,
-  #dbh = scale(bci.mainstem$dbh)[,1]/2,
-  dbh_gr = scale(bci.mainstem$dbh.gr)[,1]/2,
-  #dbh_rgr = scale(bci.mainstem$dbh.rgr)[,1]/2,
-  #basal_area = scale(bci.mainstem$basal.area)[,1]/2,
-  #basal_gr = scale(bci.mainstem$basal.area.gr)[,1]/2,
-  #basal_rgr = scale(bci.mainstem$basal.area.rgr)[,1]/2,
-  census_length = bci.mainstem$census.interval, #logged for model
-  died = bci.mainstem$dead.next.census)
-
-#Actual model
-model <- function(x) {
-  for(it in 1:n_obs) {
-    
-    died[it] ~ dbern(p[it])
-    cloglog(p[it]) <- log(census_length[it]) + log(alpha0 + alpha1 * exp(-beta1 * ln_cswd[spp[it]] + alpha2 * exp(-beta2 * dbh_gr[it])))
-    }
+for (i in 1:nmodels) {
+  cat(sprintf('
+              model {
+              for(it in 1:n_obs) {
+              died[it] ~ dbern(p[it])
+              cloglog(p[it]) <- log(census_length[it]) + 
+              log(alpha0 + alpha1 * exp(-beta1 * log(wd[spp[it]])) + alpha2 * exp(-beta2 * %s[it]))
+              }
+              
+              #Priors
+              alpha0 ~ dlnorm(0, 0.01) 
+              alpha1 ~ dlnorm(0, 0.01) 
+              alpha2 ~ dlnorm(0, 0.01)
+              beta1 ~ dlnorm(0, 0.0001)
+              beta2 ~ dlnorm(0, 0.0001)
+              
+              }',models[i]),file=(tmp <- tempfile()))
   
-  #Priors
-  alpha0 ~ dlnorm(0, 0.0001) # Must be positive or large growth rates are undefined.
-  alpha1 ~ dlnorm(0, 0.0001) # Can be positive or negative (but theory would suggest positive)
-  alpha2 ~ dlnorm(0, 0.0001) # Has to be positive or small growth rates not defined
-  beta1 ~ dnorm(0, 0.0001) # Can be positive or negative
-  beta2 ~ dnorm(0, 0.0001)
-  
-  }
-mod3<-     jags.parallel(model.file = model,
-                        n.iter = 20000,
+  system.time(output[[models[i]]] <- 
+                      jags.parallel(
+                        model.file = tmp,
+                        n.iter = 30000,
                         data= names(data), 
                         envir=list2env(data),
-                        inits = NULL,
-                        parameters.to.save = c('alpha0','alpha1','alpha2','beta1','beta2'))
+                        inits = inits,
+                        parameters.to.save = c('alpha0','alpha1','alpha2','beta1','beta2')))
+  }
 ```
 
-#Potential Stan Model
-```{r, eval=FALSE}
-library(parallel)
-library(rstan)
-library(dplyr)
-#Loads BCI data and attaches trait data
-load('../data_BCI/output/bci.mainstem.Rdata')
-bci.traits <- read.csv('../data_BCI/rawdata/traits/BCI_traits_20101220.csv')
-names(bci.traits) <- tolower(names(bci.traits)) # lowers trait column names for merging
-bci.traits$sp <- tolower(bci.traits$sp) # lowers species code names for merging
-bci.mainstem <- merge(bci.mainstem,bci.traits[,c('sp','sg100c_avg')],by = 'sp') #only uses species trait data exists for.
-rm(bci.traits)
+**Preliminary results of competing risk models**
 
-#Subsets data to only include species with traits and has a status record.
-#Also removes couple of rows that have 10 yr census intervals.
-#Then adds a sp.id column
-bci.mainstem<- bci.mainstem %>%
-  filter(!is.na(census.interval) & !is.na(sg100c_avg) & !is.na(dead.next.census) & census.interval< 6) %>%
-  mutate(sp.id = as.numeric(factor(sp)))
-
-data <- list(
-  n_obs = nrow(bci.mainstem),
-  #n_spp = length(unique(bci.mainstem$sp)),
-  #pp = as.numeric(factor(bci.mainstem$sp), as.character(unique(bci.mainstem$sp))),
-  wd = scale(log(bci.mainstem$sg100c_avg*1000),center = FALSE)[,1]/2,
-  #dbh = scale(bci.mainstem$dbh)[,1]/2,
-  dbh_gr = scale(bci.mainstem$dbh.gr, center = FALSE)[,1]/2,
-  #dbh_rgr = bci.mainstem$dbh.rgr,
-  #basal_area = scale(bci.mainstem$basal.area)[,1]/2,
-  #basal_gr = scale(bci.mainstem$basal.area.gr,center = FALSE)[,1]/2,
-  #basal_rgr = scale(bci.mainstem$basal.area.rgr)[,1]/2,
-  census_length = bci.mainstem$census.interval, #logged for model
-  died = bci.mainstem$dead.next.census)
-cat('
-    data {
-    int<lower=0> n_obs;
-    int<lower=0, upper=1> died[n_obs];
-    vector[n_obs] census_length;
-    vector[n_obs] wd;
-    vector[n_obs] dbh_gr;
-    
-    }
-    parameters {
-    real<lower=0> alpha0;
-    real<lower=0> alpha1;
-    real<lower=0> alpha2;
-    real<lower=0> beta1;
-    real<lower=0> beta2;
-    } 
-    model {
-    for (it in 1:n_obs)
-    died[it] ~ bernoulli(inv_cloglog(log(census_length[it]) + 
-    log(alpha0 + alpha1 * exp(-beta1 * wd[it]) + alpha2 * exp(-beta2 * dbh_gr[it]))));
-    }
-    ', file=(StanModel <- tempfile()))
-  				
-system.time(BCImodel <- sflist2stanfit(mclapply(1:2,mc.cores=2,
-		function(i) stan(file=StanModel, inter=4000, data=data,seed=123, chains=1, chain_id=i, refresh=-1))))
-```
+TO BE ADDED
 
 
+**Further extensions still to do**
+- Add a hazard effect of size? What would the shape of this be? Preliminary analysis of mortality vs dbh suggests that most species exhibit a U-shape mortality curve.
+- Validate that a negative exponential is a reasonable assumption for the effects of growth and wood density. This could be done via partial dependency plots and non-parametric approaches.
+- Cross validate models
 
-##PROJECT 2
+**Size mortality relationships**
+
+TO BE ADDED
+
+
+### PROJECT 2: LITERATURE REVIEW. Examine which plant traits influence mortality rates under common hazards (e.g. wind throw, drought, fire, disease, herbivory) experienced by vegetation.
 ### Hazard Hypotheses
 1. The most common hazards that can result in plant death are all size dependent and include:
 **Competition**: This hazard will most strongly affect smaller individuals because they are more at risk of being shaded compared to larger plants. Traits affecting the likelihood of competition resulting in death will be correlated with shade tolerance such as *LMA* and *wood density*.
@@ -245,6 +216,11 @@ system.time(BCImodel <- sflist2stanfit(mclapply(1:2,mc.cores=2,
 **Fire**: This hazard is likely to be size dependent with small individuals more suspectible to fire compared to larger plants. This is because for small/juvenile plants will are less likely to have developed fire-resistant traits. They are also lower in stature making their leaves exposed to both low severity and high severity fires. Traits affecting the likelihood of fire resulting in death will be correlated with fire-resistance (e.g. bark thickness) and persistance (e.g. resprouting)
 
 **Drought/Extreme heat/ Extreme cold**: These hazard is likely to affect smaller plants moreso than larger plants.
+
+
+
+### PROJECT 3: Process-based model - coming from first principles
+Build a process-based mortality model that allows trait effects to interact with the type of hazard as well as growth and size. 
 
 ###Factors influencing small individuals
 ```{r, echo=FALSE}
@@ -295,33 +271,6 @@ axis(1, at=c(0,2), labels=c('Small', 'Large'))
 legend(0.7,0.2, legend = c('low severity', 'high severity'), col=c('black','red'), lty=c(1,2), bty = 'n', lwd=2, cex=2,)
 ```
 
-
-
-#Random notes
-
-### MULTI-LEVEL NOTES:
-
-####From Hedeker et al 2014
-
-Nice summary of why multi-level models are essential for accounting for non-independence in nested datasets.
-
-"An important question is then to determine the degree to which covariates are related to substance use initiation. In these studies it is often of interest to model the student outcomes while controlling for the nesting of students in classrooms and/or schools. In analysis of such grouped-time initiation (or survival) data, use of grouped-time regression models that assume independence of observations [Thompson, 1977; Prentice & Gloeckler, 1978; Allison, 1982] is therefore problematic because of this clustering of students. More generally, this same issue arises for other types of clustered datasets in which subjects are observed nested within various types of clusters (e.g., hospitals, firms, clinics, counties), and thus cannot be assumed to be independent. To account for the data clustering, multilevel models (also called hierarchical linear or mixed models) provide a useful approach for simultaneously estimating the parameters of the regression model and the variance components that account for the data clustering [Goldstein, 1995; Raudenbush & Bryk, 2002]."
-
-## TWO REVIEW PAPERS TO READ Pickles et al 1995 & Hougaard 1995 ###
-
-Lee et al 1992 has developed continuous0time survival models. However, the application of these models to grouped or discrete-time survival data is generally not recommended because of the large number of ties that result.
-
-Instead, models specifically developed for grouped or discrete-time survival data have been proposed.
-
-Both Han & Hausman (1990) and Scheike & Jensen (1997) have described proportional hazards models incorporating a log-gamma distribution specification of heterogeneity. Furthermore, Ten Have (1996) developed a discrete-time proportional hazards survival model incorporating a log-gamma random effects distribution, additionally allowing for ordinal survival and failure categories. Ten Have & Uttal (1994) used Gibbs samplng to fit a continuation ratio logit model with multiple normally distributed random effects.
-
-## IMPORTANT NOTE ON link function
-
-Doksum & Gasko (1990) note, that large amounts of high quality data are often necessary for link function selections to be relevant. McCullagh (1980) notes that the link function choice should be based primarily on ease of interpretation.
-
-## Multilevel model that treats each individual's survival time as a set of dichotomous observations indicating whether or not an individual failed in each time unti until a person either experiences the event or is censored. This type of model is extensively described in Singer & Willett (2003) & is illustrated in Reardon et al (2002).
-
-This approach is particularly useful for handling time-dependent covariates and fitting non-proportional hazards models because the covariate values can change across each individual's Tij timepoints.
 
 
 # REFERENCES
