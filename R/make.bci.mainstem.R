@@ -30,7 +30,7 @@ BCI_download_species_table <- function(dest) {
   save(BCI_nomenclature, file=dest)
 }
 
-BCI_calculate_individual_growth <- function(BCI_50haplot, BCI_nomenclature) {
+BCI_calculate_individual_growth <- function(BCI_data=BCI_50haplot, spp_table=BCI_nomenclature) {
   require(dplyr)
   #Look up family
   lookup_family <- function(tag, nomen){
@@ -91,14 +91,17 @@ BCI_calculate_individual_growth <- function(BCI_50haplot, BCI_nomenclature) {
   
   data <- BCI_50haplot %>%
     arrange(sp, treeid, exactdate) %>%
-    select(sp, treeid, nostems, exactdate, dfstatus, pom, dbh) %>%
-    mutate(species = lookup_latin(sp, BCI_nomenclature),
-           family = lookup_family(sp, BCI_nomenclature),
-           #Converts dbh from mm to m
-           dbh=dbh/1000) %>%
+    select(sp, treeid, nostems, censusid, exactdate, dfstatus, pom, dbh) %>%
+    mutate(
+      #census id for period 7 was entered incorrectly
+      censusid = ifelse(censusid==171, 7,censusid), 
+      species = lookup_latin(sp, BCI_nomenclature),
+      family = lookup_family(sp, BCI_nomenclature),
+      #Converts dbh from mm to m
+      dbh=dbh/1000) %>%
     # Remove stems from earlier census, measured with course resolution
     # First measurement in 1990 ='1990-02-06'
-    filter(exactdate >= "1990-02-06") %>%
+    filter(censusid >= 3) %>%
     # Remove families that don't exhibit dbh growth e.g. palms
     filter(!family %in% c('Arecaceae', 'Cyatheaceae', 'Dicksoniaceae', 'Metaxyaceae', 
                           'Cibotiaceae', 'Loxomataceae', 'Culcitaceae', 'Plagiogyriaceae', 
@@ -134,7 +137,7 @@ BCI_calculate_individual_growth <- function(BCI_50haplot, BCI_nomenclature) {
     # Only keep alive stems
     filter(dfstatus=="alive") %>%
     filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt)) %>%
-    select(sp,treeid,exactdate,julian,census_interval,pom,nostems,
+    select(sp,treeid,censusid,exactdate,julian,census_interval,pom,nostems,
            dbh,dbh_dt,dbh_dt_rel,basal_area,basal_area_dt,
            basal_area_dt_rel,dead_next_census)
 }
