@@ -30,73 +30,73 @@ BCI_download_species_table <- function(dest) {
   save(BCI_nomenclature, file=dest)
 }
 
+#Look up family
+lookup_family <- function(tag, spp_table){
+  i <- match(tag, tolower(spp_table[['sp']]))
+  spp_table$Family[i]
+}
+
+#Look up species code
+lookup_latin <- function(tag, spp_table){
+  spp_table$latin <- paste(spp_table$Genus, spp_table$Species)
+  i <- match(tag, tolower(spp_table[['sp']]))
+  spp_table[['latin']][i]
+}
+
+# Identifies individuals that return from the dead or are supposably refound
+# i.e. Individuals given dbh=NA and then later given numeric value
+# Note this function must be used prior to subsetting only observations with pom=1.3
+is_zombie <- function(dbh) {
+  any(diff(is.na(dbh)) == -1)
+}
+
+#Calculates growth rate as a function of past size
+calculate_growth_rate <- function(x, t, f=function(y) y){
+  dt = diff(t)/365.25
+  if(any(dt < 0, na.rm=TRUE)){
+    stop("time must be sorted")
+  }
+  c(NA, diff(f(x))/dt)
+}
+
+# Function to identify bad data. Adapted from function in CTFS R package
+CTFS_sanity_check <- function(dbh, dbh_increment, dbasal_diam_dt) {
+  
+  slope <- 0.006214
+  intercept <- 0.9036 /1000   #convert from mm to m
+  error_limit <- 4
+  max_growth <- 75 / 1000     #convert from mm to m
+  
+  accept <- rep(TRUE, length(dbh))
+  # Remove records based on max growth rate
+  accept[dbasal_diam_dt > max_growth] <- FALSE
+  # Remove records based on min growth rate, estimated from allowbale error
+  allowable.decrease <- -error_limit * (slope * dbh + intercept)
+  accept[dbh_increment < allowable.decrease] <- FALSE
+  accept
+}
+
+mortality_in_next_census <- function(status){
+  if(length(status) > 1){
+    i <- 1:(length(status)-1)} # if more than 1 obs
+  else{
+    i <- 0
+  }
+  as.numeric(c(status[i] == 'alive' & status[i+1] == 'dead', NA))
+}
+
 BCI_calculate_individual_growth <- function(BCI_data=BCI_50haplot, spp_table=BCI_nomenclature) {
   require(dplyr)
-  #Look up family
-  lookup_family <- function(tag, nomen){
-    i <- match(tag, tolower(nomen[['sp']]))
-    nomen$Family[i]
-  }
+  names(BCI_data) <- tolower(names(BCI_data)) # lower case for all column names
   
-  #Look up species code
-  lookup_latin <- function(tag, nomen){
-    nomen$latin <- paste(nomen$Genus, nomen$Species)
-    i <- match(tag, tolower(nomen[['sp']]))
-    nomen[['latin']][i]
-  }
-  
-  # Identifies individuals that return from the dead or are supposably refound
-  # i.e. Individuals given dbh=NA and then later given numeric value
-  # Note this function must be used prior to subsetting only observations with pom=1.3
-  is_zombie <- function(dbh) {
-    any(diff(is.na(dbh)) == -1)
-  }
-  
-  #Calculates growth rate as a function of past size
-  calculate_growth_rate <- function(x, t, f=function(y) y){
-    dt = diff(t)/365.25
-    if(any(dt < 0, na.rm=TRUE)){
-      stop("time must be sorted")
-    }
-    c(NA, diff(f(x))/dt)
-  }
-  
-  # Function to identify bad data. Adapted from function in CTFS R package
-  CTFS_sanity_check <- function(dbh, dbh_increment, dbasal_diam_dt) {
-    
-    slope <- 0.006214
-    intercept <- 0.9036 /1000   #convert from mm to m
-    error_limit <- 4
-    max_growth <- 75 / 1000     #convert from mm to m
-    
-    accept <- rep(TRUE, length(dbh))
-    # Remove records based on max growth rate
-    accept[dbasal_diam_dt > max_growth] <- FALSE
-    # Remove records based on min growth rate, estimated from allowbale error
-    allowable.decrease <- -error_limit * (slope * dbh + intercept)
-    accept[dbh_increment < allowable.decrease] <- FALSE
-    accept
-  }
-  
-  mortality_in_next_census <- function(status){
-    if(length(status) > 1){
-      i <- 1:(length(status)-1)} # if more than 1 obs
-    else{
-      i <- 0
-    }
-    as.numeric(c(status[i] == 'alive' & status[i+1] == 'dead', NA))
-  }
-  
-  names(BCI_50haplot) <- tolower(names(BCI_50haplot)) # lower case for all column names
-  
-  data <- BCI_50haplot %>%
+  data <- BCI_data %>%
     arrange(sp, treeid, exactdate) %>%
     select(sp, treeid, nostems, censusid, exactdate, dfstatus, pom, dbh) %>%
     mutate(
       #census id for period 7 was entered incorrectly
       censusid = ifelse(censusid==171, 7,censusid), 
-      species = lookup_latin(sp, BCI_nomenclature),
-      family = lookup_family(sp, BCI_nomenclature),
+      species = lookup_latin(sp, spp_table),
+      family = lookup_family(sp, spp_table),
       #Converts dbh from mm to m
       dbh=dbh/1000) %>%
     # Remove stems from earlier census, measured with course resolution
