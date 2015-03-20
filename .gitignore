@@ -1,5 +1,7 @@
 .maker
 output
+data
+Junk
 figure*
 .Rproj.user
 *.Rproj
