@@ -17,7 +17,6 @@ stan_data <- list(
   n_spp = length(unique(bci.mainstem$sp)),
   spp = as.numeric(factor(bci.mainstem$sp), as.character(unique(bci.mainstem$sp))),
   rho =  unique(bci.mainstem$sg100c_avg)*1000, # converts wood density to kg/m2
-  dbh = bci.mainstem$dbh,
   dbh_dt = bci.mainstem$dbh_dt + abs(min(bci.mainstem$dbh_dt)), # makes most negative growth rate zero.
   census_length = bci.mainstem$census_interval,
   y = as.integer(bci.mainstem$dead_next_census))
@@ -29,16 +28,13 @@ StanModel <- '
     int<lower=0> n_spp;
     int<lower=1> spp[n_obs];
     vector[n_obs] census_length;
-    vector[n_obs] dbh;
     vector[n_obs] dbh_dt;
     vector[n_spp] rho;
   }
 transformed data { // centers and standardizes predictors
   vector[n_spp] cs_lnrho;
-  vector[n_obs] cs_lndbh;
   vector[n_obs] s_dbh_dt;
   cs_lnrho <- (log(rho) - mean(log(rho)))/ (2*sd(log(rho)));
-  cs_lndbh <- (log(dbh) - mean(log(dbh)))/ (2*sd(log(dbh)));
   s_dbh_dt <- dbh_dt/ (2*sd(dbh_dt)); 
 }
 parameters { // assumes uniform priors on all parameters
@@ -46,11 +42,8 @@ parameters { // assumes uniform priors on all parameters
   real b0_raw[n_spp];
   real c0_raw[n_spp];
   real a1; // effect of rho on a_log
-  real a2; // effect of dbh on a_log
   real b1; // effect of rho on b_log
-  real b2; // effect of dbh on b_log
   real c1; // effect of rho on ho_log
-  real c2; // effect of dbh on ho_log
   real a0_mu; // a_log effect for average species
   real<lower=0> a0_sigma; // a_log effect species variation
   real b0_mu;  // b_log effect for average species
@@ -75,9 +68,9 @@ transformed parameters {
   }
   
   for (i in 1:n_obs) { // Calculate a_log & b_log for each observation
-    a_log[i] <- a0[spp[i]] + a1 * cs_lnrho[spp[i]] + a2 * cs_lndbh[i];
-    b_log[i] <- b0[spp[i]] + b1 * cs_lnrho[spp[i]] + b2 * cs_lndbh[i];
-    ho_log[i] <- c0[spp[i]] + c1 * cs_lnrho[spp[i]] + c2 * cs_lndbh[i];
+    a_log[i] <- a0[spp[i]] + a1 * cs_lnrho[spp[i]];
+    b_log[i] <- b0[spp[i]] + b1 * cs_lnrho[spp[i]];
+    ho_log[i] <- c0[spp[i]] + c1 * cs_lnrho[spp[i]];
     
     // Estimate Pr(Dying)
     p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[i] - exp(b_log[i]) * s_dbh_dt[i]) + exp(ho_log[i]))));
@@ -97,5 +90,5 @@ model {
 
 stan_model <- sflist2stanfit(mclapply(1:3,mc.cores=3,
                                       function(i) stan(model_code=StanModel, data=stan_data, 
-                                                       pars = c('a0_mu','b0_mu','c0_mu','a0_sigma','b0_sigma','c0_sigma','a1','a2','b1','b2','c1','c2'),
+                                                       pars = c('a0_mu','b0_mu','c0_mu','a0_sigma','b0_sigma','c0_sigma','a1','b1','c1'),
                                                        iter = 2000, seed=123, chains=1, chain_id=i, refresh=-1)))
