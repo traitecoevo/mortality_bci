@@ -1,8 +1,13 @@
 library(rstan)
 library(parallel)
 source('R/make.bci.mainstem.R')
-#BCI_download_50ha_plot_full('data/BCI_50haplot.rda')
-#BCI_download_species_table('data/BCI_nomenclature.rda')
+filename <- 'data/BCI_50haplot.rda'
+if(!file.exists(filename))
+  BCI_download_50ha_plot_full(filename)
+filename <- 'data/BCI_nomenclature.rda'
+if(!file.exists(filename))
+  BCI_download_species_table('data/BCI_nomenclature.rda')
+
 load('data/BCI_50haplot.rda')
 load('data/BCI_nomenclature.rda')
 bci.traits <- read.csv('data/BCI_traits_20101220.csv')
