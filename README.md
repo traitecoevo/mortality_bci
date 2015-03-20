@@ -7,8 +7,8 @@ Understanding who lives or dies, and why, is critical to accurately forecasting 
 
 
 ###Dataset
-This uses data from BCI
+This project data from BCI
 
 ###Modelling approach
-Bayesian, using rstan
+Bayesian; using rstan
 
