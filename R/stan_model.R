@@ -42,50 +42,60 @@ transformed data { // centers and standardizes predictors
   s_dbh_dt <- dbh_dt/ (2*sd(dbh_dt)); 
 }
 parameters { // assumes uniform priors on all parameters
-  real<lower=0> ho; // growth independent hazard
   real a0_raw[n_spp];
   real b0_raw[n_spp];
+  real c0_raw[n_spp];
   real a1; // effect of rho on a_log
   real a2; // effect of dbh on a_log
   real b1; // effect of rho on b_log
   real b2; // effect of dbh on b_log
+  real c1; // effect of rho on ho_log
+  real c2; // effect of dbh on ho_log
   real a0_mu; // a_log effect for average species
   real<lower=0> a0_sigma; // a_log effect species variation
   real b0_mu;  // b_log effect for average species
   real<lower=0> b0_sigma; // b_log effect species variation
+  real c0_mu;  // ho_log effect for average species
+  real<lower=0> c0_sigma; // ho_log effect species variation
 }  
 
 transformed parameters {
   real<lower=0, upper=1> p[n_obs];
   real a_log[n_obs];
   real b_log[n_obs];
+  real ho_log[n_obs];
   real a0[n_spp];
   real b0[n_spp];
+  real c0[n_spp];
   
   for (s in 1:n_spp){ # Add species random effect
     a0[s] <- a0_raw[s] * a0_sigma + a0_mu;
     b0[s] <- b0_raw[s] * b0_sigma + b0_mu;
+    c0[s] <- c0_raw[s] * c0_sigma + c0_mu;
   }
   
   for (i in 1:n_obs) { // Calculate a_log & b_log for each observation
     a_log[i] <- a0[spp[i]] + a1 * cs_lnrho[spp[i]] + a2 * cs_lndbh[i];
     b_log[i] <- b0[spp[i]] + b1 * cs_lnrho[spp[i]] + b2 * cs_lndbh[i];
+    ho_log[i] <- c0[spp[i]] + c1 * cs_lnrho[spp[i]] + c2 * cs_lndbh[i];
     
     // Estimate Pr(Dying)
-    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[i] - exp(b_log[i]) * s_dbh_dt[i]) + ho)));
+    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[i] - exp(b_log[i]) * s_dbh_dt[i]) + exp(ho_log[i]))));
   }
 }
 
 model {
   for (s in 1:n_spp) { // non-centered parameterization Papaspiliopoulos et al. (2007).
-    a0_raw[s] ~ normal(0,1); //implies normal(a0_mu, a0_sigma);
+    a0_raw[s] ~ normal(0,1); // implies normal(a0_mu, a0_sigma);
     b0_raw[s] ~ normal(0,1); // implies normal(b0_mu, b0_sigma); 
+    c0_raw[s] ~ normal(0,1); // implies normal(c0_mu, c0_sigma); 
   }
   // Sample Pr(Dying) from bernoulli
   y ~ bernoulli(p);
 }
 '
+
 stan_model <- sflist2stanfit(mclapply(1:3,mc.cores=3,
                                       function(i) stan(model_code=StanModel, data=stan_data, 
-                                                       pars = c('a0_mu','b0_mu','a0_sigma','b0_sigma','a1','a2','b1','b2', 'ho'),
+                                                       pars = c('a0_mu','b0_mu','c0_mu','a0_sigma','b0_sigma','c0_sigma','a1','a2','b1','b2','c1','c2'),
                                                        iter = 2000, seed=123, chains=1, chain_id=i, refresh=-1)))
