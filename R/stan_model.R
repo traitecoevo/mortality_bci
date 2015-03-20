@@ -61,26 +61,24 @@ parameters { // assumes uniform priors on all parameters
 
 transformed parameters {
   real<lower=0, upper=1> p[n_obs];
-  real a_log[n_obs];
-  real b_log[n_obs];
-  real ho_log[n_obs];
+  real a_log[n_spp];
+  real b_log[n_spp];
+  real ho_log[n_spp];
   real a0[n_spp];
   real b0[n_spp];
   real c0[n_spp];
   
-  for (s in 1:n_spp){ # Add species random effect
+  for (s in 1:n_spp){ # Add species random effect & effects of rho
     a0[s] <- a0_raw[s] * a0_sigma + a0_mu;
     b0[s] <- b0_raw[s] * b0_sigma + b0_mu;
     c0[s] <- c0_raw[s] * c0_sigma + c0_mu;
+    a_log[s] <- a0[s] + a1 * cs_lnrho[s];
+    b_log[s] <- b0[s] + b1 * cs_lnrho[s];
+    ho_log[s] <- c0[s] + c1 * cs_lnrho[s];
   }
   
-  for (i in 1:n_obs) { // Calculate a_log & b_log for each observation
-    a_log[i] <- a0[spp[i]] + a1 * cs_lnrho[spp[i]];
-    b_log[i] <- b0[spp[i]] + b1 * cs_lnrho[spp[i]];
-    ho_log[i] <- c0[spp[i]] + c1 * cs_lnrho[spp[i]];
-    
-    // Estimate Pr(Dying)
-    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[i] - exp(b_log[i]) * s_dbh_dt[i]) + exp(ho_log[i]))));
+  for (i in 1:n_obs) { // Estimate p
+    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * s_dbh_dt[i]) + exp(ho_log[spp[i]]))));
   }
 }
 
@@ -98,4 +96,4 @@ model {
 stan_model <- sflist2stanfit(mclapply(1:3,mc.cores=3,
                                       function(i) stan(model_code=StanModel, data=stan_data, 
                                                        pars = c('a0_mu','b0_mu','c0_mu','a0_sigma','b0_sigma','c0_sigma','a1','b1','c1'),
-                                                       iter = 2000, seed=123, chains=1, chain_id=i, refresh=-1)))
+                                                       iter = 1000, seed=123, chains=1, chain_id=i, refresh=-1)))
