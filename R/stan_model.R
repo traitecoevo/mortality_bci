@@ -20,11 +20,10 @@ bci.mainstem <- subset(bci.mainstem, !is.na(sg100c_avg) & !is.na(dbh_dt) & !is.n
 
 stan_data <- list(
   n_obs = nrow(bci.mainstem),
-  n_ind = length(unique(bci.mainstem$treeid)),
   n_spp = length(unique(bci.mainstem$sp)),
   spp = as.numeric(factor(bci.mainstem$sp), as.character(unique(bci.mainstem$sp))),
   rho =  unique(bci.mainstem$sg100c_avg)*1000, # converts wood density to kg/m2
-  dbh_dt = bci.mainstem$dbh_dt + abs(min(bci.mainstem$dbh_dt)), # makes most negative growth rate zero.
+  dbh_dt = bci.mainstem$dbh_dt,
   census_length = bci.mainstem$census_interval,
   y = as.integer(bci.mainstem$dead_next_census))
 
