@@ -1,126 +1,159 @@
-# Simulates coefficient values based on its mean and standard deviation
-sim.coeff <- function(jagsfit, params) {
-  if(!require(jagstools)) {
-    require(devtools)
-    install_github(repo='jagstools', username='johnbaums')
-  }
-  as.data.frame(apply(jagsresults(jagsfit, params), 1, function(x) rnorm(1000, x['mean'], x['sd'])))}
+# Coefficient Plot
 
-# Provides the mean, standard deviation, 95%,80% and 50% quantiles of desired covariates.
-data.summary <- function(x, covariates){
-  as.data.frame(x)
-  if(ncol(x) ==1) {
-    as.data.frame(apply(x,2, function(x) c(mean= mean(x), std= sd(x),
-                                           quantile(x,c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9,0.975)))))}
-  else {
-    df <- x[, c(covariates)]
-    as.data.frame(apply(df,2, function(x) c(mean= mean(x), std= sd(x),
-                                            quantile(x,c(0.025, 0.1, 0.25, 0.5, 0.75, 0.9,0.975)))))}}
-
-# Produces a JAGS coefficient plot with credible intervals
-coeff.plot <- function(jagsfit, params, labels=NULL, conf=c(95, 50), xlab='Effect size') {
-
-  if(!require(jagstools)) {
-    require(devtools)
-    install_github(repo='jagstools', username='johnbaums')
-  }
-
-  conf <- unique(as.numeric(conf))
-  if (!all(conf %in% c(95, 50)))
-    stop('conf must be a vector of one or more of 95 and 50.')
-  dat <- jagsresults(jagsfit, params)
-  dat <- dat[match(params, row.names(dat)), ]
+coeff_plot <- function(stanfit, params, labels=NULL,quantiles =c(0.025,0.975,0.1,0.9), xlab='effect size', transform=NULL) {
+  dat <- summary(stan_model, pars=params, probs=quantiles)$summary
+  if (!is.null(transform))
+    dat <-transform(dat)
+  
   if (is.null(labels)) labels <- row.names(dat)
   opar <- par(mai=c(1, max(strwidth(labels, 'inches')) + 0.3, 0.5, 0.5))
   on.exit(par(opar))
-  plot(dat[, '50%'], seq_len(nrow(dat)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
-       xlim=range(pretty(range(dat[, c(paste0((100 - max(conf))/2, '%'),
-                                       paste0(100 - (100 - max(conf))/2, '%'))]))),
-
+  plot(dat[,'mean'], seq_len(nrow(dat)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
+       xlim=range(pretty(range(dat[, c(min(paste0((quantiles*100), '%')),
+                                       paste0(max(quantiles*100), '%'))]))),
+       
        panel.first={
          abline(v=0, lty=3)
-         if(length(conf) == 1) {
-           segments(dat[, paste0((100 - conf)/2, '%')], seq_len(nrow(dat)),
-                    x1=dat[, paste0(100 - (100 - conf)/2, '%')], lend=1)
-         } else {
-           segments(dat[, '2.5%'], seq_len(nrow(dat)), x1=dat[, '97.5%'], lwd=1, lend=1)
-           segments(dat[, '25%'], seq_len(nrow(dat)), x1=dat[, '75%'], lwd=3, lend=1)
+         if(length(quantiles) == 2) {
+           segments(dat[, paste0(quantiles*100, '%')], seq_len(nrow(dat)),
+                    x1=dat[, paste0(quantiles*100, '%')], lend=1)
+         } else if(length(quantiles) == 4) {
+           segments(dat[, paste0(quantiles[1]*100, '%')], seq_len(nrow(dat)), x1=dat[, paste0(quantiles[2]*100, '%')], lwd=1, lend=1)
+           segments(dat[, paste0(quantiles[3]*100, '%')], seq_len(nrow(dat)), x1=dat[, paste0(quantiles[4]*100, '%')], lwd=3, lend=1)
+         }
+         else {
+           stop('Only two credible intervals can be plotted at any one time')
          }
        })
   axis(2, at=seq_len(nrow(dat)), labels=labels, las=1)
-  box()
+  
   mtext(xlab, side = 1, line=2.5)
 }
 
+# Model simulation
+sim_mortality <- function(model_fit, model_data, cov_name='rho', 
+                          wd_values=c(200,800), growth_name='dbh_dt', 
+                          growth_range=NULL, mortality_curve = FALSE){
+  model_fit <- extract(model_fit)
+  
+  new_cs_lnwd <- (log(wd_values) - mean(log(model_data[[cov_name]])))/ (2*sd(log(model_data[[cov_name]])))
+  
+  if (is.null(growth_range)){
+    new_s_dbh_dt <- seq(min(model_data[[growth_name]]),max(model_data[[growth_name]]), by=0.001)/ (2*sd(model_data[[growth_name]]))
+  }
+  else {
+    new_s_dbh_dt <- seq(min(growth_range), max(growth_range), by=0.00001)/ (2*sd(model_data[[growth_name]]))}
+  
+  preds <- sapply(new_cs_lnwd, function(wd) {
+    with(model_fit, 
+         mapply(function(a0_mu, b0_mu, c0_mu, a1, b1, c1) {
+           a_log = a0_mu + a1 * wd
+           b_log = b0_mu + b1 * wd
+           ho_log = c0_mu + c1 * wd
+           if (mortality_curve ==TRUE){
+             preds <-1 - exp(-(exp(a_log - exp(b_log) * new_s_dbh_dt) + exp(ho_log)))
+           }
+           else {
+             preds <- exp(a_log - exp(b_log) * new_s_dbh_dt) + exp(ho_log)
+           }
+         }, a0_mu, b0_mu, c0_mu, a1, b1, c1))}, simplify = 'array')
+  output <- list(mn = apply(preds,c(1,3), mean), 
+                 l95 = apply(preds, c(1,3), quantile, 0.025), 
+                 u95 =  apply(preds, c(1,3), quantile, 0.975), 
+                 new_s_dbh_dt = new_s_dbh_dt)
+  return(output)
+}
+
+
+# Plot hazard and mortality curves
+plot_mortality <- function(model_fit, model_data, cov_name='rho', wd_values=c(200,800), 
+                           growth_name='dbh_dt', growth_range=NULL, 
+                           mortality_curve = FALSE, xaxis_on=TRUE,legend=TRUE, haz_lim=NULL) {
+  
+  output <- sim_mortality(model_fit = model_fit, model_data = model_data, cov_name= cov_name, wd_values=wd_values, growth_name=growth_name, growth_range=growth_range, mortality_curve = mortality_curve)
+  
+  if (mortality_curve == TRUE){
+    plot(mn[,1]~ new_s_dbh_dt, type='n', data=output, ylim=c(0,1),
+         xaxt='n', ylab='Mortality probability/year', xlab='DBH growth (m)')
+    
+    polygon(c(output$new_s_dbh_dt, rev(output$new_s_dbh_dt)), 
+            c(output$l95[,1], rev(output$u95[,1])), 
+            col=rgb(1,0,0,0.5), border=NA)
+    
+    lines(mn[,1]~new_s_dbh_dt, type='l', lwd=2, data=output, col='darkred')
+    
+    polygon(c(output$new_s_dbh_dt, rev(output$new_s_dbh_dt)), 
+            c(output$l95[,2], rev(output$u95[,2])), 
+            col=rgb(0,0,1,0.5), border=NA)
+    
+    lines(mn[,2]~new_s_dbh_dt, type='l', lwd=2, data=output, lty=2, col='blue')
+  }
+  
+  else {
+    if (is.null(haz_lim)) {
+      haz_lim <- range(pretty(output$u95))
+    }
+    plot(mn[,1]~ new_s_dbh_dt, type='n', data=output, ylim=haz_lim,
+         xaxt='n', ylab='Instantaneous hazard rate', xlab='DBH growth (m)')
+    
+    polygon(c(output$new_s_dbh_dt, rev(output$new_s_dbh_dt)),
+            c(output$l95[,1], rev(output$u95[,1])), 
+            col=rgb(1,0,0,0.5), border=NA)
+    
+    lines(mn[,1]~new_s_dbh_dt, type='l', lwd=2, data=output, col='darkred')
+    
+    polygon(c(output$new_s_dbh_dt, rev(output$new_s_dbh_dt)), 
+            c(output$l95[,2], rev(output$u95[,2])), 
+            col=rgb(0,0,1,0.5), border=NA)
+    
+    lines(mn[,2]~new_s_dbh_dt, type='l', lwd=2, data=output, lty=2, col='blue')
+  }
+  if(legend == TRUE){
+    legend('topright', 
+           legend = c(paste(cov_name, '=', wd_values[1]), (paste(cov_name, '=', wd_values[2]))), 
+           bty = 'n', col=c('darkred', 'blue'), lty=c(1,2), lwd=2)
+  }
+  if(xaxis_on==TRUE){
+    axis(1,at = pretty(output$new_s_dbh_dt), 
+         label= round(pretty(output$new_s_dbh_dt)*(2 * sd(model_data$dbh_dt)),3))
+  }
+  else
+    axis(1,at = pretty(output$new_s_dbh_dt), label= NULL)
+}
+
+
+plot_3d(model_fit = stan_model, model_data = stan_data, cov_name = 'rho', wd_values = seq(200,800, by=10), theta=145, phi=20,mortality_curve = TRUE)
 
 #3-dimensional plot
-
-plot.3d <- function(jagsfit, x, xmean, xstd, y, ymean, ystd, xlab='x', ylab='y', zlab='z', theta=110, phi=20) {
-  require(VGAM)
-
-  z <- outer(x,y,function(x,y) cloglog(jagsfit$BUGSoutput$mean$GM +
-                                         jagsfit$BUGSoutput$mean$b.1 * ((x - xmean) / (2 * xstd))
-                                       + jagsfit$BUGSoutput$mean$b.2 * ((y - ymean) / (2 * ystd))
-                                       + jagsfit$BUGSoutput$mean$b.2 * (((x - xmean)/ (2 * xstd)) * ((y - ymean) / (2 * ystd))), inverse=T))
-
-  nrz <- nrow(z)
-  ncz <- ncol(z)
+plot_3d <- function(model_fit, model_data, cov_name='rho', wd_values=seq(200:800, by=5), 
+                    growth_name='dbh_dt', growth_range=NULL, 
+                    mortality_curve = FALSE, legend=TRUE, haz_lim=NULL, theta=110, phi=20,
+                    ticktype='detailed') {
+  
+  
+  output <- sim_mortality(model_fit = model_fit, model_data = model_data, cov_name= cov_name, 
+                          wd_values=wd_values, growth_name=growth_name, growth_range=growth_range, 
+                          mortality_curve = mortality_curve)
+  
+  nrz <- nrow(output$mn)
+  ncz <- ncol(output$mn)
   jet.colors <- colorRampPalette(c('blue','yellow','orange', 'red'))
   # Generate the desired number of colors from this palette
-  nbcol <- 1000
+  nbcol <- 10000
   color <- jet.colors(nbcol)
   # Compute the z-value at the facet centres
-  zfacet <- z[-1, -1] + z[-1, -ncz] + z[-nrz, -1] + z[-nrz, -ncz]
+  zfacet <- output$mn[-1, -1] + output$mn[-1, -ncz] + output$mn[-nrz, -1] + output$mn[-nrz, -ncz]
   # Recode facet z-values into color indices
   facetcol <- cut(zfacet, nbcol)
-  persp(x, y, z, col = color[facetcol], xlab= xlab, ylab=ylab, zlab=zlab, theta = theta, phi =phi)
-}
-
-
-# returns 10^x as expression. useful for labelling axes
-powerTenExpression<-function(x){
-  do.call(expression, lapply(x, function(i) bquote(10^.(i))))
-}
-
-#return last element in dataframe or vector
-last <- function(x) { tail(x, n = 1) }
-
-## Make colours semitransparent:
-make.transparent <- function(col, opacity=0.5) {
-  if (length(opacity) > 1 && any(is.na(opacity))) {
-    n <- max(length(col), length(opacity))
-    opacity <- rep(opacity, length.out=n)
-    col <- rep(col, length.out=n)
-    ok <- !is.na(opacity)
-    ret <- rep(NA, length(col))
-    ret[ok] <- Recall(col[ok], opacity[ok])
-    ret
-  } else {
-    tmp <- col2rgb(col)/255
-    rgb(tmp[1,], tmp[2,], tmp[3,], alpha=opacity)
+  
+  if (mortality_curve==TRUE){
+    persp(output$new_s_dbh_dt*(sd(model_data[[growth_name]])), wd_values, output$mn, 
+          col = color[facetcol], xlab= 'dbh growth', ylab='rho', 
+          zlab='Mortality probablity/yr', theta=theta, phi=phi, border=NA,ticktype=ticktype)
   }
-}
-
-
-
-## Position label at a fractional x/y position on a plot
-label <- function(px, py, lab, ..., adj=c(0, 1)) {
-  usr <- par("usr")
-  x <- usr[1] + px*(usr[2] - usr[1])
-  y <- usr[3] + py*(usr[4] - usr[3])
-
-  if(par("ylog"))
-    y <- 10^y
-  if(par("xlog"))
-    x <- 10^x
-
-  text(x,y, lab, adj=adj, ...)
-}
-
-#returns up to 80 unique, nice colors, generated using http://tools.medialab.sciences-po.fr/iwanthue/
-# Starts repeating after 80
-niceColors<-function(n=80){
-  cols<-rep(c("#75954F","#D455E9","#E34423","#4CAAE1","#451431","#5DE737","#DC9B94","#DC3788","#E0A732","#67D4C1","#5F75E2","#1A3125","#65E689","#A8313C","#8D6F96","#5F3819","#D8CFE4","#BDE640","#DAD799","#D981DD","#61AD34","#B8784B","#892870","#445662","#493670","#3CA374","#E56C7F","#5F978F","#BAE684","#DB732A","#7148A8","#867927","#918C68","#98A730","#DDA5D2","#456C9C","#2B5024","#E4D742","#D3CAB6","#946661","#9B66E3","#AA3BA2","#A98FE1","#9AD3E8","#5F8FE0","#DF3565","#D5AC81","#6AE4AE","#652326","#575640","#2D6659","#26294A","#DA66AB","#E24849","#4A58A3","#9F3A59","#71E764","#CF7A99","#3B7A24","#AA9FA9","#DD39C0","#604458","#C7C568","#98A6DA","#DDAB5F","#96341B","#AED9A8","#55DBE7","#57B15C","#B9E0D5","#638294","#D16F5E","#504E1A","#342724","#64916A","#975EA8","#9D641E","#59A2BB","#7A3660","#64C32A"),
-            ceiling(n/80))
-  cols[1:n]
+  else {
+    persp(output$new_s_dbh_dt*(sd(model_data[[growth_name]])), wd_values, output$mn, 
+          col = color[facetcol], xlab= 'dbh growth', ylab='rho', 
+          zlab='Instantaneous hazard rate', theta=theta, phi=phi, border=NA,ticktype=ticktype)
+  }
 }
