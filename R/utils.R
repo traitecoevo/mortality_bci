@@ -39,10 +39,10 @@ sim_mortality <- function(model_fit, model_data, cov_name='rho',
   new_cs_lnwd <- (log(wd_values) - mean(log(model_data[[cov_name]])))/ (2*sd(log(model_data[[cov_name]])))
   
   if (is.null(growth_range)){
-    new_s_dbh_dt <- seq(min(model_data[[growth_name]]),max(model_data[[growth_name]]), by=0.001)/ (2*sd(model_data[[growth_name]]))
+    new_s_dbh_dt <- seq(min(model_data[[growth_name]]),max(model_data[[growth_name]]), by=0.0001)/ (2*sd(model_data[[growth_name]]))
   }
   else {
-    new_s_dbh_dt <- seq(min(growth_range), max(growth_range), by=0.00001)/ (2*sd(model_data[[growth_name]]))}
+    new_s_dbh_dt <- seq(min(growth_range), max(growth_range), by=0.0001)/ (2*sd(model_data[[growth_name]]))}
   
   preds <- sapply(new_cs_lnwd, function(wd) {
     with(model_fit, 
@@ -68,25 +68,25 @@ sim_mortality <- function(model_fit, model_data, cov_name='rho',
 # Plot hazard and mortality curves
 plot_mortality <- function(model_fit, model_data, cov_name='rho', wd_values=c(200,800), 
                            growth_name='dbh_dt', growth_range=NULL, 
-                           mortality_curve = FALSE, xaxis_on=TRUE,legend=TRUE, haz_lim=NULL) {
+                           mortality_curve = FALSE, xaxis_on=TRUE,legend=TRUE, haz_lim=NULL,xlim=xlim) {
   
   output <- sim_mortality(model_fit = model_fit, model_data = model_data, cov_name= cov_name, wd_values=wd_values, growth_name=growth_name, growth_range=growth_range, mortality_curve = mortality_curve)
   
   if (mortality_curve == TRUE){
-    plot(mn[,1]~ new_s_dbh_dt, type='n', data=output, ylim=c(0,1),
-         xaxt='n', ylab='Mortality probability/year', xlab='DBH growth (m)')
+    plot(mn[,1]*100~ new_s_dbh_dt, type='n', data=output, ylim=c(0,100),
+         xaxt='n', ylab='Pr(Mortality)/year', xlab=NA)
     
     polygon(c(output$new_s_dbh_dt, rev(output$new_s_dbh_dt)), 
-            c(output$l95[,1], rev(output$u95[,1])), 
+            c(output$l95[,1]*100, rev(output$u95[,1]*100)), 
             col=rgb(1,0,0,0.5), border=NA)
     
-    lines(mn[,1]~new_s_dbh_dt, type='l', lwd=2, data=output, col='darkred')
+    lines(mn[,1]*100~new_s_dbh_dt, type='l', lwd=2, data=output, col='darkred')
     
     polygon(c(output$new_s_dbh_dt, rev(output$new_s_dbh_dt)), 
-            c(output$l95[,2], rev(output$u95[,2])), 
+            c(output$l95[,2]*100, rev(output$u95[,2]*100)), 
             col=rgb(0,0,1,0.5), border=NA)
     
-    lines(mn[,2]~new_s_dbh_dt, type='l', lwd=2, data=output, lty=2, col='blue')
+    lines(mn[,2]*100~new_s_dbh_dt, type='l', lwd=2, data=output, lty=2, col='blue')
   }
   
   else {
@@ -94,7 +94,7 @@ plot_mortality <- function(model_fit, model_data, cov_name='rho', wd_values=c(20
       haz_lim <- range(pretty(output$u95))
     }
     plot(mn[,1]~ new_s_dbh_dt, type='n', data=output, ylim=haz_lim,
-         xaxt='n', ylab='Instantaneous hazard rate', xlab='DBH growth (m)')
+         xaxt='n', ylab='Instantaneous hazard rate', xlab=NA)
     
     polygon(c(output$new_s_dbh_dt, rev(output$new_s_dbh_dt)),
             c(output$l95[,1], rev(output$u95[,1])), 
@@ -116,16 +116,14 @@ plot_mortality <- function(model_fit, model_data, cov_name='rho', wd_values=c(20
   if(xaxis_on==TRUE){
     axis(1,at = pretty(output$new_s_dbh_dt), 
          label= round(pretty(output$new_s_dbh_dt)*(2 * sd(model_data$dbh_dt)),3))
+    title(xlab ='DBH growth (m)')
   }
   else
-    axis(1,at = pretty(output$new_s_dbh_dt), label= NULL)
+    axis(1,at = pretty(output$new_s_dbh_dt), label= NA)
 }
 
-
-plot_3d(model_fit = stan_model, model_data = stan_data, cov_name = 'rho', wd_values = seq(200,800, by=10), theta=145, phi=20,mortality_curve = TRUE)
-
 #3-dimensional plot
-plot_3d <- function(model_fit, model_data, cov_name='rho', wd_values=seq(200:800, by=5), 
+plot3d <- function(model_fit, model_data,  cov_name='rho', wd_values=seq(200:800, by=5), 
                     growth_name='dbh_dt', growth_range=NULL, 
                     mortality_curve = FALSE, legend=TRUE, haz_lim=NULL, theta=110, phi=20,
                     ticktype='detailed') {
