@@ -9,13 +9,13 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000, seed=123){
        iter = iter, seed=seed, chains=1, chain_id=chain_id, refresh=-1)
 }
 
-stan_data_BCI <- function(data) {
+stan_data_BCI <- function(data, growth_measure = "dbh_dt") {
   list(
     n_obs = nrow(data),
     n_spp = length(unique(data$sp)),
     spp = as.numeric(factor(data$sp), as.character(unique(data$sp))),
     rho =  unique(data$rho),
-    dbh_dt = data$dbh_dt,
+    growth_dt = data[[growth_measure]],
     census_length = data$census_interval,
     y = as.integer(data$dead_next_census)
     )
@@ -31,14 +31,14 @@ data {
   int<lower=0> n_spp;
   int<lower=1> spp[n_obs];
   vector[n_obs] census_length;
-  vector[n_obs] dbh_dt;
+  vector[n_obs] growth_dt;
   vector[n_spp] rho;
 }
 transformed data { // centers and standardizes predictors
   vector[n_spp] cs_lnrho;
-  vector[n_obs] s_dbh_dt;
+  vector[n_obs] s_growth_dt;
   cs_lnrho <- (log(rho) - mean(log(rho)))/ (2*sd(log(rho)));
-  s_dbh_dt <- dbh_dt/ (2*sd(dbh_dt));
+  s_growth_dt <- growth_dt/ (2*sd(growth_dt));
 }
 parameters { // assumes uniform priors on all parameters
   real a0_raw[n_spp];
@@ -74,7 +74,7 @@ transformed parameters {
   }
 
   for (i in 1:n_obs) { // Estimate p
-    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * s_dbh_dt[i]) + exp(ho_log[spp[i]]))));
+    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * s_growth_dt[i]) + exp(ho_log[spp[i]]))));
   }
 }
 

@@ -189,10 +189,10 @@ coeff_plot(stan_output_combined, params=c('c1','c0_mu','b1','b0_mu','a1','a0_mu'
 ```{r Hazard rates,fig.height=6,fig.width=6, echo=FALSE}
 par(mfrow=c(2,1),mar=c(4,3,1,1), xaxs='i')
 plot_mortality(model_fit = stan_output_combined ,model_data = stan_data, cov_name = 'rho',
-               wd_values = c(200,800), growth_name = 'dbh_dt', mortality_curve = FALSE, xaxis_on = FALSE, haz_lim=c(0,2))
+               wd_values = c(200,800), growth_name = 'growth_dt', mortality_curve = FALSE, xaxis_on = FALSE, haz_lim=c(0,2))
 
 plot_mortality(model_fit = stan_output_combined ,model_data = stan_data, cov_name = 'rho',
-               wd_values = c(200,800), growth_name = 'dbh_dt', mortality_curve = TRUE, xaxis_on = TRUE, legend = FALSE)
+               wd_values = c(200,800), growth_name = 'growth_dt', mortality_curve = TRUE, xaxis_on = TRUE, legend = FALSE)
 ```
 
 **Fig 8** Predicted hazard rates (top) and mortality probability (bottom) for an average 200 (black) and 800 kg/m2 (red) kg/m2 wood density species. Errors are 95% credible intervals. rho = wood density.
@@ -242,14 +242,14 @@ StanModel <- '
     int<lower=0> n_spp;
     int<lower=1> spp[n_obs];
     vector[n_obs] census_length;
-    vector[n_obs] dbh_dt;
+    vector[n_obs] growth_dt;
     vector[n_spp] rho;
   }
 transformed data { // centers and standardizes predictors
   vector[n_spp] cs_lnrho;
-  vector[n_obs] s_dbh_dt;
+  vector[n_obs] s_growth_dt;
   cs_lnrho <- (log(rho) - mean(log(rho)))/ (2*sd(log(rho)));
-  s_dbh_dt <- dbh_dt/ (2*sd(dbh_dt));
+  s_growth_dt <- growth_dt/ (2*sd(growth_dt));
 }
 parameters { // assumes uniform priors on all parameters
   real a0_raw[n_spp];
@@ -285,7 +285,7 @@ transformed parameters {
   }
 
   for (i in 1:n_obs) { // Estimate p
-    p[i] <- inv_cloglog(log(census_length[i] * (exp(log_a[spp[i]] - exp(log_b[spp[i]]) * s_dbh_dt[i]) + exp(log_ho[spp[i]]))));
+    p[i] <- inv_cloglog(log(census_length[i] * (exp(log_a[spp[i]] - exp(log_b[spp[i]]) * s_growth_dt[i]) + exp(log_ho[spp[i]]))));
   }
 }
 
