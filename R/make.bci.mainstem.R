@@ -1,46 +1,70 @@
 #List of functions used to manipulate and summarise data from BCI.
 
+subset_BCI_data_by_census <- function(data, census=4) {
+  filter(data, censusid==census)
+}
+
+merge_BCI_data <- function(BCI_demography, BCI_traits) {
+  merge(BCI_demography,BCI_traits[,c('sp','sg100c_avg')],by = 'sp') %>% #only uses species trait data exists for.
+  filter(!is.na(sg100c_avg) & !is.na(dbh_dt) & !is.na(dead_next_census))
+}
+
 #Download BCI data
 # download function from package downloader provides wrapper
 # to download file so that works for https and across platforms
 BCI_download_50ha_plot_full<- function(dest) {
-  require(httr)
-  if(!is.character(dest)) stop('dest must be character')
-  if(file.exists(dest)) stop('dest already exists')
   url <-"https://repository.si.edu/bitstream/handle/10088/20925/bci.full.Rdata31Aug2012.zip"
-  GET(url, write_disk(f <- tempfile(fileext='.zip')), progress())
-  tryCatch({
-    ff <- unzip(f, exdir=tempdir())
-    e <- new.env()
-    lapply(ff, load, e)
-    BCI_50haplot <- do.call(rbind, mget(ls(e), e))
-  }, error=function(e) 
-    sprintf(':c something bad happened... but your file is here: %s', f))
-  save(BCI_50haplot, file=dest)
+  download(url, dest, mode="wb")
+}
+
+#Load 50ha census data
+BCI_load_50ha_plot <- function(path_to_zip) {
+
+  tmp <- tempfile()
+  unzip(path_to_zip, exdir=tmp)
+  on.exit(unlink(tmp, recursive=TRUE))
+
+  files <- list.files(tmp, pattern=".rdata", full.names=TRUE)
+  data <- tbl_df(lapply(list.files(tmp, pattern=".rdata", full.names=TRUE), function(x) load_rdata(x)) %>% rbind_all)
+  names(data) <- tolower(names(data)) # lower case for all column names
+  data
+}
+
+#loads an RData file, and returns it
+load_rdata <- function(file) {
+  v <- load(file)
+  get(v)
 }
 
 BCI_download_species_table <- function(dest) {
-  require(httr)
-  if(!is.character(dest)) stop('dest must be character')
-  if(file.exists(dest)) stop('dest already exists')
   url <-"https://repository.si.edu/bitstream/handle/10088/20925/bci.spptable.rdata"
-  GET(url, write_disk(f <- tempfile()), progress())
-  nm <- load(f)
-  BCI_nomenclature <- get(nm)
-  save(BCI_nomenclature, file=dest)
+  download(url, dest, mode="wb")
+}
+
+BCI_load_nomenclature <- function(file){
+  data <- load_rdata(file)
+  names(data) <- tolower(names(data))
+  data
 }
 
 #Look up family
 lookup_family <- function(tag, spp_table){
   i <- match(tag, tolower(spp_table[['sp']]))
-  spp_table$Family[i]
+  spp_table$family[i]
 }
 
 #Look up species code
 lookup_latin <- function(tag, spp_table){
-  spp_table$latin <- paste(spp_table$Genus, spp_table$Species)
+  spp_table$latin <- paste(spp_table$genus, spp_table$species)
   i <- match(tag, tolower(spp_table[['sp']]))
   spp_table[['latin']][i]
+}
+
+load_trait_data <- function(file) {
+  data <- read.csv(file, stringsAsFactors=FALSE)
+  names(data) <- tolower(names(data)) # lowers trait column names for merging
+  data$sp <- tolower(data$sp) # lowers species code names for merging
+  data
 }
 
 # Identifies individuals that return from the dead or are supposably refound
@@ -61,12 +85,12 @@ calculate_growth_rate <- function(x, t, f=function(y) y){
 
 # Function to identify bad data. Adapted from function in CTFS R package
 CTFS_sanity_check <- function(dbh, dbh_increment, dbasal_diam_dt) {
-  
+
   slope <- 0.006214
   intercept <- 0.9036 /1000   #convert from mm to m
   error_limit <- 4
   max_growth <- 75 / 1000     #convert from mm to m
-  
+
   accept <- rep(TRUE, length(dbh))
   # Remove records based on max growth rate
   accept[dbasal_diam_dt > max_growth] <- FALSE
@@ -85,16 +109,14 @@ mortality_in_next_census <- function(status){
   as.numeric(c(status[i] == 'alive' & status[i+1] == 'dead', NA))
 }
 
-BCI_calculate_individual_growth <- function(BCI_data=BCI_50haplot, spp_table=BCI_nomenclature) {
-  require(dplyr)
-  names(BCI_data) <- tolower(names(BCI_data)) # lower case for all column names
-  
+BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
+
   data <- BCI_data %>%
     arrange(sp, treeid, exactdate) %>%
     select(sp, treeid, nostems, censusid, exactdate, dfstatus, pom, dbh) %>%
     mutate(
       #census id for period 7 was entered incorrectly
-      censusid = ifelse(censusid==171, 7,censusid), 
+      censusid = ifelse(censusid==171, 7,censusid),
       species = lookup_latin(sp, spp_table),
       family = lookup_family(sp, spp_table),
       #Converts dbh from mm to m
@@ -103,8 +125,8 @@ BCI_calculate_individual_growth <- function(BCI_data=BCI_50haplot, spp_table=BCI
     # First measurement in 1990 ='1990-02-06'
     filter(censusid >= 3) %>%
     # Remove families that don't exhibit dbh growth e.g. palms
-    filter(!family %in% c('Arecaceae', 'Cyatheaceae', 'Dicksoniaceae', 'Metaxyaceae', 
-                          'Cibotiaceae', 'Loxomataceae', 'Culcitaceae', 'Plagiogyriaceae', 
+    filter(!family %in% c('Arecaceae', 'Cyatheaceae', 'Dicksoniaceae', 'Metaxyaceae',
+                          'Cibotiaceae', 'Loxomataceae', 'Culcitaceae', 'Plagiogyriaceae',
                           'Thyrsopteridaceae')) %>%
     # Remove observations without a species code
     filter(!is.na(sp)) %>%
@@ -121,7 +143,7 @@ BCI_calculate_individual_growth <- function(BCI_data=BCI_50haplot, spp_table=BCI
     # Remove individuals that are not alive for at least 2 censuses
     mutate(
       ncensus = length(unique(exactdate[dfstatus=='alive']))) %>%
-    filter(ncensus >1) %>% 
+    filter(ncensus >1) %>%
     mutate(
       # First measurement in 1990 ='1990-02-06'
       julian = as.vector(julian(as.Date(exactdate,"%Y-%m-%d"), as.Date("1990-02-06", "%Y-%m-%d"))),
@@ -133,7 +155,7 @@ BCI_calculate_individual_growth <- function(BCI_data=BCI_50haplot, spp_table=BCI
       basal_area_dt = calculate_growth_rate(basal_area, julian),
       basal_area_dt_rel = calculate_growth_rate(basal_area, julian, log),
       dead_next_census = mortality_in_next_census(dfstatus)) %>%
-    
+
     # Only keep alive stems
     filter(dfstatus=="alive") %>%
     filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt)) %>%
@@ -145,7 +167,7 @@ BCI_calculate_individual_growth <- function(BCI_data=BCI_50haplot, spp_table=BCI
 #No. Obs = 775871
 #No. Inds = 203277
 #No. Sp = 286
-#No. Deaths = 200968 (~26% from 1990 to 2010) 
+#No. Deaths = 200968 (~26% from 1990 to 2010)
 #No. CTFS observed errors = 35385 observations
 #No. Zombies = 7330 individuals
 #No. Multistems = 54614 individuals

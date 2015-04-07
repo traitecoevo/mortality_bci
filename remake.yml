@@ -1,0 +1,75 @@
+packages:
+  - dplyr
+  - rstan
+  - RCurl
+  - downloader
+  - rmarkdown
+
+sources:
+  - R
+
+targets:
+  all:
+    depends:
+      - ms.md
+
+  stan_output_combined:
+    command: combine_stan_chains(chain1, chain2, chain3)
+
+  chain1:
+    command: run_single_stan_chain(stan_model, stan_data, chain_id=I(1), iter=I(10))
+
+  chain2:
+    command: run_single_stan_chain(stan_model, stan_data, chain_id=I(2), iter=I(10))
+
+  chain3:
+    command: run_single_stan_chain(stan_model, stan_data, chain_id=I(3), iter=I(10))
+
+  stan_model:
+    command: make_stan_model()
+
+  stan_data:
+    command: stan_data_BCI(BCI_model_dataset_census4)
+
+  BCI_model_dataset_census4:
+    command: subset_BCI_data_by_census(BCI_model_dataset_full, census=I(4))
+
+  BCI_model_dataset_full:
+    command: merge_BCI_data(BCI_demography, BCI_traits)
+
+  BCI_demography:
+    command: BCI_calculate_individual_growth(BCI_50haplot, BCI_nomenclature)
+
+  BCI_traits:
+    command: load_trait_data("data/BCI_traits_20101220.csv")
+
+  BCI_50haplot:
+    command: BCI_load_50ha_plot("downloads/bci.full.Rdata31Aug2012.zip")
+
+  downloads/bci.full.Rdata31Aug2012.zip:
+    command: BCI_download_50ha_plot_full(target_name)
+    cleanup_level: never
+    check: exists
+
+  BCI_nomenclature:
+    command: BCI_load_nomenclature("downloads/bci.spptable.rdata")
+
+  downloads/bci.spptable.rdata:
+    command: BCI_download_species_table(target_name)
+    cleanup_level: never
+    check: exists
+
+
+  downloads/style.csl:
+    command: get_amnat_csl(target_name)
+
+  ms.pdf:
+    command: pandoc_build("ms.md")
+
+  ms.md:
+    knitr: true
+    depends:
+      - stan_output_combined
+      - stan_data
+      - data/refs.bib
+      - downloads/style.csl

@@ -38,22 +38,7 @@ In this study we build a hierarchical Bayesian logistic regression that attempts
 
 We hypothesize that wood density will decrease both growth-dependent and growth-independent sources of mortality. Specifically, we expect wood density to affect the growth-mortality relationship by decreasing its intercept, (i.e. mortality rates at zero growth) and steepening its slope (i.e. more negative, Fig 5). We also expect that the effect of wood density will be greatest for growth-independent mortality, and that these relationships will be broadly consistent across growth measures.
 
-```{r hypotheses,fig.height=6,fig.width=6, echo=FALSE}
-par(mfrow=c(2,1), mar=c(2,4,1,1), oma=c(3,0,0,0), xaxs='i')
-curve(exp(1 -exp(-0.3) * x) + exp(-2), xlim=c(0,12), ylim=c(0,5),
-xlab=NA, ylab='Hazard rate', xaxt='n')
-curve(exp(0.5 -exp(1) * x) + exp(-4), add=TRUE, col='red')
-axis(1, at=0)
-
-legend('topright', c('low rho', 'high rho'), col=c('black','red'), lty=1, bty='n')
-curve((1-exp(-(exp(1 - exp(-0.3) * x) + exp(-1.5))))*100, xlim=c(0,12), ylim=c(0,100),
-xlab=NA, ylab='Pr(Mortality)/year', xaxt='n')
-curve((1-exp(-(exp(0.5 - exp(1) * x) + exp(-4))))*100, add=TRUE, col='red')
-abline(v=0, lty=2, col='blue')
-axis(1, at=0)
-mtext(side=1, 'Growth rate',line = 1, outer=TRUE)
-
-```
+![plot of chunk hypotheses](figure/hypotheses-1.png) 
 
 **Fig 5:** Hypotheses of how wood density will affect growth-mortality curve. Top = Hazard curves (i.e. instantaneous mortality rates); Bottom = Mortality probability/year based on estimated hazard rates. Where curve asymptotes is dependent on wood density effects on growth-independent hazard. Note changes in intercept, slope and asymptote between both lines.
 
@@ -108,29 +93,7 @@ Instead of calculating the probability of death for a given time period, we can 
 }^{\text{Growth independent hazard}}\right)
 \end{equation}
 
-```{r model description, fig.height=6,fig.width=6, echo=FALSE}
-par(mfrow=c(2,1), mar=c(3,4,1,1), xaxs='i')
-       curve(exp(1 -exp(-0.3) * x) + exp(-4), xlim=c(0,12), ylim=c(0,5),
-             xlab=NA, ylab='Hazard rate',xaxt='n', col='red')
-       arrows(x0 = 2, y0 = 2.7, x1 = 0 ,y1 = 2.7)
-       text(3.1,2.7, 'alpha')
-       arrows(x0 = 4, y0 = 1.5, x1 = 1.5 ,y1 = 1)
-       text(4.5,1.7, 'beta')
-       arrows(x0 = 11, y0 = 0.8, x1 = 11 ,y1 = 0.018)
-       text(11,1, 'ho')
-       axis(1, at=0, labels= 0)
-
-       curve((1-exp(-(exp(1 - exp(-0.3) * x) + exp(-4))))*100, xlim=c(0,12), ylim=c(0,100),
-             xlab=NA, ylab='Pr(Mortality)', xaxt='n', col='red')
-       text(3.1,93, 'alpha')
-       arrows(x0 = 2, y0 = 93, x1 = 0 ,y1 = 93)
-       text(6,30, 'beta')
-       arrows(x0 = 5, y0 = 30, x1 = 3 ,y1 = 30)
-       text(11,15, 'ho')
-       arrows(x0 = 11, y0 = 10, x1 = 11 ,y1 = exp(-4)*100)
-       axis(1, at=0, labels= 0)
-       mtext(side=1, 'Growth rate',line = 2)
-```
+![plot of chunk model description](figure/model description-1.png) 
 
 **Fig 6:** Interpreting model parameters. Top = Hazard curves (i.e. instantaneous mortality rates); Bottom = Mortality probability/year based on estimated hazard rates. The intercept at zero growth is defined by $alpha$. The slope is defined by $beta$. The asymptote is defined by $ho$ and represents the growth-independent hazard.
 
@@ -173,43 +136,41 @@ Because we used Bayesian inference we needed to specify prior distributions for 
 **Take home message:**
 Wood density decreases intercept (log_a) & further increases the steepness of the growth-mortality slope (log_b). It also decreases the growth-independent hazard log_ho
 
-```{r Model output, echo=FALSE}
-print(stan_output_combined,probs = c(0.025,0.975), digits_summary = 3)
+
+```
+## Inference for Stan model: model$model_code.
+## 3 chains, each with iter=10; warmup=5; thin=1; 
+## post-warmup draws per chain=5, total post-warmup draws=15.
+## 
+##                mean  se_mean       sd       2.5%      97.5% n_eff Rhat
+## a0_mu        -3.216    0.159    0.614     -4.031     -2.637    15  Inf
+## b0_mu        -0.387    0.167    0.647     -1.187      0.337    15  Inf
+## c0_mu        -3.741    0.289    1.118     -5.189     -2.597    15  Inf
+## a0_sigma      0.168    0.006    0.024      0.135      0.185    15  Inf
+## b0_sigma      0.522    0.102    0.396      0.158      1.051    15  Inf
+## c0_sigma      0.229    0.023    0.090      0.110      0.314    15  Inf
+## a1            0.301    0.227    0.879     -0.897      0.970    15  Inf
+## b1           -0.779    0.299    1.158     -1.903      0.748    15  Inf
+## c1           -0.189    0.243    0.940     -0.989      1.082    15  Inf
+## lp__     -82295.643 1541.745 5971.154 -89440.331 -75312.782    15  Inf
+## 
+## Samples were drawn using NUTS(diag_e) at Tue Apr  7 12:24:56 2015.
+## For each parameter, n_eff is a crude measure of effective sample size,
+## and Rhat is the potential scale reduction factor on split chains (at 
+## convergence, Rhat=1).
 ```
 
-```{r Coefficient plot, fig.height=6,fig.width=6, echo=FALSE}
-coeff_plot(stan_output_combined, params=c('c1','c0_mu','b1','b0_mu','a1','a0_mu'),
-           labels = c('ho x wd','ho','beta x wd','beta','alpha x wd','alpha'),
-           xlab = 'cloglog effect size', transform = NULL)
-```
+![plot of chunk Coefficient plot](figure/Coefficient plot-1.png) 
 
 **Fig 7** log centered and scaled coefficients ± 95 (thin line) and 80% (thick line) Bayesian Credible Intervals. log_a = intercept; log_b = slope, log_ho = asymptote.
 
 
-```{r Hazard rates,fig.height=6,fig.width=6, echo=FALSE}
-par(mfrow=c(2,1),mar=c(4,3,1,1), xaxs='i')
-plot_mortality(model_fit = stan_output_combined ,model_data = stan_data, cov_name = 'rho',
-               wd_values = c(200,800), growth_name = 'dbh_dt', mortality_curve = FALSE, xaxis_on = FALSE, haz_lim=c(0,2))
-
-plot_mortality(model_fit = stan_output_combined ,model_data = stan_data, cov_name = 'rho',
-               wd_values = c(200,800), growth_name = 'dbh_dt', mortality_curve = TRUE, xaxis_on = TRUE, legend = FALSE)
-```
+![plot of chunk Hazard rates](figure/Hazard rates-1.png) 
 
 **Fig 8** Predicted hazard rates (top) and mortality probability (bottom) for an average 200 (black) and 800 kg/m2 (red) kg/m2 wood density species. Errors are 95% credible intervals. rho = wood density.
 
 
-```{r 3d plots, fig.height=10,fig.width=10, echo=FALSE}
-par(mfrow=c(2,1))
-plot3d(model_fit = stan_output_combined,
-        model_data = stan_data, cov_name = 'rho',
-        wd_values = seq(200,800, by=10),
-        theta=145, phi=20,mortality_curve = FALSE)
-
-plot3d(model_fit = stan_output_combined,
-       model_data = stan_data, cov_name = 'rho',
-       wd_values = seq(200,800, by=10),
-       theta=145, phi=20,mortality_curve = TRUE)
-```
+![plot of chunk 3d plots](figure/3d plots-1.png) 
 
 **Fig 9** Mean predicted 3D surface for hazard rates (top) and mortality probability (bottom). Note that there is no 'significant' difference at low growth rate between low and high wood density. rho = wood density,This can be better seen in Fig. 8.
 
@@ -233,8 +194,8 @@ plot3d(model_fit = stan_output_combined,
 
 ##Model Code
 
-```{r stan model,eval=FALSE}
 
+```r
 StanModel <- '
   data {
     int<lower=0> n_obs;

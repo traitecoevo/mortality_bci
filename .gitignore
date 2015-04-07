@@ -1,10 +1,8 @@
-.maker
-output
-data
+.remake
+downloads
 Junk
 figure*
 .Rproj.user
 *.Rproj
 *.csl
-*.md
 *.pdf
