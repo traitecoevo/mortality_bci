@@ -14,20 +14,42 @@ targets:
       - ms.md
 
   stan_output_combined:
-    command: combine_stan_chains(chain1, chain2, chain3)
+    command: combine_stan_chains(chain1_model3_trait_species, chain2_model3_trait_species)
 
-  chain1:
-    command: run_single_stan_chain(stan_model, stan_data, chain_id=I(1), iter=I(10))
+  # Model 3
+  chain2_model3_trait_species:
+    command: run_single_stan_chain(stan_model3_trait_species, stan_data, chain_id=I(2), iter=I(10))
 
-  chain2:
-    command: run_single_stan_chain(stan_model, stan_data, chain_id=I(2), iter=I(10))
+  chain1_model3_trait_species:
+    command: run_single_stan_chain(stan_model3_trait_species, stan_data, chain_id=I(1), iter=I(10))
 
-  chain3:
-    command: run_single_stan_chain(stan_model, stan_data, chain_id=I(3), iter=I(10))
+  stan_model3_trait_species:
+    command: make_stan_model(chunks_model3_trait_species)
 
-  stan_model:
-    command: make_stan_model()
+  chunks_model3_trait_species:
+    command: get_chunks_model3_trait_species()
 
+  # Model 2
+  chain1_model2_trait_species:
+    command: run_single_stan_chain(stan_model2_trait_species, stan_data, chain_id=I(1), iter=I(10))
+
+  stan_model2_trait_species:
+    command: make_stan_model(chunks_model2_trait_species)
+
+  chunks_model2_trait_species:
+    command: get_chunks_model2_trait_species()
+
+  # Model 1
+  chain1_model1_trait_species:
+    command: run_single_stan_chain(stan_model1_trait_species, stan_data, chain_id=I(1), iter=I(10))
+
+  stan_model1_trait_species:
+    command: make_stan_model(chunks_model1_trait_species)
+
+  chunks_model1_trait_species:
+    command: get_chunks_model1_trait_species()
+
+  # data preparation
   stan_data:
     command: stan_data_BCI(BCI_model_dataset_census4)
 
@@ -59,7 +81,7 @@ targets:
     cleanup_level: never
     check: exists
 
-
+  # paper
   downloads/style.csl:
     command: get_amnat_csl(target_name)
 
