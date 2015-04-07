@@ -5,8 +5,8 @@ subset_BCI_data_by_census <- function(data, census=4) {
 }
 
 merge_BCI_data <- function(BCI_demography, BCI_traits) {
-  merge(BCI_demography,BCI_traits[,c('sp','sg100c_avg')],by = 'sp') %>% #only uses species trait data exists for.
-  filter(!is.na(sg100c_avg) & !is.na(dbh_dt) & !is.na(dead_next_census))
+  merge(BCI_demography,BCI_traits[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
+  filter(!is.na(rho) & !is.na(dbh_dt) & !is.na(dead_next_census))
 }
 
 #Download BCI data
@@ -64,7 +64,9 @@ load_trait_data <- function(file) {
   data <- read.csv(file, stringsAsFactors=FALSE)
   names(data) <- tolower(names(data)) # lowers trait column names for merging
   data$sp <- tolower(data$sp) # lowers species code names for merging
-  data
+
+  mutate(data, rho = sg100c_avg*1000) %>% # converts wood density to kg/m2
+  select(-sg100c_avg)
 }
 
 # Identifies individuals that return from the dead or are supposably refound

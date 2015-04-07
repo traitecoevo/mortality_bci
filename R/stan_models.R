@@ -14,7 +14,7 @@ stan_data_BCI <- function(data) {
     n_obs = nrow(data),
     n_spp = length(unique(data$sp)),
     spp = as.numeric(factor(data$sp), as.character(unique(data$sp))),
-    rho =  unique(data$sg100c_avg)*1000, # converts wood density to kg/m2
+    rho =  unique(data$rho),
     dbh_dt = data$dbh_dt,
     census_length = data$census_interval,
     y = as.integer(data$dead_next_census)
