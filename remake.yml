@@ -16,7 +16,26 @@ targets:
   stan_output_combined:
     command: combine_stan_chains(chain1_model3_trait_species, chain2_model3_trait_species)
 
+  fits:
+    depends:
+      - chain1_model1_species
+      - chain1_model1_trait_species
+      - chain1_model2_species
+      - chain1_model2_trait_species
+      - chain1_model3_species
+      - chain1_model3_trait_species
+
   # Model 3
+  chain1_model3_species:
+    command: run_single_stan_chain(stan_model3_species, stan_data, chain_id=I(1), iter=I(10))
+
+  stan_model3_species:
+    command: make_stan_model(chunks_model3_species)
+
+  chunks_model3_species:
+    command: get_chunks_model3_species()
+
+
   chain2_model3_trait_species:
     command: run_single_stan_chain(stan_model3_trait_species, stan_data, chain_id=I(2), iter=I(10))
 
@@ -30,6 +49,15 @@ targets:
     command: get_chunks_model3_trait_species()
 
   # Model 2
+  chain1_model2_species:
+    command: run_single_stan_chain(stan_model2_species, stan_data, chain_id=I(1), iter=I(10))
+
+  stan_model2_species:
+    command: make_stan_model(chunks_model2_species)
+
+  chunks_model2_species:
+    command: get_chunks_model2_species()
+
   chain1_model2_trait_species:
     command: run_single_stan_chain(stan_model2_trait_species, stan_data, chain_id=I(1), iter=I(10))
 
@@ -40,6 +68,16 @@ targets:
     command: get_chunks_model2_trait_species()
 
   # Model 1
+  chain1_model1_species:
+    command: run_single_stan_chain(stan_model1_species, stan_data, chain_id=I(1), iter=I(10))
+
+  stan_model1_species:
+    command: make_stan_model(chunks_model1_species)
+
+  chunks_model1_species:
+    command: get_chunks_model1_species()
+
+
   chain1_model1_trait_species:
     command: run_single_stan_chain(stan_model1_trait_species, stan_data, chain_id=I(1), iter=I(10))
 
@@ -48,6 +86,7 @@ targets:
 
   chunks_model1_trait_species:
     command: get_chunks_model1_trait_species()
+
 
   # data preparation
   stan_data:
