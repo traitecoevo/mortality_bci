@@ -35,10 +35,10 @@ data {
   vector[n_spp] rho;
 }
 transformed data { // centers and standardizes predictors
-  vector[n_spp] cs_lnrho;
-  vector[n_obs] s_growth_dt;
-  cs_lnrho <- (log(rho) - mean(log(rho)))/ (2*sd(log(rho)));
-  s_growth_dt <- growth_dt/ (2*sd(growth_dt));
+  vector[n_spp] log_rho_cs;
+  vector[n_obs] growth_dt_s;
+  log_rho_cs  <- (log(rho) - mean(log(rho)))/ (2*sd(log(rho)));
+  growth_dt_s <- growth_dt / (2*sd(growth_dt));
 }
 parameters { // assumes uniform priors on all parameters
   real a0_raw[n_spp];
@@ -46,20 +46,20 @@ parameters { // assumes uniform priors on all parameters
   real c0_raw[n_spp];
   real a1; // effect of rho on a_log
   real b1; // effect of rho on b_log
-  real c1; // effect of rho on ho_log
+  real c1; // effect of rho on h_log
   real a0_mu; // a_log effect for average species
   real<lower=0> a0_sigma; // a_log effect species variation
   real b0_mu;  // b_log effect for average species
   real<lower=0> b0_sigma; // b_log effect species variation
-  real c0_mu;  // ho_log effect for average species
-  real<lower=0> c0_sigma; // ho_log effect species variation
+  real c0_mu;  // h_log effect for average species
+  real<lower=0> c0_sigma; // h_log effect species variation
 }
 
 transformed parameters {
   real<lower=0, upper=1> p[n_obs];
   real a_log[n_spp];
   real b_log[n_spp];
-  real ho_log[n_spp];
+  real h_log[n_spp];
   real a0[n_spp];
   real b0[n_spp];
   real c0[n_spp];
@@ -68,13 +68,13 @@ transformed parameters {
     a0[s] <- a0_raw[s] * a0_sigma + a0_mu;
     b0[s] <- b0_raw[s] * b0_sigma + b0_mu;
     c0[s] <- c0_raw[s] * c0_sigma + c0_mu;
-    a_log[s] <- a0[s] + a1 * cs_lnrho[s];
-    b_log[s] <- b0[s] + b1 * cs_lnrho[s];
-    ho_log[s] <- c0[s] + c1 * cs_lnrho[s];
+    a_log[s] <- a0[s];
+    b_log[s] <- b0[s];
+    h_log[s] <- c0[s];
   }
 
   for (i in 1:n_obs) { // Estimate p
-    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * s_growth_dt[i]) + exp(ho_log[spp[i]]))));
+    p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * growth_dt_s[i]) + exp(h_log[spp[i]]))));
   }
 }
 

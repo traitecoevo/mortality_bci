@@ -36,31 +36,31 @@ sim_mortality <- function(model_fit, model_data, cov_name='rho',
                           growth_range=NULL, mortality_curve = FALSE){
   model_fit <- extract(model_fit)
 
-  new_cs_lnwd <- (log(wd_values) - mean(log(model_data[[cov_name]])))/ (2*sd(log(model_data[[cov_name]])))
+  new_log_rho_cs <- (log(wd_values) - mean(log(model_data[[cov_name]])))/ (2*sd(log(model_data[[cov_name]])))
 
   if (is.null(growth_range)){
-    new_s_growth_dt <- seq(min(model_data[[growth_name]]),max(model_data[[growth_name]]), by=0.0001)/ (2*sd(model_data[[growth_name]]))
+    new_growth_dt_s <- seq(min(model_data[[growth_name]]),max(model_data[[growth_name]]), by=0.0001)/ (2*sd(model_data[[growth_name]]))
   }
   else {
-    new_s_growth_dt <- seq(min(growth_range), max(growth_range), by=0.0001)/ (2*sd(model_data[[growth_name]]))}
+    new_growth_dt_s <- seq(min(growth_range), max(growth_range), by=0.0001)/ (2*sd(model_data[[growth_name]]))}
 
-  preds <- sapply(new_cs_lnwd, function(wd) {
+  preds <- sapply(new_log_rho_cs, function(wd) {
     with(model_fit,
          mapply(function(a0_mu, b0_mu, c0_mu, a1, b1, c1) {
            a_log = a0_mu + a1 * wd
            b_log = b0_mu + b1 * wd
-           ho_log = c0_mu + c1 * wd
+           h_log = c0_mu + c1 * wd
            if (mortality_curve ==TRUE){
-             preds <-1 - exp(-(exp(a_log - exp(b_log) * new_s_growth_dt) + exp(ho_log)))
+             preds <-1 - exp(-(exp(a_log - exp(b_log) * new_growth_dt_s) + exp(h_log)))
            }
            else {
-             preds <- exp(a_log - exp(b_log) * new_s_growth_dt) + exp(ho_log)
+             preds <- exp(a_log - exp(b_log) * new_growth_dt_s) + exp(h_log)
            }
          }, a0_mu, b0_mu, c0_mu, a1, b1, c1))}, simplify = 'array')
   output <- list(mn = apply(preds,c(1,3), mean),
                  l95 = apply(preds, c(1,3), quantile, 0.025),
                  u95 =  apply(preds, c(1,3), quantile, 0.975),
-                 new_s_growth_dt = new_s_growth_dt)
+                 new_growth_dt_s = new_growth_dt_s)
   return(output)
 }
 
@@ -73,40 +73,40 @@ plot_mortality <- function(model_fit, model_data, cov_name='rho', wd_values=c(20
   output <- sim_mortality(model_fit = model_fit, model_data = model_data, cov_name= cov_name, wd_values=wd_values, growth_name=growth_name, growth_range=growth_range, mortality_curve = mortality_curve)
 
   if (mortality_curve == TRUE){
-    plot(mn[,1]*100~ new_s_growth_dt, type='n', data=output, ylim=c(0,100),
+    plot(mn[,1]*100~ new_growth_dt_s, type='n', data=output, ylim=c(0,100),
          xaxt='n', ylab='Pr(Mortality)/year', xlab=NA)
 
-    polygon(c(output$new_s_growth_dt, rev(output$new_s_growth_dt)),
+    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
             c(output$l95[,1]*100, rev(output$u95[,1]*100)),
             col=rgb(1,0,0,0.5), border=NA)
 
-    lines(mn[,1]*100~new_s_growth_dt, type='l', lwd=2, data=output, col='darkred')
+    lines(mn[,1]*100~new_growth_dt_s, type='l', lwd=2, data=output, col='darkred')
 
-    polygon(c(output$new_s_growth_dt, rev(output$new_s_growth_dt)),
+    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
             c(output$l95[,2]*100, rev(output$u95[,2]*100)),
             col=rgb(0,0,1,0.5), border=NA)
 
-    lines(mn[,2]*100~new_s_growth_dt, type='l', lwd=2, data=output, lty=2, col='blue')
+    lines(mn[,2]*100~new_growth_dt_s, type='l', lwd=2, data=output, lty=2, col='blue')
   }
 
   else {
     if (is.null(haz_lim)) {
       haz_lim <- range(pretty(output$u95))
     }
-    plot(mn[,1]~ new_s_growth_dt, type='n', data=output, ylim=haz_lim,
+    plot(mn[,1]~ new_growth_dt_s, type='n', data=output, ylim=haz_lim,
          xaxt='n', ylab='Instantaneous hazard rate', xlab=NA)
 
-    polygon(c(output$new_s_growth_dt, rev(output$new_s_growth_dt)),
+    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
             c(output$l95[,1], rev(output$u95[,1])),
             col=rgb(1,0,0,0.5), border=NA)
 
-    lines(mn[,1]~new_s_growth_dt, type='l', lwd=2, data=output, col='darkred')
+    lines(mn[,1]~new_growth_dt_s, type='l', lwd=2, data=output, col='darkred')
 
-    polygon(c(output$new_s_growth_dt, rev(output$new_s_growth_dt)),
+    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
             c(output$l95[,2], rev(output$u95[,2])),
             col=rgb(0,0,1,0.5), border=NA)
 
-    lines(mn[,2]~new_s_growth_dt, type='l', lwd=2, data=output, lty=2, col='blue')
+    lines(mn[,2]~new_growth_dt_s, type='l', lwd=2, data=output, lty=2, col='blue')
   }
   if(legend == TRUE){
     legend('topright',
@@ -114,12 +114,12 @@ plot_mortality <- function(model_fit, model_data, cov_name='rho', wd_values=c(20
            bty = 'n', col=c('darkred', 'blue'), lty=c(1,2), lwd=2)
   }
   if(xaxis_on==TRUE){
-    axis(1,at = pretty(output$new_s_growth_dt),
-         label= round(pretty(output$new_s_growth_dt)*(2 * sd(model_data$growth_dt)),3))
+    axis(1,at = pretty(output$new_growth_dt_s),
+         label= round(pretty(output$new_growth_dt_s)*(2 * sd(model_data$growth_dt)),3))
     title(xlab ='DBH growth (m)')
   }
   else
-    axis(1,at = pretty(output$new_s_growth_dt), label= NA)
+    axis(1,at = pretty(output$new_growth_dt_s), label= NA)
 }
 
 #3-dimensional plot
@@ -145,12 +145,12 @@ plot3d <- function(model_fit, model_data,  cov_name='rho', wd_values=seq(200:800
   facetcol <- cut(zfacet, nbcol)
 
   if (mortality_curve==TRUE){
-    persp(output$new_s_growth_dt*(sd(model_data[[growth_name]])), wd_values, output$mn,
+    persp(output$new_growth_dt_s*(sd(model_data[[growth_name]])), wd_values, output$mn,
           col = color[facetcol], xlab= 'dbh growth', ylab='rho',
           zlab='Mortality probablity/yr', theta=theta, phi=phi, border=NA,ticktype=ticktype)
   }
   else {
-    persp(output$new_s_growth_dt*(sd(model_data[[growth_name]])), wd_values, output$mn,
+    persp(output$new_growth_dt_s*(sd(model_data[[growth_name]])), wd_values, output$mn,
           col = color[facetcol], xlab= 'dbh growth', ylab='rho',
           zlab='Instantaneous hazard rate', theta=theta, phi=phi, border=NA,ticktype=ticktype)
   }
