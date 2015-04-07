@@ -80,22 +80,13 @@ p_i \sim \textrm{bernoulli}(p_i) \end{equation}
 
 We modelled the probability of drying, $p_i$, using a complimentary-log-log link, $\log_e(-\log_e(1-p))$. Unlike the traditional logit link, $\log_e(p/1-p)$, the complimentary-log-log allows regression coefficients to be interpreted as hazard ratios. That is, the hazard for one individual relative to another [@Kleinbaum:2012tn]. It is also asymmetrical and can explicitly account for variable census length [@Allison:1982vd; @Kleinbaum:2012tn], which is particularly important with large-scale monitoring programs such as BCI, where the period of time between revisits of individual trees varies within a single census because there are so many individuals that they cannot be observed simulataneously [@Condit:1995ux].
 
-$p_i$ is modelled as a function of census length (ranging from 3.8 to 5.8 years) and the sum of two independent hazards:
+$p_i$ is modelled as a function of census length (ranging from 3.8 to 5.8 years) and the cumulative hazard $\lambda_i$ for each individual:
 
 \begin{equation} \label{eq:pred_model}
-\log_e(-\log_e(1-p_i)) = \log_e\left(\textrm{census-length}_i \times
-\left(
-\overbrace{\exp\left(alpha_{s[i]} - \exp(beta_{s[i]}) \times
-\frac{\textrm{growth}_i}{2 \times \sigma(\textrm{growth})}
-\right)
-}^{\text{Growth dependent hazard}} +
-\overbrace{\exp(ho_{s[i]})
-}^{\text{Growth independent hazard}}\right)\right)
+\log_e(-\log_e(1-p_i)) = \log_e\left(\textrm{census-length}_i \times \lambda_i\right) 
 \end{equation}
 
-The growth-dependent hazard encapsulates the growth-mortality relationship by allowing the probability of dying to decrease exponentially with growth rate [@Buchman:1983vx; @Kobe:1997vy; @Wyckoff:2002ul; @Mantgem:2003dw]. This relationship consists of two species varying parameters alpha, the intercept term that defines the instantaneous hazard rate at zero growth, and beta, the slope term that defines the decrease in hazard rate per scaled unit growth (Fig.6). By contrast, the growth independent hazard is assumed to be linear and is defined by one species varying parameter, ho. Here, growth was estimated as $\frac{dbh_t - dbh_{t-1}}{\Delta{t}}$.
-
-Instead of calculating the probability of death for a given time period, we can also use this model form to calculcate the instantaneous mortality rate, $\lambda_i$ (also known as the hazard rate; @Kleinbaum:2012tn), for each individual $i$:
+Here, the cumulative hazard, $\lambda_i$, is the sum of two independent hazards - growth-dependent hazard (i.e. death via carbon starvation) and growth-independent (death by all other causes). Growth-dependent hazard encapsulates the growth-mortality relationship by allowing the probability of dying to decrease exponentially with growth rate [@Buchman:1983vx; @Kobe:1997vy; @Wyckoff:2002ul; @Mantgem:2003dw]. This relationship consists of two species varying parameters $alpha$, the intercept term that defines the instantaneous hazard rate at zero growth, and $beta$, the slope term that defines the decrease in hazard rate per scaled unit growth (Fig.6). By contrast, the growth independent hazard is assumed to be linear and is defined by one species varying parameter, ho. Note: we estimate growth as $\frac{dbh_t - dbh_{t-1}}{\Delta{t}}$.
 
 \begin{equation} \label{eq:lambda}
 \lambda_i =
