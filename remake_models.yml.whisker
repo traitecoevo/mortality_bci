@@ -13,7 +13,7 @@ targets:
 
 {{#chains}}
   chainX{{chain}}_model3_trait_species:
-    command: run_single_stan_chain(stan_model3_trait_species, stan_data, chain_id=I({{chain}}), iter=I(10))
+    command: run_single_stan_chain(stan_model3_trait_species, stan_data, chain_id={{chain}}, iter=10)
 {{/chains}}
 
 
@@ -32,7 +32,7 @@ targets:
   # Model {{model}} ----------------------------------------------------------
   ## constant effects
   chain1_model{{model}}_constant:
-    command: run_single_stan_chain(stan_model{{model}}_constant, stan_data, chain_id=I(1), iter=I(10))
+    command: run_single_stan_chain(stan_model{{model}}_constant, stan_data, chain_id=1, iter=10)
 
   stan_model{{model}}_constant:
     command: make_stan_model(chunks_model{{model}}_constant)
@@ -42,7 +42,7 @@ targets:
 
   ## trait effects
   chain1_model{{model}}_trait:
-    command: run_single_stan_chain(stan_model{{model}}_trait, stan_data, chain_id=I(1), iter=I(10))
+    command: run_single_stan_chain(stan_model{{model}}_trait, stan_data, chain_id=1, iter=10)
 
   stan_model{{model}}_trait:
     command: make_stan_model(chunks_model{{model}}_trait)
@@ -52,7 +52,7 @@ targets:
 
   ## species effects
   chain1_model{{model}}_species:
-    command: run_single_stan_chain(stan_model{{model}}_species, stan_data, chain_id=I(1), iter=I(10))
+    command: run_single_stan_chain(stan_model{{model}}_species, stan_data, chain_id=1, iter=10)
 
   stan_model{{model}}_species:
     command: make_stan_model(chunks_model{{model}}_species)
@@ -62,7 +62,7 @@ targets:
 
   ## species + trait effects
   chain1_model{{model}}_trait_species:
-    command: run_single_stan_chain(stan_model{{model}}_trait_species, stan_data, chain_id=I(1), iter=I(10))
+    command: run_single_stan_chain(stan_model{{model}}_trait_species, stan_data, chain_id=1, iter=10)
 
   stan_model{{model}}_trait_species:
     command: make_stan_model(chunks_model{{model}}_trait_species)

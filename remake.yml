@@ -23,7 +23,7 @@ targets:
     command: stan_data_BCI(BCI_model_dataset_census4)
 
   BCI_model_dataset_census4:
-    command: subset_BCI_data_by_census(BCI_model_dataset_full, census=I(4))
+    command: subset_BCI_data_by_census(BCI_model_dataset_full, census=4)
 
   BCI_model_dataset_full:
     command: merge_BCI_data(BCI_demography, BCI_traits)
