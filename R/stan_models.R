@@ -1,5 +1,5 @@
 
-combine_stan_chains <- function(..., d=list(...)) {
+combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
 	sflist2stanfit(d)
  }
 
