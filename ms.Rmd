@@ -222,7 +222,41 @@ plot3d(model_fit = stan_output_combined,
 
 \pagebreak
 
-##Model Code
+## K-fold Cross validation example excerp from [Vehtari & Gelman 2014](http://www.stat.columbia.edu/~gelman/research/unpublished/waic_stan.pdf)
+
+
+To implement K-fold cross-validation in Stan we need to repeatedly fit the model to one subset of the data and use it to predict the held-out set. The way we recommend setting this up is to do the partitioning in R (or Python, or whatever data-processing environment is being used) and then pass the training data and held-out data to Stan in two pieces.
+With linear regression, for example, we start with the Stan model on page 4, passing in the training data as N, y, X and the held-out set as N holdout, y holdout, X holdout, with the data block augmented accordingly. We then keep the data block and model as is, and just alter the generated quantities block to operate on the held-out data. The code looks like this:
+
+```{r eval=FALSE}
+􏰋
+￼￼￼data { int N;
+  int J;
+vector[N] y;
+matrix[N,J] X;
+int N_holdout;
+vector[N_holdout] y_holdout;
+matrix[N_holdout,J] X_holdout;
+}
+  parameters {
+    vector[J] b;
+real<lower=0> sigma;
+  }
+  model {
+    y ~ normal(X*b, sigma);
+increment_log_prob(-log(sigma));
+  }
+  generated quantities {
+    vector[N_holdout] log_lik;
+for (n in 1:N_holdout){
+  // data model
+// log prior for p(sigma) propto 1/sigma
+log_lik[n] <- normal_log(y_holdout[n], X_holdout[n]*b, sigma);
+9
+} }
+
+```
+
 
 \pagebreak
 
