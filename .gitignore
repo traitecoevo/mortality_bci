@@ -1,7 +1,7 @@
 .remake
 downloads
 output
-Junk
+ignore
 figure*
 .Rproj.user
 *.Rproj
