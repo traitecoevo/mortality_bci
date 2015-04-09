@@ -13,8 +13,7 @@ get_chunks_model1_species <- function() {
   c0[s] <- c0_raw[s] * c0_sigma + c0_mu;
   c_log[s] <- c0[s];",
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(c_log[spp[i]]))));",
-  model = "
-  c0_raw[s] ~ normal(0,1);"
+  model = "c0_raw[s] ~ normal(0,1);",
   r_model = function(stan_data, pars) {
     c_log <- pars$c0
     inv_cloglog(log(stan_data$census_length * (exp(c_log))))
@@ -48,7 +47,7 @@ get_chunks_model2_species <- function() {
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * growth_dt_s[i]))));",
   model = "
   a0_raw[s] ~ normal(0,1);
-  b0_raw[s] ~ normal(0,1);"
+  b0_raw[s] ~ normal(0,1);",
   r_model = function(stan_data, pars) {
     a_log <- pars$a0
     b_log <- pars$b0
@@ -91,10 +90,10 @@ get_chunks_model3_species <- function() {
   c0[s] <- c0_raw[s] * c0_sigma + c0_mu;
   c_log[s] <- c0[s];",
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * growth_dt_s[i]) + exp(c_log[spp[i]]))));",
-  model = "
+  model = ",
   a0_raw[s] ~ normal(0,1);
   b0_raw[s] ~ normal(0,1);
-  c0_raw[s] ~ normal(0,1);"
+  c0_raw[s] ~ normal(0,1);",
   r_model = function(stan_data, pars) {
     a_log <- pars$a0
     b_log <- pars$b0

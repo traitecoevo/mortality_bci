@@ -54,7 +54,7 @@ get_chunks_model3_constant <- function() {
   b_log <- b0;
   c_log <- c0;",
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log - exp(b_log) * growth_dt_s[i]) + exp(c_log))));",
-  model = ""
+  model = "",
   r_model = function(stan_data, pars) {
     a_log <- pars$a0
     b_log <- pars$b0
