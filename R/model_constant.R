@@ -29,7 +29,12 @@ get_chunks_model2_constant <- function() {
   a_log <- a0;
   b_log <- b0;",
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log - exp(b_log) * growth_dt_s[i]))));",
-  model = ""
+  model = "",
+  r_model = function(stan_data, pars) {
+    a_log <- pars$a0
+    b_log <- pars$b0
+    inv_cloglog(log(stan_data$census_length * (exp(a_log - exp(b_log) * stan_data$growth_dt_s))))
+  }
   )
 }
 
@@ -50,5 +55,11 @@ get_chunks_model3_constant <- function() {
   c_log <- c0;",
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log - exp(b_log) * growth_dt_s[i]) + exp(c_log))));",
   model = ""
+  r_model = function(stan_data, pars) {
+    a_log <- pars$a0
+    b_log <- pars$b0
+    c_log <- pars$c0
+    inv_cloglog(log(stan_data$census_length * (exp(a_log - exp(b_log) * stan_data$growth_dt_s) + exp(c_log))))
+  }
   )
 }
