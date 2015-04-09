@@ -7,7 +7,8 @@ csl: downloads/style.csl
 bibliography: data/refs.bib
 ---
 
-##Introduction
+## Introduction
+
 Understanding who lives or dies, and why, is critical to accurately predict population, community and ecosystem dynamics [@Hawkes:2000ib; @McDowell:2011dr]. In plants, the carbon budget is considered a fundamental determinant of mortality, such that if rates of carbon assimilation are low or become insufficient for growth, an individual is more likely to die [@Peet:1987va; @Hawkes:2000ib; @Keane:2001db; @McDowell:2011dr]. Empirical studies have broadly supported this assumption, with many studies showing that the probability of dying decreasing exponentially with growth rate [Fig 1; @Buchman:1983vx; @Kobe:1997vy; @Wyckoff:2002ul; @Mantgem:2003dw], and consequently most dynamic vegetation models, including tree gap models [@Botkin:1972ii; @Keane:2001db] and Dynamic Global Vegetation Models (DGVM's; @Woodward:2004ft) use this growth-mortality relationship as the predominant, and in many cases, only cause of plant mortality [@Hawkes:2000ib; @McDowell:2011dr].
 
 <!-- ![Fig1](figures/wyckoff2002.png) -->
@@ -59,7 +60,7 @@ mtext(side=1, 'Growth rate',line = 1, outer=TRUE)
 
 \pagebreak
 
-##Data
+## Data
 
 We are fitting our model to growth and mortality data collected from a tropical rainforest on Barro Colorado Island, Panama @BarroColoradofores:2012up. This rainforest plot has been surveyed every 5 years since 1985 and includes size, growth and status (alive, dead) observations from more than 200,000 individuals across 286 species.
 
@@ -68,7 +69,7 @@ In this study we only use data recorded between 1990 and 2010 for single stemmed
 For more details about the data, or to download it, please click [here](https://repository.si.edu/handle/10088/20925).
 Currently species trait data is not publically available.
 
-##Model Description
+## Model Description
 
 We used a hierarchical generalized linear model to examine how wood density affected growth-dependent and growth-independent tree mortality. These models are well suited to data sets that have a hierarchical structure (e.g. individuals within species) because they can account for observation error and partition both explained and unexplained variation at multiple levels of a dataset [@Gelman:2007te; @Kery:2010tp]. We used Bayesian inference and fitted models to data using Markov chain Monte Carlo (MCMC) sampling in R 3.1.3 using package rstan version 2.6 [@StanDevelopmentTeam:2015uz]. Before commencing model fit, we first scaled growth by dividing by two standard deviations. We then centered and scaled wood density, $rho$, by first log-transforming it and then substracting its mean and dividing by two standard deviations. The advantage of centering and standardizing is that it allows for better mixing of chains and easier interpretation, with intercepts interpreted as average responses and slope terms as partial dependencies conditional on other continuous variables at their mean. Furthermore, standardizing by two standard deviations allows the magnitude of effects to be directly compared between binary and continuous covariates (Gelman and Hill 2007). Three independent chains were executed and in all cases modeled parameters converged within 1000 iterations. Convergence was assessed through both visual inspection of chains and reference to the Brooks-Gelman-Rubin convergence diagnostic [@Gelman:1992ts; @Brooks:1998ju]. After discarding the first 1000 iterations as ‘burn in’, a further 1000 iterations were taken from the joint posterior. The residuals of the model were checked graphically against predictions with none showing any systematic pattern or severe heteroscedasticity. To ensure the effect of wood density was identifiable, and to examine it's effect on all three parameters (i.e growth-mortality intercept and slope, and growth-independent hazard) we selectively removed it from each and visually inspected whether the direction and magnitude of effects were severely altered. Below we describe the full model structure, parameters and priors. We also supply the stan code below.
 
@@ -83,7 +84,7 @@ We modelled the probability of drying, $p_i$, using a complimentary-log-log link
 $p_i$ is modelled as a function of census length (ranging from 3.8 to 5.8 years) and the cumulative hazard $\lambda_i$ for each individual:
 
 \begin{equation} \label{eq:pred_model}
-\log_e(-\log_e(1-p_i)) = \log_e\left(\textrm{census-length}_i \times \lambda_i\right) 
+\log_e(-\log_e(1-p_i)) = \log_e\left(\textrm{census-length}_i \times \lambda_i\right)
 \end{equation}
 
 Here, the cumulative hazard, $\lambda_i$, is the sum of two independent hazards - growth-dependent hazard (i.e. death via carbon starvation) and growth-independent (death by all other causes). Growth-dependent hazard encapsulates the growth-mortality relationship by allowing the probability of dying to decrease exponentially with growth rate [@Buchman:1983vx; @Kobe:1997vy; @Wyckoff:2002ul; @Mantgem:2003dw]. This relationship consists of two species varying parameters $alpha$, the intercept term that defines the instantaneous hazard rate at zero growth, and $beta$, the slope term that defines the decrease in hazard rate per scaled unit growth (Fig.6). By contrast, the growth independent hazard is assumed to be linear and is defined by one species varying parameter, ho. Note: we estimate growth as $\frac{dbh_t - dbh_{t-1}}{\Delta{t}}$.
@@ -158,55 +159,22 @@ Here, the terms $\alpha1$, $\beta1$ and $\gamma1$ represent the effect of wood d
 
 Because we used Bayesian inference we needed to specify prior distributions for all model parameters. For wood density effects ($\alpha1$, $\beta1$ and $\gamma1$) and mean hyperparamters ($\alpha_{\mu}$, $\beta_{mu}$ and $\gamma_{\mu}$) we used stan's default uninformative prior, $\textrm{Uniform(-2,2)}. For hyperparamater standard deviations we used $\textrm{Uniform(0,2)}$.
 
+## Analysis plan
+
+Step 1 - define a general structure of model we think will capture data, on basis of prior knowledge
+Step 2 - assuming species effects on all pars, ask which growth meausre best predicts data, compare 4 growth rates using cross validation
+Step 3 - fit full model with trait effects, look at effect sizes of WD on a, b and c
+Step 4 - based on 3, choose some subsets of models, compare these using both bayes factor (most parsimonious) and predictive capacity
+
+
 \pagebreak
 
-##Results
+## Results
 **Take home message:**
 Wood density decreases intercept (log_a) & further increases the steepness of the growth-mortality slope (log_b). It also decreases the growth-independent hazard log_ho
-
-```{r Model output, echo=FALSE}
-print(stan_output_combined,probs = c(0.025,0.975), digits_summary = 3)
-```
-
-```{r Coefficient plot, fig.height=6,fig.width=6, echo=FALSE}
-coeff_plot(stan_output_combined, params=c('c1','c0_mu','b1','b0_mu','a1','a0_mu'),
-           labels = c('ho x wd','ho','beta x wd','beta','alpha x wd','alpha'),
-           xlab = 'cloglog effect size', transform = NULL)
-```
-
-**Fig 7** log centered and scaled coefficients ± 95 (thin line) and 80% (thick line) Bayesian Credible Intervals. log_a = intercept; log_b = slope, log_ho = asymptote.
-
-
-```{r Hazard rates,fig.height=6,fig.width=6, echo=FALSE}
-par(mfrow=c(2,1),mar=c(4,3,1,1), xaxs='i')
-plot_mortality(model_fit = stan_output_combined ,model_data = stan_data, cov_name = 'rho',
-               wd_values = c(200,800), growth_name = 'growth_dt', mortality_curve = FALSE, xaxis_on = FALSE, haz_lim=c(0,2))
-
-plot_mortality(model_fit = stan_output_combined ,model_data = stan_data, cov_name = 'rho',
-               wd_values = c(200,800), growth_name = 'growth_dt', mortality_curve = TRUE, xaxis_on = TRUE, legend = FALSE)
-```
-
-**Fig 8** Predicted hazard rates (top) and mortality probability (bottom) for an average 200 (black) and 800 kg/m2 (red) kg/m2 wood density species. Errors are 95% credible intervals. rho = wood density.
-
-
-```{r 3d plots, fig.height=10,fig.width=10, echo=FALSE}
-par(mfrow=c(2,1))
-plot3d(model_fit = stan_output_combined,
-        model_data = stan_data, cov_name = 'rho',
-        wd_values = seq(200,800, by=10),
-        theta=145, phi=20,mortality_curve = FALSE)
-
-plot3d(model_fit = stan_output_combined,
-       model_data = stan_data, cov_name = 'rho',
-       wd_values = seq(200,800, by=10),
-       theta=145, phi=20,mortality_curve = TRUE)
-```
-
-**Fig 9** Mean predicted 3D surface for hazard rates (top) and mortality probability (bottom). Note that there is no 'significant' difference at low growth rate between low and high wood density. rho = wood density,This can be better seen in Fig. 8.
-
 \pagebreak
 
-##Notes/Questions
+## Notes/Questions
 
 1 - How much data should we fit to this model? All of it would require the inclusion of a individual random effect to account for non-independence of repeatedly sampled individuals. We could subsample individuals in entire dataset... but again this would require non-independence to be account for. The advantage of this approach is we can also cross validate. Another way to cross validate is to run the model for each census on a subset of individuals spanning all species. Question is, how can we best stratify sampling to ensure low abundance species are also represented.
 
@@ -222,42 +190,32 @@ plot3d(model_fit = stan_output_combined,
 
 \pagebreak
 
-## K-fold Cross validation example excerp from [Vehtari & Gelman 2014](http://www.stat.columbia.edu/~gelman/research/unpublished/waic_stan.pdf)
+## Cross validation
 
+We will implement *K-fold cross validation*.
 
-To implement K-fold cross-validation in Stan we need to repeatedly fit the model to one subset of the data and use it to predict the held-out set. The way we recommend setting this up is to do the partitioning in R (or Python, or whatever data-processing environment is being used) and then pass the training data and held-out data to Stan in two pieces.
-With linear regression, for example, we start with the Stan model on page 4, passing in the training data as N, y, X and the held-out set as N holdout, y holdout, X holdout, with the data block augmented accordingly. We then keep the data block and model as is, and just alter the generated quantities block to operate on the held-out data. The code looks like this:
+According to [Vehtari & Gelman 2014](http://www.stat.columbia.edu/~gelman/research/unpublished/waic_stan.pdf):
 
-```{r eval=FALSE}
-􏰋
-￼￼￼data { int N;
-  int J;
-vector[N] y;
-matrix[N,J] X;
-int N_holdout;
-vector[N_holdout] y_holdout;
-matrix[N_holdout,J] X_holdout;
-}
-  parameters {
-    vector[J] b;
-real<lower=0> sigma;
-  }
-  model {
-    y ~ normal(X*b, sigma);
-increment_log_prob(-log(sigma));
-  }
-  generated quantities {
-    vector[N_holdout] log_lik;
-for (n in 1:N_holdout){
-  // data model
-// log prior for p(sigma) propto 1/sigma
-log_lik[n] <- normal_log(y_holdout[n], X_holdout[n]*b, sigma);
-9
-} }
+  To implement K-fold cross-validation in Stan we need to repeatedly fit the model to one subset of the data and use it to predict the held-out set. The way we recommend setting this up is to do the partitioning in R (or Python, or whatever data-processing environment is being used) and then pass the training data and held-out data to Stan in two pieces. With linear regression, for example, we start with the Stan model on page 4, passing in the training data as N, y, X and the held-out set as N holdout, y holdout, X holdout, with the data block augmented accordingly. We then keep the data block and model as is, and just alter the generated quantities block to operate on the held-out data.
 
-```
+For a model $M$, training data $D$, and test data $D^*$, we want to calculate
+
+$$p(D^* | D,M) = \int p(\theta | D, M) \, p(D^* | \theta, M) \, d \theta$$
+
+The distribution $p(\theta | D, M)$ gives the likelihood of parameter values $\theta$ given the training data (obtained from fitting the model) and is calculated (via Bayes Rule) as
+
+$$p(\theta | D, M) = \frac{p(\theta) \, p(D|\theta)}{p(D)}.$$
+
+$p(D^* | \theta, M)$ is then the probability of observing the test data given a particular parameter set (i.e the likelihood of the data) and is calculated as
+$$p(D^* | \theta, M) = \prod_i p(D^*_i | \theta, M).$$
+
+Log-likelihoods are easier to deal with and so we have
+
+$$\log p(D^* | \theta, M) = \sum_i \log p(D^*_i | \theta, M).$$
+
+Aki \& Gelman 2014 provide methods for estimating "an importance-sampling approximated LOO directly using the log-likelihood evaluated at the posterior simulations of the parameter values"
 
 
 \pagebreak
 
-##References
+## References
