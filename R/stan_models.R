@@ -73,3 +73,10 @@ model {
 ', chunks$parameters, chunks$transformed_parameters_declare, chunks$transformed_parameters_assign, chunks$transformed_parameters_p, chunks$model)
   )
 }
+
+# define accessory functions - equivalenets to those used in stan
+inv_cloglog <- function(x) {1 - exp(-exp(x))}
+
+bernoulli_log <- function(y, p) {
+  dbinom(y, size=1, p, log = TRUE)
+}

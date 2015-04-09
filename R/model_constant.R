@@ -8,7 +8,11 @@ get_chunks_model1_constant <- function() {
   transformed_parameters_assign = "
   c_log <- c0;",
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(c_log))));",
-  model = ""
+  model = "",
+  r_model = function(stan_data, pars) {
+    c_log <- pars$c0
+    inv_cloglog(log(stan_data$census_length * (exp(c_log))))
+  }
   )
 }
 

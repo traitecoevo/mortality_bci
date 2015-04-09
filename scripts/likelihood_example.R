@@ -6,49 +6,36 @@ remake::create_bindings()
 iter <- 100
 
 # Model: 1 with constant effects
-model <- list()
-model <- make_stan_model(get_chunks_model1_constant())
-
-model$pars <- c(model$pars,"p")
-
-# define accessoryfunctions
-inv_cloglog <- function(x) {1 - exp(-exp(x))}
-
-bernoulli_log <- function(y, p) {
-  dbinom(y, size=1, p, log = TRUE)
-}
-
-inv_cloglog <- function(x) {1 - exp(-exp(x))}
-
-bernoulli_log <- function(y, p) {
-  dbinom(y, size=1, p, log = TRUE)
-}
+chunks <- get_chunks_model1_constant()
+model <- make_stan_model(chunks)
 
 # run model in stan
 x <- run_single_stan_chain(model, stan_data, chain_id=1, iter=iter)
 
-# Now extract parameters
-fitted <- extract(x)
-c0 <- fitted$c0
-p_stan <- fitted$p
+log_likelihood <- function(stan_data, x, chunks) {
 
-# Now define R euqivalent for model
-prob_mort <- function(c0, census_length) {
-	c_log <- c0
-	inv_cloglog(log(census_length * (exp(c_log))))
+	pars <- as.data.frame(extract(x, chunks$pars))
+
+	# Prob of mortality predicted by model
+	# returns a list with elements correpsonding to samples in pars
+	p <- 	lapply(seq_len(nrow(pars)), function(i) matrix(chunks$r_model(stan_data, pars[i,,drop=FALSE])))
+
+	# sum of log likeProb of mortality predicted by model
+	# returns a list with elements correpsonding to samples in pars
+
+	# calculate sum log likelihood for each parameter set
+	# returns a vector with rows correpsonding to rows in pars
+	log_lik <- sapply(p, function(x) bernoulli_log(stan_data$y, x))
+	log_lik
 }
 
-# check our calculation of p matches that in stan
-all(prob_mort(c0[1], stan_data$census_length) == p_stan[1,])
 
-# make a matrix to match that of stan
-p_l <- lapply(c0, prob_mort, census_length=stan_data$census_length)
-p <- matrix(unlist(p_l), nrow= nrow(p_stan), ncol=ncol(p_stan), byrow = TRUE)
+# check likelihood same as in stan
+ll 			<- log_likelihood(stan_data, x, chunks)
+all(log_lik-extract(x, "lp__")$lp__ < 1e-5)
 
-all(sapply(seq_len(nrow(p)), function(i) all(p[i,] == p_stan[i,])))
+# likeihood for test data
 
-# Now check calculations of log likelihood
-log_lik_stan <- fitted$lp__
-
-log_lik <- sapply(seq_len(nrow(p)), function(i) sum(bernoulli_log(stan_data$y, p[i,])))
-all(log_lik-log_lik_stan < 1e-5)
+BCI_model_dataset_census5 <- subset_BCI_data_by_census(BCI_model_dataset_full, census=5)
+test_data <- stan_data_BCI(BCI_model_dataset_census5)
+ll_test <- log_likelihood(test_data, x, chunks)
