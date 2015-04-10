@@ -206,3 +206,13 @@ split_into_kfolds <- function(data, k=10) {
   fold <- rep(seq_len(k), nrow(data)/k)
   split(data, fold)
 }
+
+extract_traintest_set <- function(data, n=1) {
+
+  i_train <- seq_len(length(data))[-c(n)]
+
+  list(
+    train = rbind_all(data[i_train]),
+    test = data[[n]]
+    )
+}
