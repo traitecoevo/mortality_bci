@@ -187,6 +187,7 @@ reduce_to_single_ind_obs <- function(data){
     
     data %>% 
     group_by(treeid) %>%
-    mutate(keep = sample_one(.) ) %>%
-    filter(keep == TRUE)
+    mutate(keep = sample_one(treeid) ) %>%
+    filter(keep == TRUE) %>%
+    select(-keep)
 }
