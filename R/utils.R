@@ -27,3 +27,36 @@ to_df <- function(x) {
   class(d) <- "data.frame"
   d
 }
+
+# An extension of capture.output function, allows you to run and
+# log both output and results to file
+capture_output2 <- function(..., name, divert_messages=!interactive()) {
+
+  filename <- sprintf("%s.rds", name)
+  logfile <- sprintf("%s.txt", name)
+
+  dir.create(dirname(name), showWarnings=FALSE, recursive=TRUE)
+
+  if (divert_messages) {
+    message("Diverting messages to ", logfile)
+    con <- file(logfile, open="wt")
+    sink(con, type="message") # Dangerous!
+    sink(con, type="output")
+    on.exit(sink(NULL, type="message"))
+    on.exit(sink(NULL, type="output"), add=TRUE)
+  }
+  message("--- Starting at ", Sys.time())
+
+  # This next section adapated from capture.output
+  # Evaluate all expressions in parent frame
+  # NB only last one is returned
+  args <- substitute(list(...))[-1L]
+  for (i in seq_along(args)) {
+      expr <- args[[i]]
+      tmp <- eval(expr,   envir = parent.frame())
+  }
+
+  saveRDS(tmp, filename)
+  message("--- Finishing at ", Sys.time())
+  tmp
+}
