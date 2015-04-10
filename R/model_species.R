@@ -90,7 +90,7 @@ get_chunks_model3_species <- function() {
   c0[s] <- c0_raw[s] * c0_sigma + c0_mu;
   c_log[s] <- c0[s];",
   transformed_parameters_p = "p[i] <- inv_cloglog(log(census_length[i] * (exp(a_log[spp[i]] - exp(b_log[spp[i]]) * growth_dt_s[i]) + exp(c_log[spp[i]]))));",
-  model = ",
+  model = "
   a0_raw[s] ~ normal(0,1);
   b0_raw[s] ~ normal(0,1);
   c0_raw[s] ~ normal(0,1);",
