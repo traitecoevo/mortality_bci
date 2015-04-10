@@ -4,12 +4,15 @@ combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
  }
 
 run_single_stan_chain <- function(model, data, chain_id, iter=1000, seed=123){
-	stan(model_code=model$model_code, data=data,
+
+  data_for_stan <- prep_data_for_stan(data, model$growth_measure)
+	stan(model_code = model$model_code,
+       data = data_for_stan,
        pars = model$pars,
        iter = iter, seed=seed, chains=1, chain_id=chain_id, refresh=-1)
 }
 
-stan_data_BCI <- function(data, growth_measure = "dbh_dt") {
+prep_data_for_stan <- function(data, growth_measure = "dbh_dt") {
 
   growth_data <- data[[growth_measure]]
   rho = unique(data$rho)
@@ -28,9 +31,10 @@ stan_data_BCI <- function(data, growth_measure = "dbh_dt") {
 }
 
 
-make_stan_model <- function(chunks) {
+make_stan_model <- function(chunks, growth_measure= "dbh_dt") {
 	list(
 		pars = chunks$pars,
+    growth_measure = growth_measure,
 		model_code = sprintf('
 data {
   int<lower=0> n_obs;
