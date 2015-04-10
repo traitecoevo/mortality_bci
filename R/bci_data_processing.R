@@ -163,7 +163,9 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
     filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt)) %>%
     select(sp,treeid,censusid,exactdate,julian,census_interval,pom,nostems,
            dbh,dbh_dt,dbh_dt_rel,basal_area,basal_area_dt,
-           basal_area_dt_rel,dead_next_census)
+           basal_area_dt_rel,dead_next_census) %>%
+    ungroup()
+
 }
 #Final counts between 1990 and 2010 censuses:
 #No. Obs = 775871
@@ -178,16 +180,29 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
 #No. Inidividuals only recorded once = 103023
 
 reduce_to_single_ind_obs <- function(data){
-    
-    # retruns vector of same lenght which is all 0 except for a single 1
+
+    # returns vector of same length which is all FALSE except
+    # for a single, randomly placed TRUE
     sample_one <- function(x) {
       rnd <- runif(length(x))
       rnd==max(rnd)
     }
-    
-    data %>% 
+
+    data %>%
     group_by(treeid) %>%
     mutate(keep = sample_one(treeid) ) %>%
     filter(keep == TRUE) %>%
-    select(-keep)
+    select(-keep) %>%
+    ungroup()
+}
+
+# split into k equally sized datasets
+split_into_kfolds <- function(data, k=10) {
+  # make dataset an even multiple of 10
+  data <- data[seq_len(floor(nrow(data)/k)*k),]
+  # execute the split
+  # use an ordered vector so that all species distributed
+  # apporx. equally across groups
+  fold <- rep(seq_len(k), nrow(data)/k)
+  split(data, fold)
 }
