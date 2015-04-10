@@ -25,12 +25,8 @@ targets:
   BCI_model_dataset_census4:
     command: subset_BCI_data_by_census(BCI_model_dataset_full, census=4)
 
-  stan_data_folds:
-    command: make_folds_stan(BCI_model_dataset_folds)
-    cleanup_level: purge
-
   BCI_model_dataset_folds:
-    command: split_into_kfolds_for_stan(BCI_model_dataset_unique)
+    command: split_into_kfolds(BCI_model_dataset_unique)
     cleanup_level: purge
 
   BCI_model_dataset_unique:
