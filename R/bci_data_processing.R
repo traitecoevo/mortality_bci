@@ -177,3 +177,16 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
 #No. NA spcodes = 0. New dataset fixed this issue
 #No. Inidividuals only recorded once = 103023
 
+reduce_to_single_ind_obs <- function(data){
+    
+    # retruns vector of same lenght which is all 0 except for a single 1
+    sample_one <- function(x) {
+      rnd <- runif(length(x))
+      rnd==max(rnd)
+    }
+    
+    data %>% 
+    group_by(treeid) %>%
+    mutate(keep = sample_one(.) ) %>%
+    filter(keep == TRUE)
+}

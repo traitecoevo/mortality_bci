@@ -28,6 +28,10 @@ targets:
   BCI_model_dataset_full:
     command: merge_BCI_data(BCI_demography, BCI_traits)
     cleanup_level: purge
+    
+  BCI_model_dataset_unique:
+    command: reduce_to_single_ind_obs(BCI_model_dataset_full)
+    cleanup_level: purge
 
   BCI_demography:
     command: BCI_calculate_individual_growth(BCI_50haplot, BCI_nomenclature)
