@@ -27,15 +27,19 @@ targets:
 
   BCI_model_dataset_full:
     command: merge_BCI_data(BCI_demography, BCI_traits)
+    cleanup_level: purge
 
   BCI_demography:
     command: BCI_calculate_individual_growth(BCI_50haplot, BCI_nomenclature)
+    cleanup_level: purge
 
   BCI_traits:
     command: load_trait_data("data/BCI_traits_20101220.csv")
+    cleanup_level: purge
 
   BCI_50haplot:
     command: BCI_load_50ha_plot("downloads/bci.full.Rdata31Aug2012.zip")
+    cleanup_level: purge
 
   downloads/bci.full.Rdata31Aug2012.zip:
     command: BCI_download_50ha_plot_full(target_name)
