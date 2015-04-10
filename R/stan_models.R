@@ -10,14 +10,20 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000, seed=123){
 }
 
 stan_data_BCI <- function(data, growth_measure = "dbh_dt") {
+
+  growth_data <- data[[growth_measure]]
+  rho = unique(data$rho)
+
   list(
     n_obs = nrow(data),
     n_spp = length(unique(data$sp)),
-    spp = as.numeric(factor(data$sp), as.character(unique(data$sp))),
-    rho =  unique(data$rho),
-    growth_dt = data[[growth_measure]],
+    spp = as.numeric(factor(data$sp)),
+    y = as.integer(data$dead_next_census),
     census_length = data$census_interval,
-    y = as.integer(data$dead_next_census)
+    growth_dt = growth_data,
+    growth_dt_s = growth_data / (2*sd(growth_data)),
+    rho =  rho,
+    log_rho_cs  = (log(rho) - mean(log(rho)))/ (2*sd(log(rho)))
     )
 }
 
@@ -32,16 +38,10 @@ data {
   int<lower=0> n_spp;
   int<lower=1> spp[n_obs];
   vector[n_obs] census_length;
-  vector[n_obs] growth_dt;
-  vector[n_spp] rho;
-}
-transformed data { // centers and standardizes predictors
   vector[n_obs] growth_dt_s;
   vector[n_spp] log_rho_cs;
-
-  growth_dt_s <- growth_dt / (2*sd(growth_dt));
-  log_rho_cs  <- (log(rho) - mean(log(rho)))/ (2*sd(log(rho)));
 }
+
 parameters { // assumes uniform priors on all parameters
   %s
 }
