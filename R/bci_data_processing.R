@@ -85,6 +85,13 @@ calculate_growth_rate <- function(x, t, f=function(y) y){
   c(NA, diff(f(x))/dt)
 }
 
+drop_last <- function(x) {
+  if(length(x) > 0)
+    x[seq_len(length(x)-1)]
+  else
+    NULL
+}
+
 # Function to identify bad data. Adapted from function in CTFS R package
 CTFS_sanity_check <- function(dbh, dbh_increment, dbasal_diam_dt) {
 
@@ -156,14 +163,16 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
       basal_area = 0.25*pi*dbh^2,
       basal_area_dt = calculate_growth_rate(basal_area, julian),
       basal_area_dt_rel = calculate_growth_rate(basal_area, julian, log),
-      dead_next_census = mortality_in_next_census(dfstatus)) %>%
+      dead_next_census = mortality_in_next_census(dfstatus),
+      dbh_prev = c(NA, drop_last(dbh))
+      ) %>%
 
     # Only keep alive stems
     filter(dfstatus=="alive") %>%
     filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt)) %>%
     select(sp,treeid,censusid,exactdate,julian,census_interval,pom,nostems,
            dbh,dbh_dt,dbh_dt_rel,basal_area,basal_area_dt,
-           basal_area_dt_rel,dead_next_census) %>%
+           basal_area_dt_rel,dead_next_census, dbh_prev) %>%
     ungroup()
 
 }
