@@ -29,6 +29,11 @@ RUN install2.r --error  \
     inline \
     rmarkdown
 
+RUN MAKEVARS="-j1" install2.r --error  \
+    --repos=http://cran.rstudio.com  \
+    --repos=http://rstan.org/repo \
+    rstan
+
 RUN installGithub.r  \
     richfitz/remake \
     richfitz/remoji \
@@ -36,10 +41,5 @@ RUN installGithub.r  \
     richfitz/RedisAPI \
     richfitz/RedisHeartbeat \
     traitecoevo/rrqueue
-
-RUN MAKEVARS="-j1" install2.r --error  \
-    --repos=http://cran.rstudio.com  \
-    --repos=http://rstan.org/repo \
-    rstan
 
 CMD ["bash"]
