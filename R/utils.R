@@ -58,7 +58,7 @@ capture_output2 <- function(..., name, divert_messages=!interactive()) {
 
   saveRDS(tmp, filename)
   message("--- Finishing at ", Sys.time())
-  tmp
+  filename
 }
 
 str_eval <- function(x) {eval(parse(text=x))}
