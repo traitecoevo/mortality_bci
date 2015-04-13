@@ -37,8 +37,7 @@ RUN installGithub.r  \
     richfitz/RedisHeartbeat \
     traitecoevo/rrqueue
 
-# This will be needed but runs out of memory on boot2docker
-RUN install2.r --error  \
+RUN MAKEVARS="-j1" install2.r --error  \
     --repos=http://cran.rstudio.com  \
     --repos=http://rstan.org/repo \
     rstan
