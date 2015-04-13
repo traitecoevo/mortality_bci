@@ -60,3 +60,5 @@ capture_output2 <- function(..., name, divert_messages=!interactive()) {
   message("--- Finishing at ", Sys.time())
   tmp
 }
+
+str_eval <- function(x) {eval(parse(text=x))}
