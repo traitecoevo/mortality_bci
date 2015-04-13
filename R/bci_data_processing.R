@@ -181,19 +181,22 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
 
 reduce_to_single_ind_obs <- function(data){
 
-    # returns vector of same length which is all FALSE except
-    # for a single, randomly placed TRUE
-    sample_one <- function(x) {
-      rnd <- runif(length(x))
-      rnd==max(rnd)
-    }
+  # set seed so that same subsetting is implemented on all machines
+  set.seed(523)
 
-    data %>%
-    group_by(treeid) %>%
-    mutate(keep = sample_one(treeid) ) %>%
-    filter(keep == TRUE) %>%
-    select(-keep) %>%
-    ungroup()
+  # returns vector of same length which is all FALSE except
+  # for a single, randomly placed TRUE
+  sample_one <- function(x) {
+    rnd <- runif(length(x))
+    rnd==max(rnd)
+  }
+
+  data %>%
+  group_by(treeid) %>%
+  mutate(keep = sample_one(treeid) ) %>%
+  filter(keep == TRUE) %>%
+  select(-keep) %>%
+  ungroup()
 }
 
 # split into k equally sized datasets
