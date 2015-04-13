@@ -38,9 +38,9 @@ RUN installGithub.r  \
     traitecoevo/rrqueue
 
 # This will be needed but runs out of memory on boot2docker
-# RUN install2.r --error  \
-#     --repos=http://cran.rstudio.com  \
-#     --repos=http://rstan.org/repo \
-#     rstan
+RUN install2.r --error  \
+    --repos=http://cran.rstudio.com  \
+    --repos=http://rstan.org/repo \
+    rstan
 
 CMD ["bash"]
