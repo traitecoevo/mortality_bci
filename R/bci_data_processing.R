@@ -207,12 +207,18 @@ split_into_kfolds <- function(data, k=10) {
   split(data, fold)
 }
 
-extract_traintest_set <- function(data, n=1) {
+extract_traintest_set <- function(data, k=NA) {
 
-  i_train <- seq_len(length(data))[-c(n)]
+  # by default train on whole dataset
+  i_train <- seq_len(length(data))
+  i_test <- NA
 
+  if(is.numeric(k)){
+    i_train <- i_train[-c(k)]
+    i_test <- k
+  }
   list(
     train = rbind_all(data[i_train]),
-    test = data[[n]]
+    test = rbind_all(data[i_test])
     )
 }

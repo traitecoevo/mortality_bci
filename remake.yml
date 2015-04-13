@@ -27,6 +27,7 @@ targets:
 
   BCI_training_test:
     depends:
+      - BCI_training_full
       - BCI_training_test_1
       - BCI_training_test_2
       - BCI_training_test_3
@@ -37,6 +38,10 @@ targets:
       - BCI_training_test_8
       - BCI_training_test_9
       - BCI_training_test_10
+
+  BCI_training_full:
+    command: extract_traintest_set(BCI_model_dataset_folds, NA)
+    cleanup_level: purge
 
   BCI_training_test_1:
     command: extract_traintest_set(BCI_model_dataset_folds, 1)
