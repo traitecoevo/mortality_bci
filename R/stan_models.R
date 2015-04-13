@@ -3,13 +3,18 @@ combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
 	sflist2stanfit(d)
  }
 
-run_single_stan_chain <- function(model, data, chain_id, iter=1000, seed=123){
+run_single_stan_chain <- function(model, data, chain_id, iter=1000,
+  sample_file=NA, diagnostic_file=NA) {
 
   data_for_stan <- prep_data_for_stan(data, model$growth_measure)
 	stan(model_code = model$model_code,
        data = data_for_stan,
        pars = model$pars,
-       iter = iter, seed=seed, chains=1, chain_id=chain_id, refresh=-1)
+       iter = iter,
+       chains=1, chain_id=chain_id,
+       refresh=-1, # What is this?
+       sample_file=sample_file,
+       diagnostic_file=diagnostic_file)
 }
 
 prep_data_for_stan <- function(data, growth_measure = "dbh_dt") {
