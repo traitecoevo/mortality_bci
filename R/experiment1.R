@@ -32,5 +32,5 @@ exp1_run_model <- function(pars) {
   ## The model output is large so instead of returning it we'll just
   ## dump into a file.
   saveRDS(res, pars$filename)
-  res$filename
+  pars$filename
 }
