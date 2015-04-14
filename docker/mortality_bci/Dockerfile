@@ -43,7 +43,7 @@ RUN MAKEVARS="-j1" install2.r --error  \
     --repos=http://rstan.org/repo \
     rstan
 
-RUN installGithub.r treeecoevo rrqueue \
+RUN installGithub.r traitecoevo/rrqueue \
   && r -e 'rrqueue:::install_scripts("/usr/local/bin")'
 
 WORKDIR /work
