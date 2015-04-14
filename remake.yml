@@ -1,6 +1,6 @@
 packages:
-  - dplyr
   - rstan
+  - dplyr
   - RCurl
   - downloader
   - rmarkdown

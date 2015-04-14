@@ -26,11 +26,13 @@ prep_data_for_stan <- function(data, growth_measure = "dbh_dt") {
     n_obs = nrow(data),
     n_spp = length(unique(data$sp)),
     spp = as.numeric(factor(data$sp)),
+    n_census = length(unique(data$censusid)),
+    census = as.numeric(factor(data$censusid)),
     y = as.integer(data$dead_next_census),
     census_length = data$census_interval,
     growth_dt = growth_data,
     growth_dt_s = growth_data / (2*sd(growth_data)),
-    rho =  rho,
+    rho =  unique(rho),
     log_rho_cs  = (log(rho) - mean(log(rho)))/ (2*sd(log(rho)))
     )
 }
@@ -43,9 +45,11 @@ make_stan_model <- function(chunks, growth_measure= "dbh_dt") {
 		model_code = sprintf('
 data {
   int<lower=0> n_obs;
-  int<lower=0, upper=1> y[n_obs];
   int<lower=0> n_spp;
   int<lower=1> spp[n_obs];
+  int<lower=0> n_census;
+  int<lower=1> census[n_obs];
+  int<lower=0, upper=1> y[n_obs];
   vector[n_obs] census_length;
   vector[n_obs] growth_dt_s;
   vector[n_spp] log_rho_cs;
@@ -57,29 +61,19 @@ parameters { // assumes uniform priors on all parameters
 
 transformed parameters {
   real<lower=0, upper=1> p[n_obs];
-
  %s
-
-  for (s in 1:n_spp){ # Add species random effect & effects of rho
-    %s
-  }
-
-  for (i in 1:n_obs) { // Estimate p
-    %s
-  }
 }
 
 model {
   // non-centered parameterization Papaspiliopoulos et al. (2007).
   // x_raw[s]implies normal(x_mu, x_sigma)
+    
+  %s
 
-  for (s in 1:n_spp) {
-    %s
-  }
   // Sample Pr(Dying) from bernoulli
   y ~ bernoulli(p);
 }
-', chunks$parameters, chunks$transformed_parameters_declare, chunks$transformed_parameters_assign, chunks$transformed_parameters_p, chunks$model)
+', chunks$parameters, chunks$transformed_parameters, chunks$model)
   )
 }
 
