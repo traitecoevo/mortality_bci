@@ -188,49 +188,70 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
 #No. NA spcodes = 0. New dataset fixed this issue
 #No. Inidividuals only recorded once = 103023
 
-reduce_to_single_ind_obs <- function(data){
-
+reduce_to_single_ind_obs <- function(data) {
   # set seed so that same subsetting is implemented on all machines
   set.seed(523)
 
   # returns vector of same length which is all FALSE except
   # for a single, randomly placed TRUE
   sample_one <- function(x) {
-    rnd <- runif(length(x))
-    rnd==max(rnd)
+    seq_along(x) == sample(length(x), 1)
   }
 
-  data %>%
-  group_by(treeid) %>%
-  mutate(keep = sample_one(treeid) ) %>%
-  filter(keep == TRUE) %>%
-  select(-keep) %>%
-  ungroup()
+  ret <-
+    data %>%
+      group_by(treeid) %>%
+      mutate(keep = sample_one(treeid)) %>%
+      filter(keep) %>%
+      select(-keep) %>%
+      ungroup()
+  ## Someone with dplyr foo can do the incredibly difficult thing of
+  ## working out how to subset columns by name later.
+  # This is the set of columns we actually need:
+  cols <- c("rho", "sp", "censusid", "dead_next_census",
+            "census_interval", "dbh_dt", "dbh_dt_rel",
+            "basal_area_dt", "basal_area_dt_rel")
+  ret[cols]
 }
 
 # split into k equally sized datasets
 split_into_kfolds <- function(data, k=10) {
   # make dataset an even multiple of 10
-  data <- data[seq_len(floor(nrow(data)/k)*k),]
+  data <- data[seq_len(floor(nrow(data) / k) * k), ]
   # execute the split
   # use an ordered vector so that all species distributed
-  # apporx. equally across groups
+  # approx. equally across groups
   fold <- rep(seq_len(k), nrow(data)/k)
   split(data, fold)
 }
 
 extract_traintest_set <- function(data, k=NA) {
-
   # by default train on whole dataset
   i_train <- seq_len(length(data))
-  i_test <- NA
-
-  if(is.numeric(k)){
-    i_train <- i_train[-c(k)]
+  if (is.na(k)) {
+    i_test <- NA
+  } else {
+    i_train <- setdiff(i_train, k)
     i_test <- k
   }
+
   list(
     train = rbind_all(data[i_train]),
-    test = rbind_all(data[i_test])
-    )
+    test  = rbind_all(data[i_test]))
+}
+
+make_traintest <- function(data) {
+  lapply(seq_along(data), function(i)
+         extract_traintest_set(data, i))
+}
+
+## Really ugly working around something I've not worked out how to do
+## in remake (1 function -> n file outputs)
+export_data <- function(data, filename) {
+  saveRDS(data, filename)
+  filename_fmt <- sub("\\.rds$", "_%s.rds", filename)
+  filename_sub <- sprintf(filename_fmt, seq_along(data))
+  for (i in seq_along(data)) {
+    saveRDS(data[[i]], filename_sub[[i]])
+  }
 }

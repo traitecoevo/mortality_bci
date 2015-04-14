@@ -24,7 +24,7 @@ for (s in sources) {
   source(s)
 }
 
-pars <- exp1_pars()
+pars <- exp1_pars(iter=10)
 pars_list <- df_to_list(pars)
 for (d in unique(dirname(pars$filename))) {
   dir.create(d, FALSE, TRUE)
