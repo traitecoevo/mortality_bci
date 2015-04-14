@@ -62,3 +62,8 @@ capture_output2 <- function(..., name, divert_messages=!interactive()) {
 }
 
 str_eval <- function(x) {eval(parse(text=x))}
+
+df_to_list <- function(x) {
+  attr(x, "out.attrs") <- NULL # expand.grid leaves this behind.
+  unname(lapply(split(x, seq_len(nrow(x))), as.list))
+}
