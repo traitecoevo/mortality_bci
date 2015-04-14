@@ -29,17 +29,23 @@ RUN install2.r --error  \
     inline \
     rmarkdown
 
+RUN installGithub.r  \
+    richfitz/remake \
+    richfitz/remoji \
+    richfitz/rfiglet \
+    ropensci/RedisAPI \
+    richfitz/RedisHeartbeat
+
+# This fails fairly easily, especially if the machine is under heavy
+# load
 RUN MAKEVARS="-j1" install2.r --error  \
     --repos=http://cran.rstudio.com  \
     --repos=http://rstan.org/repo \
     rstan
 
-RUN installGithub.r  \
-    richfitz/remake \
-    richfitz/remoji \
-    richfitz/rfiglet \
-    richfitz/RedisAPI \
-    richfitz/RedisHeartbeat \
-    traitecoevo/rrqueue
+RUN installGithub.r treeecoevo rrqueue \
+  && r -e 'rrqueue:::install_scripts("/usr/local/bin")'
+
+WORKDIR /work
 
 CMD ["bash"]
