@@ -17,8 +17,8 @@ clone_or_pull ../ work
 WORK=$(pwd)/work
 QUEUE=rrq
 
-docker build -t mortality_bci -f mortality_bci/Dockerfile .
-docker build -t mortality_bci_worker mortality_bci_worker
+docker build -t richfitz/mortality_bci -f mortality_bci/Dockerfile .
+docker build -t richfitz/mortality_bci_worker mortality_bci_worker
 
 ## The database, if it's not up already
 if [ $(docker inspect -f {{.State.Running}} redis) == "false" ]; then
