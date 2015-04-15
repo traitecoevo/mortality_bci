@@ -1,12 +1,13 @@
 exp1_pars <- function(iter=2000) {
   chains <- 3
   model <- 3
-  effects <- c("constant", "trait", "species", "trait_species")
+  effects <- c("species")
   growth_measures <- c("dbh_dt", "dbh_dt_rel", "basal_area_dt",
                        "basal_area_dt_rel")
   ndata <- 10
 
-  ret <- expand.grid(iter=iter,
+  ret <- expand.grid(experiment="exp1",
+                     iter=iter,
                      chain=seq_len(chains),
                      model=model,
                      effect=effects,
