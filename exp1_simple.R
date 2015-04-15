@@ -6,7 +6,7 @@
 ##
 ## There are odd choices made for how this is structured; these are to
 ## meet part way with rrqueue.
-packages <- "rstan"
+packages <- c("rstan", "plyr")
 sources <- c("R/model_all.R",
              "R/model_constant.R",
              "R/model_species.R",
@@ -24,13 +24,45 @@ for (s in sources) {
   source(s)
 }
 
-pars <- exp1_pars(iter=10)
+# Launching
+pars <- exp1_pars()
 pars_list <- df_to_list(pars)
 for (d in unique(dirname(pars$filename))) {
   dir.create(d, FALSE, TRUE)
 }
 
 ## Try on a test data set.
-i <- which(pars$effect == "trait_species")[[1]]
-p <- pars_list[[i]]
-res <- exp1_run_model(p)
+# i <- which(pars$effect == "trait_species")[[1]]
+# p <- pars_list[[i]]
+# res <- exp1_run_model(p)
+
+
+## Analysis
+split_ids <- c("model", "effect", "growth_measure", "data")
+complete <- file.exists(pars$filename)
+results <- pars[complete,]
+
+summarise_stanfits <- function(x) {
+  data.frame(lp=mean(extract(x, 'lp__')$lp__),
+                          n_eff_min=min(summary(x)$summary[, 'n_eff']),
+                          rhat_max=max(summary(x)$summary[, 'Rhat']),
+                          r_bad_n=length(which(summary(x)$summary[, 'Rhat'] > 1.1)))
+}
+
+load_stan_chains <- function(files) {
+  n_chains <- length(files)
+  if(n_chains == 0) {
+    NULL
+  } else if(n_chains == 1) {
+    readRDS(files[1])
+  } else if(n_chains > 1) {
+    sflist2stanfit(lapply(files, readRDS))
+  }
+}
+
+load_summarise_stan <- function(data) {
+   chains <- load_stan_chains(data$filename)
+   data.frame(n_chains = length(data$filename), summarise_stanfits(chains))
+}
+
+x <- ddply(results, split_ids, load_summarise_stan)
