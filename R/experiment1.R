@@ -1,3 +1,23 @@
+exp1_pars_test <- function(iter=10) {
+  chains <- 1
+  model <- seq_len(3)
+  effects <- c("constant","species","trait", "trait_species")
+  growth_measures <- c("dbh_dt")
+  ndata <- 1
+  
+  ret <- expand.grid(experiment="test",
+                     iter=iter,
+                     chain=seq_len(chains),
+                     model=model,
+                     effect=effects,
+                     growth_measure=growth_measures,
+                     data=seq_len(ndata),
+                     stringsAsFactors=FALSE)
+  ret$filename <- sprintf("results/test/%d.rds", seq_len(nrow(ret)))
+  
+  ret
+}
+
 exp1_pars <- function(iter=2000) {
   chains <- 3
   model <- 3
