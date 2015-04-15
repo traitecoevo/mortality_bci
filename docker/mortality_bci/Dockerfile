@@ -43,8 +43,15 @@ RUN MAKEVARS="-j1" install2.r --error  \
     --repos=http://rstan.org/repo \
     rstan
 
-RUN installGithub.r traitecoevo/rrqueue \
-  && r -e 'rrqueue:::install_scripts("/usr/local/bin")'
+# option 1: install from github (won't autorefresh)
+# RUN installGithub.r traitecoevo/rrqueue \
+#   && r -e 'rrqueue:::install_scripts("/usr/local/bin")'
+
+# option 2: install locally
+COPY src /src
+RUN R CMD INSTALL /src/rrqueue \
+  && r -e 'rrqueue:::install_scripts("/usr/local/bin")' \
+  && rm -rf /src
 
 WORKDIR /work
 

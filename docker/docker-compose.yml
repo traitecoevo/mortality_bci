@@ -1,0 +1,10 @@
+redis:
+  image: redis:latest
+
+worker:
+  image: richfitz/mortality_bci_worker
+  command: log rrq --redis-host redis
+  links:
+    - redis
+  volumes:
+    - ${PWD}/work:/work

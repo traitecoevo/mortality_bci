@@ -1,5 +1,4 @@
-mkdir -p src
-
+## 0. preparation
 function clone_or_pull {
     SRC="$1"
     DEST="$2"
@@ -12,28 +11,41 @@ function clone_or_pull {
     fi
 }  
 
+## 1. Build the main image:
+mkdir -p src
 # clone_or_pull ../../rrqueue src/rrqueue
-clone_or_pull ../ work
-WORK=$(pwd)/work
-QUEUE=rrq
-
+clone_or_pull https://github.com/traitecoevo/rrqueue src/rrqueue
 docker build -t richfitz/mortality_bci -f mortality_bci/Dockerfile .
+
+## 2. Build the worker image based on this:
 docker build -t richfitz/mortality_bci_worker mortality_bci_worker
 
-## The database, if it's not up already
-if [ $(docker inspect -f {{.State.Running}} redis) == "false" ]; then
-    docker run --name redis -d redis:latest
-fi
+## 3. Clone the project
+clone_or_pull ../ work
 
-## Workers:
-docker run --link redis:redis -v ${WORK}:/work -it mortality_bci_worker worker1.log ${QUEUE} --redis-host redis
-docker run --link redis:redis -v ${WORK}:/work -it mortality_bci_worker worker2.log ${QUEUE} --redis-host redis
+## 4. Configure to allow for 2 workers:
+docker-compose scale redis=1 worker=2
 
-docker run --link redis:redis -v ${WORK}:/work -it mortality_bci
+## or just launch the container:
+##   docker-compose up
 
-# Then in R:
+## 5. Launch the controller:
+docker run --link docker_redis_1:redis -v ${PWD}/work:/work -it richfitz/mortality_bci:latest R
+
+# con <- RedisAPI::hiredis("redis")
+# con$PING()
+
 # con <- RedisAPI::hiredis("redis")
 # obj <- rrqueue::queue("rrq", con=con)
 # for (i in 1:100) {
 #   obj$enqueue(sin(1))
 # }
+
+## Cleanup is not happening correctly, so workers are being lost.
+
+## 6. Cleanup
+
+## all, with confirmation:
+##   docker-compose rm
+## all workers, skipping y/n question:
+##   docker-compose rm --force worker
