@@ -33,6 +33,7 @@ create_dirs(pars_list)
 # res <- train_model(pars_list[[i]])
 
 ## Rerun jobs if needed
+# rerun <- c(21,1,25,39,73,74,75,98,51,80,31, 43,44)
 # rerun <- which(!file.exists(pars$filename))
 # tmp <- mclapply(df_to_list(pars[rerun,]), train_model, mc.cores=8, mc.preschedule = FALSE)
 
@@ -42,10 +43,13 @@ complete <- file.exists(pars$filename)
 results <- pars[complete,]
 
 summarise_stanfits <- function(x) {
+
+  sx <- summary(x)$summary
+
   data.frame(lp=mean(extract(x, 'lp__')$lp__),
-                          n_eff_min=min(summary(x)$summary[, 'n_eff']),
-                          rhat_max=max(summary(x)$summary[, 'Rhat']),
-                          r_bad_n=length(which(summary(x)$summary[, 'Rhat'] > 1.1)))
+                          n_eff_min=min(sx[, 'n_eff']),
+                          rhat_max =max(sx[, 'Rhat']),
+                          r_bad_n =sum(sx[, 'Rhat'] > 1.1))
 }
 
 load_stan_chains <- function(files) {
@@ -65,3 +69,7 @@ load_summarise_stan <- function(data) {
 }
 
 x <- ddply(results, split_ids, load_summarise_stan)
+y <- ddply(results, c(split_ids, "chain"), load_summarise_stan)
+
+y2 <- merge(y, pars, by = c(split_ids, "chain"))
+y2[y2$r_bad_n > 0,]$jobid
