@@ -1,4 +1,26 @@
 
+create_dirs <- function(pars_list) {
+  tmp <- lapply(pars_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
+}
+
+train_model <- function(pars) {
+  data <- readRDS(pars$train_data)$train
+
+  ## Assemble the stan model:
+  chunks <- get_chunks(pars$model, pars$effect)
+  model <- make_stan_model(chunks, growth_measure=pars$growth_measure)
+
+  ## Actually run the model
+  res <- run_single_stan_chain(model, data,
+                               chain_id=pars$chain,
+                               iter=pars$iter)
+
+  ## The model output is large so instead of returning it we'll just
+  ## dump into a file.
+  saveRDS(res, pars$filename)
+  pars$filename
+}
+
 combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
 	sflist2stanfit(d)
  }

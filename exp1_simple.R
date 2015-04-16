@@ -27,16 +27,14 @@ for (s in sources) {
 # Launching
 pars <- exp1_pars()
 pars_list <- df_to_list(pars)
-for (d in unique(dirname(pars$filename))) {
-  dir.create(d, FALSE, TRUE)
-}
+create_dirs(pars_list)
 
 ## Try on a test data set.
-# res <- exp1_run_model(pars_list[[i]])
+# res <- train_model(pars_list[[i]])
 
 ## Rerun jobs if needed
-rerun <- which(!file.exists(pars$filename))
-tmp <- mclapply(df_to_list(pars[rerun,]), exp1_run_model, mc.cores=8, mc.preschedule = FALSE)
+# rerun <- which(!file.exists(pars$filename))
+# tmp <- mclapply(df_to_list(pars[rerun,]), train_model, mc.cores=8, mc.preschedule = FALSE)
 
 ## Analysis
 split_ids <- c("model", "effect", "growth_measure", "data")

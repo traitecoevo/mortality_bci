@@ -31,4 +31,4 @@ for (d in unique(dirname(pars$filename))) {
   dir.create(d, FALSE, TRUE)
 }
 
-ret <- mclapply(pars_list,  exp2_run_model, mc.cores=8, mc.preschedule = FALSE)
+ret <- mclapply(pars_list,  train_model, mc.cores=8, mc.preschedule = FALSE)

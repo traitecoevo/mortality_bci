@@ -25,6 +25,6 @@ for (s in sources) {
 }
 
 # Launching
-pars_list <- df_to_list(exp1_pars_test())
-tmp <- lapply(pars_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
-res <-mclapply(pars_list, exp1_run_model)
+pars_list <- df_to_list(exp1_pars_test(name="test"))
+create_dirs(pars_list)
+res <- mclapply(pars_list, train_model)
