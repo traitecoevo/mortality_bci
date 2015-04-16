@@ -6,7 +6,7 @@
 ##
 ## There are odd choices made for how this is structured; these are to
 ## meet part way with rrqueue.
-packages <- c("rstan", "plyr")
+packages <- c("rstan", "plyr", "parallel")
 sources <- c("R/model_all.R",
              "R/model_constant.R",
              "R/model_species.R",
@@ -26,11 +26,5 @@ for (s in sources) {
 
 # Launching
 pars_list <- df_to_list(exp1_pars_test())
-
-tmp <-lapply(pars_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
-
-library(parallel)
-
-exp1_run_model(pars_list[[1]])
-
+tmp <- lapply(pars_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
 res <-mclapply(pars_list, exp1_run_model)

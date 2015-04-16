@@ -6,7 +6,7 @@
 ##
 ## There are odd choices made for how this is structured; these are to
 ## meet part way with rrqueue.
-packages <- c("rstan", "plyr")
+packages <- c("rstan", "plyr", "parallel")
 sources <- c("R/model_all.R",
              "R/model_constant.R",
              "R/model_species.R",
@@ -32,10 +32,11 @@ for (d in unique(dirname(pars$filename))) {
 }
 
 ## Try on a test data set.
-# i <- which(pars$effect == "trait_species")[[1]]
-# p <- pars_list[[i]]
-# res <- exp1_run_model(p)
+# res <- exp1_run_model(pars_list[[i]])
 
+## Rerun jobs if needed
+rerun <- which(!file.exists(pars$filename))
+tmp <- mclapply(df_to_list(pars[rerun,]), exp1_run_model, mc.cores=8, mc.preschedule = FALSE)
 
 ## Analysis
 split_ids <- c("model", "effect", "growth_measure", "data")
