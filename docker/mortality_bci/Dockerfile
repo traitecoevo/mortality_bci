@@ -7,7 +7,6 @@ RUN apt-get update \
     git \
     libcurl4-openssl-dev \
     libhiredis-dev \
-    libxml2-dev \
     pandoc \
     ssh \
   && apt-get clean

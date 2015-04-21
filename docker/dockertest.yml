@@ -13,9 +13,6 @@ modules:
   - remake
   - rstan
 
-system:
-  libxml2-dev
-
 packages:
   R:
     - dplyr
