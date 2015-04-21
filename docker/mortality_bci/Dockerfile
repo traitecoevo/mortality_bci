@@ -44,14 +44,16 @@ RUN installGithub.r  \
     gaborcsardi/progress \
     richfitz/dockertest
 
+RUN r -e 'dockertest:::copy_scripts_dir("/usr/local/bin")'
+
 COPY local /local
 
 RUN R CMD INSTALL /local/rrqueue \
   && rm -rf /local
 
-RUN r -e 'rrqueue:::install_scripts("/usr/local/bin")'
+RUN r -e 'remake:::install_remake("/usr/local/bin")'
 
-RUN r -e 'dockertest:::copy_scripts_dir("/usr/local/bin")'
+RUN r -e 'rrqueue:::install_scripts("/usr/local/bin")'
 
 WORKDIR /root/mortality_bci
 
