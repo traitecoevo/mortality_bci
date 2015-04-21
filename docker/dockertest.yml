@@ -1,0 +1,66 @@
+image: r-base
+# Don't worry about getting the sources into the image; we'll do that
+# at runtime:
+deps_only: true
+# Keep the .git directory in the work clone
+keep_git: true
+
+names:
+  test: richfitz/mortality_bci
+
+# of the packages here many are due to rrqueue:
+#   - libhiredis-dev
+#   - RcppRedis
+#   - ropensci/RedisAPI
+#   - gaborcsardi/progress
+#   - traitecoevo/rrqueue
+# That's a bundle that perhaps dockertest should support
+# (modules=c("dockertest", "rrqueue", "remake"))
+#
+# and projects could support user-specified bundles pretty easily.
+
+system:
+  - libhiredis-dev
+  - libxml2-dev
+packages:
+  R:
+    - dplyr
+    - RCurl
+    - downloader
+    - rmarkdown
+    - RcppRedis
+    - RcppEigen # (rstan)
+    - inline    # (rstan)
+  github:
+    - richfitz/remake
+    - ropensci/RedisAPI
+    - richfitz/RedisHeartbeat
+    - gaborcsardi/progress
+    # - traitecoevo/rrqueue # (development sources below)
+  local:
+    - ../rrqueue
+system_ignore_packages:
+  - rrqueue # Redis; we'll satisfy that elsewhere.
+
+commands:
+  rstan:
+    # neither on cran nor github and a pain to install
+    command: |
+      RUN MAKEVARS="-j1" install2.r --error
+        --repos=http://cran.rstudio.com
+        --repos=http://rstan.org/repo
+        rstan
+    after: R
+  upgrade_install2.r:
+    # allow multiple repos in the rstan installation instructions:
+    command: |
+      RUN rm /usr/local/bin/install2.r &&
+        wget --no-check-certificate
+        https://raw.githubusercontent.com/cboettig/littler/master/examples/install2.r
+        -O /usr/local/bin/install2.r
+        && chmod +x /usr/local/bin/install2.r
+    after: system
+  install_rrqueue_scripts:
+    # Post-installation hook for rrqueue
+    command: RUN r -e 'rrqueue:::install_scripts("/usr/local/bin")'
+    after: local

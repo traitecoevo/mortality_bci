@@ -8,51 +8,51 @@ RUN apt-get update \
     libcurl4-openssl-dev \
     libhiredis-dev \
     libxml2-dev \
-    redis-server \
+    pandoc \
     ssh \
   && apt-get clean
 
-# More recent copy of install2.r so that we can set repos more easily
 RUN rm /usr/local/bin/install2.r && \
-    wget --no-check-certificate \
-    https://raw.githubusercontent.com/cboettig/littler/master/examples/install2.r\
-    -O /usr/local/bin/install2.r \
+  wget --no-check-certificate \
+  https://raw.githubusercontent.com/cboettig/littler/master/examples/install2.r \
+  -O /usr/local/bin/install2.r \
   && chmod +x /usr/local/bin/install2.r
 
 RUN install2.r --error  \
-    RCurl \
-    RcppEigen \
-    RcppRedis \
+    crayon \
     devtools \
+    digest \
+    docopt \
     downloader \
     dplyr \
     inline \
+    R6 \
+    RcppEigen \
+    RcppRedis \
+    RCurl \
     rmarkdown
+
+RUN MAKEVARS="-j1" install2.r --error \
+  --repos=http://cran.rstudio.com \
+  --repos=http://rstan.org/repo \
+  rstan
 
 RUN installGithub.r  \
     richfitz/remake \
-    richfitz/remoji \
-    richfitz/rfiglet \
     ropensci/RedisAPI \
-    richfitz/RedisHeartbeat
+    richfitz/RedisHeartbeat \
+    gaborcsardi/progress \
+    richfitz/dockertest
 
-# This fails fairly easily, especially if the machine is under heavy
-# load
-RUN MAKEVARS="-j1" install2.r --error  \
-    --repos=http://cran.rstudio.com  \
-    --repos=http://rstan.org/repo \
-    rstan
+COPY local /local
 
-# option 1: install from github (won't autorefresh)
-# RUN installGithub.r traitecoevo/rrqueue \
-#   && r -e 'rrqueue:::install_scripts("/usr/local/bin")'
+RUN R CMD INSTALL /local/rrqueue \
+  && rm -rf /local
 
-# option 2: install locally
-COPY src /src
-RUN R CMD INSTALL /src/rrqueue \
-  && r -e 'rrqueue:::install_scripts("/usr/local/bin")' \
-  && rm -rf /src
+RUN r -e 'rrqueue:::install_scripts("/usr/local/bin")'
 
-WORKDIR /work
+RUN r -e 'dockertest:::copy_scripts_dir("/usr/local/bin")'
+
+WORKDIR /root/mortality_bci
 
 CMD ["bash"]
