@@ -1,7 +1,8 @@
-packages:
-  R:
-    - RcppEigen
-    - inline
+# Manually list these so that we can install them with the main batch
+# of packages.
+r_packages:
+  - RcppEigen
+  - inline
 
 commands:
   rstan:
@@ -11,7 +12,7 @@ commands:
         --repos=http://cran.rstudio.com
         --repos=http://rstan.org/repo
         rstan
-    after: R
+    after: r_packages
   upgrade_install2.r:
     # allow multiple repos in the rstan installation instructions:
     command: |
@@ -20,4 +21,4 @@ commands:
         https://raw.githubusercontent.com/cboettig/littler/master/examples/install2.r
         -O /usr/local/bin/install2.r
         && chmod +x /usr/local/bin/install2.r
-    after: system
+    after: apt_packages
