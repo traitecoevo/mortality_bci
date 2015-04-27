@@ -5,12 +5,13 @@ packages:
   - rmarkdown
 
 sources:
-  - R
+  - R/bci_data_processing.R
+  - R/utils.R
 
 targets:
   all:
     depends:
-      - ms.md
+      - data
 
   data:
     depends:

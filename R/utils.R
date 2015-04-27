@@ -1,4 +1,11 @@
 
+create_dirs <- function(dirs) {
+  for (d in dirs) {
+    dir.create(d, FALSE, TRUE)
+  }
+}
+  
+
 pandoc_build <- function(file){
   args <- list('--template=data/include.tex', '--latex-engine=xelatex')
   pandoc_convert(file, output= paste0(tools::file_path_sans_ext(file), ".pdf"), citeproc = TRUE, options = args, verbose = TRUE, wd = ".")

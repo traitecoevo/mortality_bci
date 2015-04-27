@@ -7,7 +7,7 @@ train_model <- function(pars) {
   data <- readRDS(pars$train_data)$train
 
   ## Assemble the stan model:
-  chunks <- get_chunks(pars$model, pars$effect)
+  chunks <- get_chunks_for_model(pars)
   model <- make_stan_model(chunks, growth_measure=pars$growth_measure)
 
   ## Actually run the model
@@ -34,7 +34,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        pars = model$pars,
        iter = iter,
        chains=1, chain_id=chain_id,
-       refresh=-1, # What is this?
+       refresh=-1, # Turns off progress bar
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
 }
@@ -60,7 +60,7 @@ prep_data_for_stan <- function(data, growth_measure = "dbh_dt") {
 }
 
 
-make_stan_model <- function(chunks, growth_measure= "dbh_dt") {
+make_stan_model <- function(chunks, growth_measure= "dbh_dt", rho_effect_on = c('a','b','c')) {
 	list(
 		pars = chunks$pars,
     growth_measure = growth_measure,

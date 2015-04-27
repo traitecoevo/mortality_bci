@@ -2,7 +2,7 @@
 downloads
 output
 ignore
-results
+results*
 figure*
 .Rproj.user
 *.Rproj
