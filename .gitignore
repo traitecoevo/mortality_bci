@@ -8,5 +8,6 @@ figure*
 *.Rproj
 *.csl
 *.pdf
+*.html
 ms.md
 export
