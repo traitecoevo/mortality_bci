@@ -1,3 +1,33 @@
+# Check for convergence & extract fitted lps (very rough first attempt)
+ff <- list.files('~/Dropbox/MQ/mortality_bci/results/test_species_models', patt='\\.rds$', full.names=TRUE)
+num <- as.numeric(gsub('.*/(\\d+)\\.rds', '\\1', ff))
+sets <- split(ff, findInterval(num, seq(min(num), max(num), 3)))
+
+output <- do.call(rbind,
+                  setNames(lapply(sets,
+                                  function(s) {
+                                    if(length(s)>=2) {
+                                      sflist <- lapply(s, readRDS)
+                                      tryCatch({
+                                        x <- sflist2stanfit(sflist)
+                                        data.frame(lp=mean(extract(x, 'lp__')$lp__),
+                                                   n_eff_min=min(summary(x)$summary[, 'n_eff']),
+                                                   rhat_max=max(summary(x)$summary[, 'Rhat']),
+                                                   r_bad_n=length(which(summary(x)$summary[, 'Rhat'] > 1.1)))
+                                      }, error=function(e) NULL)
+                                    }
+                                  }),
+                           sapply(sets, function(x) paste0(gsub('\\D+', '', basename(x)), collapse='_')))
+)
+
+
+library(rstan)
+combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
+  sflist2stanfit(d)
+}
+
+
+
 # Coefficient Plot
 
 coeff_plot <- function(stanfit, params, labels=NULL, quantiles =c(0.025,0.975,0.1,0.9), xlab='effect size', transform=NULL) {
