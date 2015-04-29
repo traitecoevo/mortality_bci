@@ -12,6 +12,7 @@ sources <- c("R/model_constant.R",
              "R/model_no_spp_err.R",
              "R/model_no_trait.R",
              "R/model_full.R",
+             #"R/model_full_priors.R",
              "R/model_full_rho_combs.R",
              "R/task_compiler.R",
              "R/get_all_model_chunks.R",
@@ -25,9 +26,16 @@ for (s in sources) {
   source(s)
 }
 
+
+# Prior test
+functional_parsimony_pars <- pars_functional_parsimony(iter = 2000)
+functional_parsimony_pars <- subset(functional_parsimony_pars, train_data=="export/bci_data_1.rds" & model==3)
+create_dirs(unique(dirname(functional_parsimony_pars$filename)))
+ret <- mclapply(df_to_list(functional_parsimony_pars), train_model)
+
 # Will make below into functions when we move away from mclapply
 # Test to make sure all model forms work
-test_pars <- pars_test(iter = 5)
+test_pars <- pars_test(iter = 2000)
 create_dirs(unique(dirname(test_pars$filename)))
 ret <- mclapply(df_to_list(test_pars), train_model)
 
