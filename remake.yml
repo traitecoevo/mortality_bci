@@ -1,8 +1,8 @@
 packages:
-  - dplyr
   - RCurl
   - downloader
   - rmarkdown
+  - dplyr
 
 sources:
   - R/bci_data_processing.R
