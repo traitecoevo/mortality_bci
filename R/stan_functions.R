@@ -4,7 +4,7 @@ create_dirs <- function(pars_list) {
 }
 
 train_model <- function(pars) {
-  data <- readRDS(pars$train_data)$train
+  data <- readRDS(pars$fold_data)
 
   ## Assemble the stan model:
   chunks <- get_chunks_for_model(pars)
@@ -34,28 +34,32 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        pars = model$pars,
        iter = iter,
        chains=1, chain_id=chain_id,
-       refresh=-1, # Turns off progress bar
+       refresh=100,
        sample_file=sample_file,
+	     control = list(stepsize=0.01, adapt_delta=0.9),
        diagnostic_file=diagnostic_file)
 }
 
 prep_data_for_stan <- function(data, growth_measure = "dbh_dt") {
 
-  growth_data <- data[[growth_measure]]
-  rho = unique(data$rho)
-
   list(
-    n_obs = nrow(data),
-    n_spp = length(unique(data$sp)),
-    spp = as.numeric(factor(data$sp)),
-    n_census = length(unique(data$censusid)),
-    census = as.numeric(factor(data$censusid)),
-    y = as.integer(data$dead_next_census),
-    census_length = data$census_interval,
-    growth_dt = growth_data,
-    growth_dt_s = growth_data / (2*sd(growth_data)),
-    rho =  unique(rho),
-    log_rho_cs  = (log(rho) - mean(log(rho)))/ (2*sd(log(rho)))
+    n_obs = nrow(data$train),
+    n_spp = length(unique(data$train$sp)),
+    spp = as.numeric(factor(data$train$sp)),
+    n_census = length(unique(data$train$censusid)),
+    census = as.numeric(factor(data$train$censusid)),
+    y = as.integer(data$train$dead_next_census),
+    census_length = data$train$census_interval,
+    growth_dt =  data$train[[growth_measure]],
+    log_rho_c  = (log(unique(data$train$rho)) - log(600)),
+    n_obs_test = nrow(data$test),
+    n_spp_test = length(unique(data$test$sp)),
+    spp_test = as.numeric(factor(data$test$sp)),
+    census_test = as.numeric(factor(data$test$censusid)),
+    y_test = as.integer(data$test$dead_next_census),
+    census_length_test = data$test$census_interval,
+    growth_dt_test =  data$test[[growth_measure]],
+    log_rho_c_test  = (log(unique(data$test$rho)) - log(600))
     )
 }
 
@@ -66,36 +70,39 @@ make_stan_model <- function(chunks, growth_measure= "dbh_dt", rho_effect_on = c(
     growth_measure = growth_measure,
 		model_code = sprintf('
 data {
-  int<lower=0> n_obs;
-  int<lower=0> n_spp;
+  int<lower=1> n_obs;
+  int<lower=1> n_spp;
   int<lower=1> spp[n_obs];
-  int<lower=0> n_census;
+  int<lower=1> n_census;
   int<lower=1> census[n_obs];
   int<lower=0, upper=1> y[n_obs];
   vector[n_obs] census_length;
-  vector[n_obs] growth_dt_s;
-  vector[n_spp] log_rho_cs;
+  vector[n_obs] growth_dt;
+  vector[n_obs] log_rho_c;
+  
+  // Held out data
+  int<lower=1> n_obs_test;
+  int<lower=1 n_spp_test;
+  int<lower=1> spp_test[n_obs_test];
+  int<lower=1> census_test[n_obs_test];
+  int<lower=0, upper=1> y_test[n_obs_test];
+  vector[n_obs_test] census_length_test;
+  vector[n_obs_test] growth_dt_test;
+	vector[n_spp_test] log_rho_c_test;
 }
 
 parameters { // assumes uniform priors on all parameters
   %s
 }
 
-transformed parameters {
-  real<lower=0, upper=1> p[n_obs];
- %s
-}
-
 model {
-  // non-centered parameterization Papaspiliopoulos et al. (2007).
-  // x_raw[s]implies normal(x_mu, x_sigma)
-    
   %s
-
-  // Sample Pr(Dying) from bernoulli
-  y ~ bernoulli(p);
 }
-', chunks$parameters, chunks$transformed_parameters, chunks$model)
+
+generated quantities {
+  %s
+}
+', chunks$parameters, chunks$model, chunks$generated_quantities)
   )
 }
 
