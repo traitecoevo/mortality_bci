@@ -34,7 +34,7 @@ pars_test  <- function(iter=5, name="test") {
   
   ret_test$jobid <- seq_len(nrow(ret_test))
   ret_test$filename <- sprintf("results/%s/%d.rds", name, ret_test$jobid)
-  ret_test$train_data <- sprintf("export/bci_data_%s.rds", ret_test$kfold)
+  ret_test$fold_data <- sprintf("export/bci_data_%s.rds", ret_test$kfold)
   ret_test
 }
 
@@ -59,7 +59,7 @@ pars_growth <- function(iter=2000, name="growth_comparison") {
                      stringsAsFactors=FALSE)
   ret$jobid <- seq_len(nrow(ret))
   ret$filename <- sprintf("results/%s/%d.rds", name, ret$jobid)
-  ret$train_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
+  ret$fold_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
   ret
 }
 
@@ -83,7 +83,7 @@ pars_rho_combs <- function(iter=2000, name="rho_combinations") {
                      stringsAsFactors=FALSE)
   ret$jobid <- seq_len(nrow(ret))
   ret$filename <- sprintf("results/%s/%d.rds", name, ret$jobid)
-  ret$train_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
+  ret$fold_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
   ret
 }
 
@@ -94,7 +94,7 @@ pars_functional_parsimony  <- function(iter=2000, name="functional_form_comparis
   n_chains <- 3
   model <- seq_len(3)
   effects <- c("model_full")
-  growth_measures <-  c("dbh_dt") # To be determined by growth comparison analysis
+  growth_measures <-  c("basal_area_dt") # To be determined by growth comparison analysis
   
   ret <- expand.grid(experiment=name,
                      iter=iter,
@@ -106,7 +106,7 @@ pars_functional_parsimony  <- function(iter=2000, name="functional_form_comparis
                      stringsAsFactors=FALSE)
   ret$jobid <- seq_len(nrow(ret))
   ret$filename <- sprintf("results/%s/%d.rds", name, ret$jobid)
-  ret$train_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
+  ret$fold_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
   ret
 }
 
@@ -116,7 +116,7 @@ run_test <- function(iter=5) {
   pars_list <- df_to_list(pars)
   create_dirs(unique(dirname(pars$filename)))
   
-  ret <- mclapply(pars_list, train_model)
+  ret <- mclapply(pars_list, model_data)
 }
 
 # Launching growth comparison analysis
@@ -126,7 +126,7 @@ run_growth_comparison <- function(iter=2000) {
   for (d in unique(dirname(pars$filename))) {
     dir.create(d, FALSE, TRUE)
   }
-  ret <- mclapply(pars_list, train_model)
+  ret <- mclapply(pars_list, model_data)
 }
 
 # Launching rho combination analysis
@@ -137,7 +137,7 @@ run_rho_combination <- function(iter=2000) {
   for (d in unique(dirname(pars$filename))) {
     dir.create(d, FALSE, TRUE)
   }
-  ret <- mclapply(pars_list, train_model)
+  ret <- mclapply(pars_list, model_data)
 }
 
 # Launching rho combination analysis
@@ -147,5 +147,5 @@ run_rho_functional_parsimony <- function(iter=2000) {
   for (d in unique(dirname(pars$filename))) {
     dir.create(d, FALSE, TRUE)
   }
-  ret <- mclapply(pars_list, train_model)
+  ret <- mclapply(pars_list, model_data)
 }
