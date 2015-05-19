@@ -6,7 +6,9 @@ subset_BCI_data_by_census <- function(data, census=4) {
 
 merge_BCI_data <- function(BCI_demography, BCI_traits) {
   merge(BCI_demography,BCI_traits[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
-  filter(!is.na(rho) & !is.na(dbh_dt) & !is.na(dead_next_census))
+  filter(!is.na(rho)) %>%
+    mutate(sp_id = as.numeric(factor(sp)),
+           censusid = as.numeric(factor(census)))
 }
 
 #Download BCI data
@@ -125,14 +127,14 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
     select(sp, treeid, nostems, censusid, exactdate, dfstatus, pom, dbh) %>%
     mutate(
       #census id for period 7 was entered incorrectly
-      censusid = ifelse(censusid==171, 7,censusid),
+      census = ifelse(censusid==171, 7,censusid),
       species = lookup_latin(sp, spp_table),
       family = lookup_family(sp, spp_table),
       #Converts dbh from mm to m
       dbh=dbh/1000) %>%
     # Remove stems from earlier census, measured with course resolution
     # First measurement in 1990 ='1990-02-06'
-    filter(censusid >= 3) %>%
+    filter(census >= 3) %>%
     # Remove families that don't exhibit dbh growth e.g. palms
     filter(!family %in% c('Arecaceae', 'Cyatheaceae', 'Dicksoniaceae', 'Metaxyaceae',
                           'Cibotiaceae', 'Loxomataceae', 'Culcitaceae', 'Plagiogyriaceae',
@@ -151,8 +153,8 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
     filter(pom == '1.3' | dfstatus=='dead') %>%
     # Remove individuals that are not alive for at least 2 censuses
     mutate(
-      ncensus = length(unique(exactdate[dfstatus=='alive']))) %>%
-    filter(ncensus >1) %>%
+      n_census = length(unique(census[dfstatus=='alive']))) %>%
+    filter(n_census >1) %>%
     mutate(
       # First measurement in 1990 ='1990-02-06'
       julian = as.vector(julian(as.Date(exactdate,"%Y-%m-%d"), as.Date("1990-02-06", "%Y-%m-%d"))),
@@ -164,18 +166,20 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
       basal_area_dt = calculate_growth_rate(basal_area, julian),
       basal_area_dt_rel = calculate_growth_rate(basal_area, julian, log),
       dead_next_census = mortality_in_next_census(dfstatus),
-      dbh_prev = c(NA, drop_last(dbh))
-      ) %>%
-
+      dbh_prev = c(NA, drop_last(dbh))) %>%
     # Only keep alive stems
     filter(dfstatus=="alive") %>%
-    filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt)) %>%
-    select(sp,treeid,censusid,exactdate,julian,census_interval,pom,nostems,
+    filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt) & 
+             !is.na(dbh_dt) & 
+             !is.na(dead_next_census)) %>%
+    group_by(sp) %>%
+    mutate(n_ind = length(unique(treeid))) %>%
+    filter(n_ind >=10) %>% # ensures at least 1 individual is in the test dataset.
+    ungroup() %>%
+    select(sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
            dbh,dbh_dt,dbh_dt_rel,basal_area,basal_area_dt,
-           basal_area_dt_rel,dead_next_census, dbh_prev) %>%
-    ungroup()
-
-}
+           basal_area_dt_rel,dead_next_census, dbh_prev)
+  }
 #Final counts between 1990 and 2010 censuses:
 #No. Obs = 775871
 #No. Inds = 203277
@@ -204,14 +208,10 @@ reduce_to_single_ind_obs <- function(data) {
       mutate(keep = sample_one(treeid)) %>%
       filter(keep) %>%
       select(-keep) %>%
-      ungroup()
-  ## Someone with dplyr foo can do the incredibly difficult thing of
-  ## working out how to subset columns by name later.
-  # This is the set of columns we actually need:
-  cols <- c("rho", "sp", "censusid", "dead_next_census",
-            "census_interval", "dbh_dt", "dbh_dt_rel",
-            "basal_area_dt", "basal_area_dt_rel")
-  ret[cols]
+      ungroup() %>%
+    select(sp, sp_id, censusid, dead_next_census,
+           census_interval, rho, dbh_dt, dbh_dt_rel,
+           basal_area_dt, basal_area_dt_rel)
 }
 
 # split into k equally sized datasets
