@@ -174,7 +174,7 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
              !is.na(dead_next_census)) %>%
     group_by(sp) %>%
     mutate(n_ind = length(unique(treeid))) %>%
-    filter(n_ind >=10) %>% # ensures at least 1 individual is in the test dataset.
+    filter(n_ind >=10) %>% # ensures at least 1 individual is in the heldout dataset.
     ungroup() %>%
     select(sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
            dbh,dbh_dt,dbh_dt_rel,basal_area,basal_area_dt,
@@ -225,24 +225,24 @@ split_into_kfolds <- function(data, k=10) {
   split(data, fold)
 }
 
-extract_traintest_set <- function(data, k=NA) {
+extract_trainheldout_set <- function(data, k=NA) {
   # by default train on whole dataset
   i_train <- seq_len(length(data))
   if (is.na(k)) {
-    i_test <- NA
+    i_heldout <- NA
   } else {
     i_train <- setdiff(i_train, k)
-    i_test <- k
+    i_heldout <- k
   }
 
   list(
     train = rbind_all(data[i_train]),
-    test  = rbind_all(data[i_test]))
+    heldout  = rbind_all(data[i_heldout]))
 }
 
-make_traintest <- function(data) {
+make_trainheldout <- function(data) {
   lapply(seq_along(data), function(i)
-         extract_traintest_set(data, i))
+         extract_trainheldout_set(data, i))
 }
 
 ## Really ugly working around something I've not worked out how to do
