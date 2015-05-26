@@ -24,14 +24,14 @@ targets:
     command: export_data(BCI_training_sets, target_name)
 
   BCI_training_sets:
-    command: make_traintest(BCI_model_dataset_folds)
+    command: make_trainheldout(BCI_model_dataset_folds)
     cleanup_level: purge
 
   export/bci_data_full.rds:
     command: saveRDS(BCI_training_full, target_name)
 
   BCI_training_full:
-    command: extract_traintest_set(BCI_model_dataset_folds, NA)
+    command: extract_trainheldout_set(BCI_model_dataset_folds, NA)
     cleanup_level: purge
 
   BCI_model_dataset_folds:
