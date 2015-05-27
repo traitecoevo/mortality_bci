@@ -42,20 +42,15 @@ pars_rho_combos <- function(iter=2000, name="rho_combinations", growth_measure) 
 # Launching growth comparison analysis
 run_growth_comparison <- function(iter=2000) {
   pars <- pars_growth(iter = iter)
-  pars_list <- df_to_list(pars)
-  for (d in unique(dirname(pars$filename))) {
-    dir.create(d, FALSE, TRUE)
-  }
-  ret <- mclapply(pars_list, model_data)
+  create_dirs(unique(dirname(pars$filename)))
+  ret <- mclapply(df_to_list(pars), model_compiler)
 }
 
 # Launching rho combination analysis
 
-run_rho_combination <- function(iter=2000) {
-  pars <- pars_rho_combs(iter = iter)
-  pars_list <- df_to_list(pars)
-  for (d in unique(dirname(pars$filename))) {
-    dir.create(d, FALSE, TRUE)
-  }
-  ret <- mclapply(pars_list, model_data)
+run_rho_combination <- function(iter=2000, growth_measure) {
+  pars <- pars_rho_combos(iter = iter, growth_measure = growth_measure)
+  pars <- pars[c(1,4,215,232),]
+  create_dirs(unique(dirname(pars$filename)))
+  ret <- mclapply(df_to_list(pars), model_compiler)
 }
