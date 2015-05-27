@@ -2,12 +2,12 @@ create_dirs <- function(pars_list) {
   tmp <- lapply(pars_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
 }
 
-train_model <- function(pars) {
+model_compiler <- function(pars) {
   data <- readRDS(pars$fold_data)
   
   ## Assemble the stan model:
   chunks <- get_model_chunks(pars)
-  model <- make_stan_model(chunks, growth_measure=pars$growth_measure, pars$rho_combo)
+  model <- make_stan_model(chunks, growth_measure=pars$growth_measure)
   
   ## Actually run the model
   res <- run_single_stan_chain(model, data,
@@ -64,7 +64,7 @@ prep_data_for_stan <- function(data, growth_measure) {
 }
 
 
-make_stan_model <- function(chunks, growth_measure, rho_combo) {
+make_stan_model <- function(chunks, growth_measure) {
   list(
     pars = chunks$pars,
     growth_measure = growth_measure,
