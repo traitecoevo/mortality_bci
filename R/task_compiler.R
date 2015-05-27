@@ -50,7 +50,6 @@ run_growth_comparison <- function(iter=2000) {
 
 run_rho_combination <- function(iter=2000, growth_measure) {
   pars <- pars_rho_combos(iter = iter, growth_measure = growth_measure)
-  pars <- pars[c(1,4,215,232),]
   create_dirs(unique(dirname(pars$filename)))
   ret <- mclapply(df_to_list(pars), model_compiler)
 }
