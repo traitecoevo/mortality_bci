@@ -7,7 +7,8 @@ get_model_chunks <- function(pars) {
   list(
     pars = c("a0_raw","a0_mu","a0_sigma","a0","a1_raw","a1_mu","a1_sigma","a1",if("a" %in% rho_combo) "a2",
              "b0_raw","b0_mu","b0_sigma","b0","b1_raw","b1_mu","b1_sigma","b1",if("b" %in% rho_combo) "b2",
-             "c0_raw","c0_mu","c0_sigma","c0","c1_raw","c1_mu","c1_sigma","c1",if("c" %in% rho_combo) "c2"),
+             "c0_raw","c0_mu","c0_sigma","c0","c1_raw","c1_mu","c1_sigma","c1",if("c" %in% rho_combo) "c2",
+             "log_lik_fit_total","log_lik_tilde_total"),
     parameters = sprintf("
     real a0_raw[n_spp];
     real a0_mu;
