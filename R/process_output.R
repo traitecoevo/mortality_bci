@@ -1,29 +1,42 @@
-# Check for convergence & extract fitted lps (very rough first attempt)
-ff <- list.files('~/Dropbox/MQ/mortality_bci/results/test_species_models', patt='\\.rds$', full.names=TRUE)
-num <- as.numeric(gsub('.*/(\\d+)\\.rds', '\\1', ff))
-sets <- split(ff, findInterval(num, seq(min(num), max(num), 3)))
+#Compile chains for each model
+compile_model_fits <- function(model_comparison = "growth_measure", rho_growth_measure=NULL) {
+  if(model_comparison == "growth_measure") {
+    pars <- pars_growth() 
+  } else if(model_comparison == "rho" & !is.null(rho_growth_measure)) {
+    pars <- pars_rho_combos(growth_measure = rho_growth_measure) 
+  } else { 
+    stop("model_comparison must be growth_measure or rho, or if comparing rho models, rho_growth_measure needs to be specified")
+  }
+  sets <- split(pars, pars$modelid)
+  lapply(sets,function(s) {
+    files <- s[['filename']]
+    x <- sflist2stanfit(lapply(files, readRDS))
+  }
+  )
+}
 
-output <- do.call(rbind,
-                  setNames(lapply(sets,
-                                  function(s) {
-                                    if(length(s)>=2) {
-                                      sflist <- lapply(s, readRDS)
-                                      tryCatch({
-                                        x <- sflist2stanfit(sflist)
-                                        data.frame(lp=mean(extract(x, 'lp__')$lp__),
-                                                   n_eff_min=min(summary(x)$summary[, 'n_eff']),
-                                                   rhat_max=max(summary(x)$summary[, 'Rhat']),
-                                                   r_bad_n=length(which(summary(x)$summary[, 'Rhat'] > 1.1)))
-                                      }, error=function(e) NULL)
-                                    }
-                                  }),
-                           sapply(sets, function(x) paste0(gsub('\\D+', '', basename(x)), collapse='_')))
-)
-
-
-library(rstan)
-combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
-  sflist2stanfit(d)
+#Check model diagnostics
+model_diagnostics <- function(model_comparison = "growth_measure", rho_growth_measure=NULL) {
+  if(model_comparison == "growth_measure") {
+    models <- compile_model_fits(model_comparison = "growth_measure")
+  } else if(model_comparison == "rho" & !is.null(rho_growth_measure)) {
+    models <- compile_model_fits(model_comparison = "rho", rho_growth_measure = rho_growth_measure) 
+  } else { 
+    stop("model_comparison must be growth_measure or rho, or if comparing rho models, rho_growth_measure needs to be specified")
+  }
+  out <- do.call(rbind, lapply(models, function(x) {
+    summary_model <- summary(x)$summary
+    sampler_params <- get_sampler_params(x)
+    data.frame(
+      n_eff_min=min(summary_model[, 'n_eff']),
+      rhat_max=max(summary_model[, 'Rhat']),
+      r_bad_n=length(which(summary_model[, 'Rhat'] > 1.1)),
+      divergent_n = sum(sapply(sampler_params, function(y) y[,'n_divergent__'])),
+      treedepth_max = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
+  }))
+  out$id <- names(models)
+  out <- out[, c('id','treedepth_max','divergent_n','n_eff_min','r_bad_n','rhat_max')]
+  out
 }
 
 
