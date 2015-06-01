@@ -14,6 +14,7 @@ pars_growth <- function(iter=2000, name="growth_comparison") {
                      rho_combo="abc",
                      kfold=seq_len(n_kfolds),
                      stringsAsFactors=FALSE)
+  ret$modelid <- rep(1:nrow(unique(ret[,c('experiment','growth_measure','rho_combo','kfold')])),each = n_chains)
   ret$jobid <- seq_len(nrow(ret))
   ret$filename <- sprintf("results/%s/%d.rds", name, ret$jobid)
   ret$fold_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
@@ -34,6 +35,7 @@ pars_rho_combos <- function(iter=2000, name="rho_combinations", growth_measure) 
                      kfold = seq_len(n_kfolds),
                      stringsAsFactors=FALSE)
   ret$jobid <- seq_len(nrow(ret))
+  ret$modelid <- rep(1:nrow(unique(ret[,c('experiment','growth_measure','rho_combo','kfold')])),each = n_chains)
   ret$filename <- sprintf("results/%s/%d.rds", name, ret$jobid)
   ret$fold_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
   ret
