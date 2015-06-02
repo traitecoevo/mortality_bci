@@ -1,45 +1,114 @@
-#Compile chains for each model
-compile_model_fits <- function(model_comparison = "growth_measure", rho_growth_measure=NULL) {
-  if(model_comparison == "growth_measure") {
+#Compile chains for each growth measure either for each model or across kfolds
+compile_growth_model_fits <- function(subset_growth=NULL, pool_kfolds = FALSE) {
+  if(any(subset_growth %in% c('dbh_dt','dbh_dt_rel','basal_area_dt', 'basal_area_dt_rel'))) {
+    stop("subset_growth can either be NULL or contain one or multiple of the following: 'dbh_dt', 'dbh_dt_rel', 'basal_area_dt', 'basal_area_dt_rel'")
+  }
+  if(is.null(subset_growth)) {
     pars <- pars_growth() 
-  } else if(model_comparison == "rho" & !is.null(rho_growth_measure)) {
-    pars <- pars_rho_combos(growth_measure = rho_growth_measure) 
-  } else { 
-    stop("model_comparison must be growth_measure or rho, or if comparing rho models, rho_growth_measure needs to be specified")
+  } else {
+    pars <- pars_growth() 
+    pars <- pars[pars$growth_measure %in% subset_growth,]
   }
-  sets <- split(pars, pars$modelid)
-  lapply(sets,function(s) {
-    files <- s[['filename']]
-    x <- sflist2stanfit(lapply(files, readRDS))
+  if(pool_kfolds==FALSE) {
+    sets <- split(pars, pars$modelid)
+    lapply(sets,function(s) {
+      files <- s[['filename']]
+      x <- sflist2stanfit(lapply(files, readRDS))
+    })
+  } else {
+    sets <- split(pars, pars$growth_measure)
+    lapply(sets,function(s) {
+      files <- s[['filename']]
+      x <- sflist2stanfit(lapply(files, readRDS))
+    })
   }
-  )
 }
 
-#Check model diagnostics
-model_diagnostics <- function(model_comparison = "growth_measure", rho_growth_measure=NULL) {
-  if(model_comparison == "growth_measure") {
-    models <- compile_model_fits(model_comparison = "growth_measure")
-  } else if(model_comparison == "rho" & !is.null(rho_growth_measure)) {
-    models <- compile_model_fits(model_comparison = "rho", rho_growth_measure = rho_growth_measure) 
-  } else { 
-    stop("model_comparison must be growth_measure or rho, or if comparing rho models, rho_growth_measure needs to be specified")
+
+#Compile chains for each rho combination either for each model or across kfolds
+compile_rho_model_fits <- function(subset_rho_combos=NULL, pool_kfolds = FALSE) {
+  if(any(!subset_rho_combos %in% c("","a","b","c","ab","ac","bc","abc"))) {
+    stop("subset_rho_combos can either be NULL or contain one or multiple of the following:'','a','b','c','ab','ac','bc','abc'")
+  }
+  if(is.null(subset_rho_combos)) {
+    pars <- pars_rho_combos(growth_measure = 'dbh_dt') 
+  } else {
+    pars <- pars_rho_combos(growth_measure = 'dbh_dt') 
+    pars <- pars[pars$rho_combo %in% subset_rho_combos,]
+  }
+  if(pool_kfolds==FALSE) {
+    sets <- split(pars, pars$modelid)
+    lapply(sets,function(s) {
+      files <- s[['filename']]
+      x <- sflist2stanfit(lapply(files, readRDS))
+    })
+  } else {
+    sets <- split(pars, pars$rho_combo)
+    lapply(sets,function(s) {
+      files <- s[['filename']]
+      x <- sflist2stanfit(lapply(files, readRDS))
+    })
+  }
+}
+#Model diagnostics
+model_diagnostics <- function(model_comparison = "growth", pool_kfolds = FALSE) {
+  if(model_comparison %in% c('growth', 'rho')==FALSE) {
+    stop("model_comparison must be growth or rho")
+  }
+  if(model_comparison == "growth") {
+    models <- compile_growth_model_fits(pool_kfolds = pool_kfolds)
+  } 
+  if(model_comparison == "rho") { # growth_measure will need to be changed depending on outcome of growth comparison.
+    models <- compile_rho_model_fits(pool_kfolds = pool_kfolds) 
   }
   out <- do.call(rbind, lapply(models, function(x) {
     summary_model <- summary(x)$summary
     sampler_params <- get_sampler_params(x)
     data.frame(
-      n_eff_min=min(summary_model[, 'n_eff']),
-      rhat_max=max(summary_model[, 'Rhat']),
-      r_bad_n=length(which(summary_model[, 'Rhat'] > 1.1)),
+      n_eff_min = min(summary_model[, 'n_eff']),
+      rhat_max = max(summary_model[, 'Rhat']),
+      r_bad_n = length(which(summary_model[, 'Rhat'] > 1.1)),
       divergent_n = sum(sapply(sampler_params, function(y) y[,'n_divergent__'])),
       treedepth_max = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
-  }))
-  out$id <- names(models)
-  out <- out[, c('id','treedepth_max','divergent_n','n_eff_min','r_bad_n','rhat_max')]
-  out
+    }))
+  out$model_id <- names(models)
+  out <- out[, c('model_id','treedepth_max','divergent_n','n_eff_min','r_bad_n','rhat_max')]
 }
 
 
+#Extract parameters for growth models
+growth_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = TRUE, quantiles= c(0.025, 0.5, 0.975)) {
+  models <- compile_growth_model_fits(subset_growth = subset_growth, pool_kfolds = pool_kfolds)
+  if(is.null(subset_params)) {
+    lapply(models, function(x) {
+      model_summary <- summary(x, probs=quantiles)$summary
+    }
+    )
+  }else{
+    lapply(models, function(x) {
+      model_summary <- summary(x, pars=subset_params, probs=quantiles)$summary
+    }
+    )
+  }
+}
+
+#Extract parameters for rho models
+rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = TRUE, quantiles= c(0.025, 0.5, 0.975)) {
+  models <- compile_rho_model_fits(subset_growth = subset_growth, pool_kfolds = pool_kfolds)
+  if(is.null(subset_params)) {
+    lapply(models, function(x) {
+      model_summary <- summary(x, probs=quantiles)$summary
+    }
+    )
+  }else{
+    lapply(models, function(x) {
+      model_summary <- summary(x, pars=subset_params, probs=quantiles)$summary
+    }
+    )
+  }
+}
+
+#log_likelihood plot
 
 # Coefficient Plot
 
