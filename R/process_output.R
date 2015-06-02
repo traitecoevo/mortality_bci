@@ -108,41 +108,65 @@ rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = 
   }
 }
 
-#log_likelihood plot
+# Model average coefficient plot
 
-# Coefficient Plot
-
-coeff_plot <- function(stanfit, params, labels=NULL, quantiles =c(0.025,0.975,0.1,0.9), xlab='effect size', transform=NULL) {
-  dat <- summary(stanfit, pars=params, probs=quantiles)$summary
-  if (!is.null(transform))
-    dat <-transform(dat)
-
-  if (is.null(labels)) labels <- row.names(dat)
-  opar <- par(mai=c(1, max(strwidth(labels, 'inches')) + 0.3, 0.5, 0.5))
-  on.exit(par(opar))
-  plot(dat[,'mean'], seq_len(nrow(dat)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
-       xlim=range(pretty(range(dat[, c(min(paste0((quantiles*100), '%')),
-                                       paste0(max(quantiles*100), '%'))]))),
-
-       panel.first={
-         abline(v=0, lty=3)
-         if(length(quantiles) == 2) {
-           segments(dat[, paste0(quantiles*100, '%')], seq_len(nrow(dat)),
-                    x1=dat[, paste0(quantiles*100, '%')], lend=1)
-         } else if(length(quantiles) == 4) {
-           segments(dat[, paste0(quantiles[1]*100, '%')], seq_len(nrow(dat)), x1=dat[, paste0(quantiles[2]*100, '%')], lwd=1, lend=1)
-           segments(dat[, paste0(quantiles[3]*100, '%')], seq_len(nrow(dat)), x1=dat[, paste0(quantiles[4]*100, '%')], lwd=3, lend=1)
-         }
-         else {
-           stop('Only two credible intervals can be plotted at any one time')
-         }
-       })
-  axis(2, at=seq_len(nrow(dat)), labels=labels, las=1)
-
-  mtext(xlab, side = 1, line=2.5)
+coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), subset_growth ='dbh_dt', labels=NULL, quantiles =c(0.025,0.975,0.1,0.9), xlab='effect size') {
+  models <- growth_summaries(subset_params = subset_params, subset_growth = subset_growth,
+                             pool_kfolds = TRUE, quantiles = quantiles)[[subset_growth]]
+  plot(models[,'mean'], rev(seq_len(nrow(models))), xlab='', ylab='', yaxt='n', pch=21, bg='black',
+       xlim=range(pretty(c(models[, paste0(min(quantiles*100), '%')],
+                           models[, paste0(max(quantiles*100), '%')]))))
+  
+  quantiles <- paste0(quantiles*100, '%')
+  if(length(quantiles) == 2) {
+    segments(models[subset_growth, quantiles], seq_len(nrow(models)),
+             x1=models[, quantiles], lend=1)
+  } else if(length(quantiles) == 4) {
+    segments(models[, quantiles[1]], seq_len(nrow(models)), x1=models[, quantiles[2]], lwd=1, lend=1)
+    segments(models[, quantiles[3]], seq_len(nrow(models)), x1=models[, quantiles[4]], lwd=2, lend=1)
+  }
+  else {
+    stop('Only two credible intervals can be plotted at any one time')
+  }
+  abline(v=0, lty=2)
+  if(is.null(labels)) {
+    axis(2, at=seq_len(nrow(models)), labels=rev(subset_params), las=1)
+  } else {
+    axis(2, at=seq_len(nrow(models)), labels=rev(labels), las=1)    
+  }
 }
 
-# Model simulation
+
+log_likelihood_plot <- function(labels=NULL, quantiles =c(0.025,0.975,0.1,0.9), xlab='log likelihood') {
+  
+  summaries <- growth_summaries(subset_params = "log_lik_tilde_total",
+                                pool_kfolds = TRUE, quantiles = quantiles)
+  models <- do.call(rbind, summaries)
+  row.names(models) <- names(summaries)
+  models <- models[c('basal_area_dt_rel', 'basal_area_dt', 'dbh_dt_rel', 'dbh_dt'),]
+  plot(models[,'mean'], seq_len(nrow(models)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
+       xlim =range(pretty(c(models[, paste0(min(quantiles*100), '%')],
+                            models[, paste0(max(quantiles*100), '%')]))))
+  
+  quantiles <- paste0(quantiles*100, '%')
+  if(length(quantiles) == 2) {
+    segments(models[, quantiles], seq_len(nrow(models)),
+             x1=models[, quantiles], lend=1)
+  } else if(length(quantiles) == 4) {
+    segments(models[, quantiles[1]], seq_len(nrow(models)), x1=models[, quantiles[2]], lwd=1, lend=1)
+    segments(models[, quantiles[3]], seq_len(nrow(models)), x1=models[, quantiles[4]], lwd=2, lend=1)
+  }
+  else {
+    stop('Only two credible intervals can be plotted at any one time')
+  }
+  if(is.null(labels)) {
+    axis(2, at=seq_len(nrow(models)), labels=row.names(models), las=1)
+  } else {
+    axis(2, at=seq_len(nrow(models)), labels=labels, las=1)    
+  }
+}
+
+#Best model simulation plot'
 sim_mortality <- function(model_fit, model_data, cov_name='rho',
                           wd_values=c(200,800), growth_name='growth_dt',
                           growth_range=NULL, mortality_curve = FALSE){
