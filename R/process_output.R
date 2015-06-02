@@ -1,6 +1,6 @@
 #Compile chains for each growth measure either for each model or across kfolds
 compile_growth_model_fits <- function(subset_growth=NULL, pool_kfolds = FALSE) {
-  if(any(subset_growth %in% c('dbh_dt','dbh_dt_rel','basal_area_dt', 'basal_area_dt_rel'))) {
+  if(any(!subset_growth %in% c('dbh_dt','dbh_dt_rel','basal_area_dt', 'basal_area_dt_rel'))) {
     stop("subset_growth can either be NULL or contain one or multiple of the following: 'dbh_dt', 'dbh_dt_rel', 'basal_area_dt', 'basal_area_dt_rel'")
   }
   if(is.null(subset_growth)) {
@@ -50,6 +50,7 @@ compile_rho_model_fits <- function(subset_rho_combos=NULL, pool_kfolds = FALSE) 
     })
   }
 }
+
 #Model diagnostics
 model_diagnostics <- function(model_comparison = "growth", pool_kfolds = FALSE) {
   if(model_comparison %in% c('growth', 'rho')==FALSE) {
@@ -78,13 +79,13 @@ model_diagnostics <- function(model_comparison = "growth", pool_kfolds = FALSE) 
 
 #Extract parameters for growth models
 growth_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = TRUE, quantiles= c(0.025, 0.5, 0.975)) {
-  models <- compile_growth_model_fits(subset_growth = subset_growth, pool_kfolds = pool_kfolds)
+  models <- compile_growth_model_fits(subset_growth, pool_kfolds)
   if(is.null(subset_params)) {
     lapply(models, function(x) {
       model_summary <- summary(x, probs=quantiles)$summary
     }
     )
-  }else{
+  } else{
     lapply(models, function(x) {
       model_summary <- summary(x, pars=subset_params, probs=quantiles)$summary
     }
@@ -94,13 +95,13 @@ growth_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds
 
 #Extract parameters for rho models
 rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = TRUE, quantiles= c(0.025, 0.5, 0.975)) {
-  models <- compile_rho_model_fits(subset_growth = subset_growth, pool_kfolds = pool_kfolds)
+  models <- compile_rho_model_fits(subset_growth, pool_kfolds)
   if(is.null(subset_params)) {
     lapply(models, function(x) {
       model_summary <- summary(x, probs=quantiles)$summary
     }
     )
-  }else{
+  } else{
     lapply(models, function(x) {
       model_summary <- summary(x, pars=subset_params, probs=quantiles)$summary
     }
@@ -110,24 +111,12 @@ rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = 
 
 # Model average coefficient plot
 
-coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), subset_growth ='dbh_dt', labels=NULL, quantiles =c(0.025,0.975,0.1,0.9), xlab='effect size') {
-  models <- growth_summaries(subset_params = subset_params, subset_growth = subset_growth,
-                             pool_kfolds = TRUE, quantiles = quantiles)[[subset_growth]]
+coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), subset_growth ='dbh_dt', labels=NULL, xlab='effect size') {
+  models <- growth_summaries(subset_params, subset_growth,pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))[[subset_growth]]
   plot(models[,'mean'], rev(seq_len(nrow(models))), xlab='', ylab='', yaxt='n', pch=21, bg='black',
-       xlim=range(pretty(c(models[, paste0(min(quantiles*100), '%')],
-                           models[, paste0(max(quantiles*100), '%')]))))
-  
-  quantiles <- paste0(quantiles*100, '%')
-  if(length(quantiles) == 2) {
-    segments(models[subset_growth, quantiles], seq_len(nrow(models)),
-             x1=models[, quantiles], lend=1)
-  } else if(length(quantiles) == 4) {
-    segments(models[, quantiles[1]], seq_len(nrow(models)), x1=models[, quantiles[2]], lwd=1, lend=1)
-    segments(models[, quantiles[3]], seq_len(nrow(models)), x1=models[, quantiles[4]], lwd=2, lend=1)
-  }
-  else {
-    stop('Only two credible intervals can be plotted at any one time')
-  }
+       xlim=range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
+    segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1, lend=1)
+    segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2, lend=1)
   abline(v=0, lty=2)
   if(is.null(labels)) {
     axis(2, at=seq_len(nrow(models)), labels=rev(subset_params), las=1)
@@ -137,28 +126,23 @@ coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), subset_growth ='
 }
 
 
-log_likelihood_plot <- function(labels=NULL, quantiles =c(0.025,0.975,0.1,0.9), xlab='log likelihood') {
-  
-  summaries <- growth_summaries(subset_params = "log_lik_tilde_total",
-                                pool_kfolds = TRUE, quantiles = quantiles)
+log_likelihood_plot <- function(model_comparison = 'growth', log_likelihood = 'log_lik_fit_total',labels=NULL, xlab='log likelihood') {
+  if(model_comparison =='growth') {
+  summaries <- growth_summaries(log_likelihood, pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))
   models <- do.call(rbind, summaries)
   row.names(models) <- names(summaries)
   models <- models[c('basal_area_dt_rel', 'basal_area_dt', 'dbh_dt_rel', 'dbh_dt'),]
+  } else if(model_comparison =='rho') {
+    summaries <- rho_summaries(log_likelihood, pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))
+    models <- do.call(rbind, summaries)
+    row.names(models) <- names(summaries)
+    row.names(models)[1] <- 'none'
+    models <- models[c('abc','bc','ac','ab','c','b','a','none'),]
+  }
   plot(models[,'mean'], seq_len(nrow(models)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
-       xlim =range(pretty(c(models[, paste0(min(quantiles*100), '%')],
-                            models[, paste0(max(quantiles*100), '%')]))))
-  
-  quantiles <- paste0(quantiles*100, '%')
-  if(length(quantiles) == 2) {
-    segments(models[, quantiles], seq_len(nrow(models)),
-             x1=models[, quantiles], lend=1)
-  } else if(length(quantiles) == 4) {
-    segments(models[, quantiles[1]], seq_len(nrow(models)), x1=models[, quantiles[2]], lwd=1, lend=1)
-    segments(models[, quantiles[3]], seq_len(nrow(models)), x1=models[, quantiles[4]], lwd=2, lend=1)
-  }
-  else {
-    stop('Only two credible intervals can be plotted at any one time')
-  }
+       xlim = range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
+  segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1, lend=1)
+  segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2, lend=1)
   if(is.null(labels)) {
     axis(2, at=seq_len(nrow(models)), labels=row.names(models), las=1)
   } else {
