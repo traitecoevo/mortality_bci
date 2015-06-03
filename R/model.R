@@ -173,5 +173,3 @@ get_model_chunks <- function(pars) {
          ifelse("c" %in% rho_combo, " + c2 * log_rho_c_tilde[spp_tilde[i]]", ""))
     )
 }
-
-

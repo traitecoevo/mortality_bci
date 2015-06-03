@@ -3,25 +3,19 @@ compile_growth_model_fits <- function(subset_growth=NULL, pool_kfolds = FALSE) {
   if(any(!subset_growth %in% c('dbh_dt','dbh_dt_rel','basal_area_dt', 'basal_area_dt_rel'))) {
     stop("subset_growth can either be NULL or contain one or multiple of the following: 'dbh_dt', 'dbh_dt_rel', 'basal_area_dt', 'basal_area_dt_rel'")
   }
-  if(is.null(subset_growth)) {
-    pars <- pars_growth() 
-  } else {
-    pars <- pars_growth() 
-    pars <- pars[pars$growth_measure %in% subset_growth,]
+  pars <- pars_growth() 
+
+  if(!is.null(subset_growth)) {
+   pars <- pars[pars$growth_measure %in% subset_growth,]
   }
   if(pool_kfolds==FALSE) {
     sets <- split(pars, pars$modelid)
-    lapply(sets,function(s) {
-      files <- s[['filename']]
-      x <- sflist2stanfit(lapply(files, readRDS))
-    })
   } else {
     sets <- split(pars, pars$growth_measure)
-    lapply(sets,function(s) {
-      files <- s[['filename']]
-      x <- sflist2stanfit(lapply(files, readRDS))
-    })
   }
+  lapply(sets,function(s) {
+      files <- s[['filename']]
+      x <- sflist2stanfit(lapply(files, readRDS))})
 }
 
 
@@ -30,25 +24,21 @@ compile_rho_model_fits <- function(subset_rho_combos=NULL, pool_kfolds = FALSE) 
   if(any(!subset_rho_combos %in% c("","a","b","c","ab","ac","bc","abc"))) {
     stop("subset_rho_combos can either be NULL or contain one or multiple of the following:'','a','b','c','ab','ac','bc','abc'")
   }
-  if(is.null(subset_rho_combos)) {
-    pars <- pars_rho_combos(growth_measure = 'dbh_dt') 
-  } else {
-    pars <- pars_rho_combos(growth_measure = 'dbh_dt') 
-    pars <- pars[pars$rho_combo %in% subset_rho_combos,]
+  pars <- pars_rho_combos(growth_measure = 'dbh_dt') 
+ 
+  if(!is.null(subset_rho_combos)) {
+   pars <- pars[pars$rho_combo %in% subset_rho_combos,]
   }
   if(pool_kfolds==FALSE) {
     sets <- split(pars, pars$modelid)
-    lapply(sets,function(s) {
-      files <- s[['filename']]
-      x <- sflist2stanfit(lapply(files, readRDS))
-    })
   } else {
     sets <- split(pars, pars$rho_combo)
-    lapply(sets,function(s) {
-      files <- s[['filename']]
-      x <- sflist2stanfit(lapply(files, readRDS))
-    })
   }
+
+  lapply(sets,function(s) {
+    files <- s[['filename']]
+    x <- sflist2stanfit(lapply(files, readRDS))
+  })
 }
 
 #Model diagnostics
@@ -81,32 +71,30 @@ model_diagnostics <- function(model_comparison = "growth", pool_kfolds = FALSE) 
 growth_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = TRUE, quantiles= c(0.025, 0.5, 0.975)) {
   models <- compile_growth_model_fits(subset_growth, pool_kfolds)
   if(is.null(subset_params)) {
-    lapply(models, function(x) {
-      model_summary <- summary(x, probs=quantiles)$summary
+    f <- function(x) {
+      summary(x, probs=quantiles)$summary
     }
-    )
-  } else{
-    lapply(models, function(x) {
-      model_summary <- summary(x, pars=subset_params, probs=quantiles)$summary
+  } else {
+    f <- function(x) {
+      summary(x, pars=subset_params, probs=quantiles)$summary
     }
-    )
   }
+  lapply(models, f)
 }
 
 #Extract parameters for rho models
 rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = TRUE, quantiles= c(0.025, 0.5, 0.975)) {
   models <- compile_rho_model_fits(subset_growth, pool_kfolds)
   if(is.null(subset_params)) {
-    lapply(models, function(x) {
-      model_summary <- summary(x, probs=quantiles)$summary
+    f <- function(x) {
+      summary(x, probs=quantiles)$summary
     }
-    )
   } else{
-    lapply(models, function(x) {
-      model_summary <- summary(x, pars=subset_params, probs=quantiles)$summary
+     f <- function(x) {
+      summary(x, pars=subset_params, probs=quantiles)$summary
     }
-    )
   }
+  lapply(models,f)
 }
 
 # Model average coefficient plot
