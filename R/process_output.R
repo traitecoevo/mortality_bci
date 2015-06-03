@@ -71,7 +71,7 @@ model_diagnostics <- function(model_comparison = "growth", pool_kfolds = FALSE) 
       r_bad_n = length(which(summary_model[, 'Rhat'] > 1.1)),
       divergent_n = sum(sapply(sampler_params, function(y) y[,'n_divergent__'])),
       treedepth_max = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
-    }))
+  }))
   out$model_id <- names(models)
   out <- out[, c('model_id','treedepth_max','divergent_n','n_eff_min','r_bad_n','rhat_max')]
 }
@@ -111,167 +111,132 @@ rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = 
 
 # Model average coefficient plot
 
-coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), subset_growth ='dbh_dt', labels=NULL, xlab='effect size') {
+coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), param_names = NULL, subset_growth ='dbh_dt', xlab = NA, ylab = NA, x_tick_labs = TRUE) {
   models <- growth_summaries(subset_params, subset_growth,pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))[[subset_growth]]
-  plot(models[,'mean'], rev(seq_len(nrow(models))), xlab='', ylab='', yaxt='n', pch=21, bg='black',
+  plot(models[,'mean'], rev(seq_len(nrow(models))), xlab=xlab, ylab=ylab, yaxt='n', xaxt='n', pch=21, bg='black',
        xlim=range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
-    segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1, lend=1)
-    segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2, lend=1)
+  segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1, lend=1)
+  segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2, lend=1)
   abline(v=0, lty=2)
-  if(is.null(labels)) {
+  if(is.null(param_names)) {
     axis(2, at=seq_len(nrow(models)), labels=rev(subset_params), las=1)
   } else {
-    axis(2, at=seq_len(nrow(models)), labels=rev(labels), las=1)    
+    axis(2, at=seq_len(nrow(models)), labels=rev(param_names), las=1)
+  }
+  if(x_tick_labs == FALSE) {
+    axis(1, labels = FALSE)
+  } else {
+    axis(1)
   }
 }
 
+#Plot - rho effects for each model
+growth_comparison_plot <- function() {
+  par(mfrow=c(4,1), mar=c(2,4,1,1), oma=c(3,3,0,0), lend='butt', cex.axis = 1.2, cex.lab = 1.2)
+  coeff_plot_growth(subset_growth = 'dbh_dt', ylab = 'dbh dt', x_tick_labs = FALSE)
+  coeff_plot_growth(subset_growth = 'dbh_dt_rel', ylab = 'dbh dt rel', x_tick_labs = FALSE)
+  coeff_plot_growth(subset_growth = 'basal_area_dt', ylab = 'basal area dt', x_tick_labs = FALSE)
+  coeff_plot_growth(subset_growth = 'basal_area_dt_rel', ylab = 'basal area dt rel', x_tick_labs = TRUE)
+  title(ylab = mtext('Rho effects for each growth model', 2, outer=TRUE, line = 1))
+  title(xlab = mtext('Effect size', 1, line = 2.5))
+}
 
-log_likelihood_plot <- function(model_comparison = 'growth', log_likelihood = 'log_lik_fit_total',labels=NULL, xlab='log likelihood') {
+
+
+log_likelihood_plot <- function(model_comparison = 'growth', log_likelihood = 'log_lik_tilde_total', xlab='log likelihood', ylab='Growth model') {
   if(model_comparison =='growth') {
-  summaries <- growth_summaries(log_likelihood, pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))
-  models <- do.call(rbind, summaries)
-  row.names(models) <- names(summaries)
-  models <- models[c('basal_area_dt_rel', 'basal_area_dt', 'dbh_dt_rel', 'dbh_dt'),]
+    par(mar=c(6,10,1,1))
+    summaries <- growth_summaries(log_likelihood, pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))
+    models <- do.call(rbind, summaries)
+    row.names(models) <- names(summaries)
+    models <- models[c('basal_area_dt_rel', 'basal_area_dt', 'dbh_dt_rel', 'dbh_dt'),]
+    y_tick_labels <- c('rel basal area dt', 'basal area dt', 'rel dbh dt', 'dbh dt')
+    
+    plot(models[,'mean'], seq_len(nrow(models)), xlab=xlab, ylab=NA, yaxt='n', pch=21, bg='black',
+         xlim = range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
+    axis(2, seq_len(nrow(models)), labels = y_tick_labels, las = 1)
+    title(ylab = ylab, line = 8)
+    segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1)
+    segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2)
+    
   } else if(model_comparison =='rho') {
+    par(mar=c(5,4,1,1))
     summaries <- rho_summaries(log_likelihood, pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))
     models <- do.call(rbind, summaries)
     row.names(models) <- names(summaries)
     row.names(models)[1] <- 'none'
     models <- models[c('abc','bc','ac','ab','c','b','a','none'),]
-  }
-  plot(models[,'mean'], seq_len(nrow(models)), xlab='', ylab='', yaxt='n', pch=21, bg='black',
-       xlim = range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
-  segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1, lend=1)
-  segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2, lend=1)
-  if(is.null(labels)) {
-    axis(2, at=seq_len(nrow(models)), labels=row.names(models), las=1)
-  } else {
-    axis(2, at=seq_len(nrow(models)), labels=labels, las=1)    
+    y_tick_labels <- row.names(models)
+    
+    plot(models[,'mean'], seq_len(nrow(models)), xlab=xlab, ylab=NA, yaxt='n', pch=21, bg='black',
+         xlim = range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
+    axis(2, seq_len(nrow(models)), labels = y_tick_labels, las = 1)
+    title(ylab = ylab, line = 3)
+    segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1)
+    segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2)
   }
 }
 
-#Best model simulation plot'
-sim_mortality <- function(model_fit, model_data, cov_name='rho',
-                          wd_values=c(200,800), growth_name='growth_dt',
-                          growth_range=NULL, mortality_curve = FALSE){
-  model_fit <- extract(model_fit)
 
-  new_log_rho_cs <- (log(wd_values) - mean(log(model_data[[cov_name]])))/ (2*sd(log(model_data[[cov_name]])))
 
-  if (is.null(growth_range)){
-    new_growth_dt_s <- seq(min(model_data[[growth_name]]),max(model_data[[growth_name]]), by=0.0001)/ (2*sd(model_data[[growth_name]]))
+#Best model simulation plot
+sim_mortality <- function(subset_growth ='dbh_dt', rho=c(200,800), growth_range=NULL, mortality_curve = FALSE){
+  c_ln_rho <- log(rho) - log(600)
+  model <- compile_growth_model_fits(subset_growth = subset_growth, pool_kfolds = TRUE)[[subset_growth]]
+  model_sims <- extract(model, pars =c('a0_mu', 'b0_mu', 'c0_mu', 'a1_mu', 'b1_mu', 'c1_mu', 'a2', 'b2', 'c2'))
+  if(is.null(growth_range)) {
+    dat <- readRDS('export/bci_data_full.rds')
+    growth_range <- range(dat$train[,subset_growth])
   }
-  else {
-    new_growth_dt_s <- seq(min(growth_range), max(growth_range), by=0.0001)/ (2*sd(model_data[[growth_name]]))}
-
-  preds <- sapply(new_log_rho_cs, function(wd) {
-    with(model_fit,
-         mapply(function(a0_mu, b0_mu, c0_mu, a1, b1, c1) {
-           a_log = a0_mu + a1 * wd
-           b_log = b0_mu + b1 * wd
-           h_log = c0_mu + c1 * wd
+  growth <- seq(min(growth_range), max(growth_range),length.out = 100)
+  predictions <- sapply(rho, function(rho) {
+    with(model_sims,
+         mapply(function(a0_mu, b0_mu, c0_mu, a1_mu, b1_mu, c1_mu, a2, b2, c2) {
+           a_log = a0_mu + a1_mu + a2 * c_ln_rho
+           b_log = b0_mu + b1_mu + b2 * c_ln_rho
+           c_log = c0_mu + c1_mu + c2 * c_ln_rho
            if (mortality_curve ==TRUE){
-             preds <-1 - exp(-(exp(a_log - exp(b_log) * new_growth_dt_s) + exp(h_log)))
+             preds <-1 - exp(-(exp(a_log - exp(b_log) * growth) + exp(c_log)))
            }
            else {
-             preds <- exp(a_log - exp(b_log) * new_growth_dt_s) + exp(h_log)
+             preds <- exp(a_log - exp(b_log) * growth) + exp(c_log)
            }
-         }, a0_mu, b0_mu, c0_mu, a1, b1, c1))}, simplify = 'array')
-  output <- list(mn = apply(preds,c(1,3), mean),
-                 l95 = apply(preds, c(1,3), quantile, 0.025),
-                 u95 =  apply(preds, c(1,3), quantile, 0.975),
-                 new_growth_dt_s = new_growth_dt_s)
+         }, a0_mu, b0_mu, c0_mu, a1_mu, b1_mu, c1_mu, a2, b2, c2))}, simplify = 'array')
+  output <- list(mn = apply(predictions,c(1,3), mean),
+                 l95 = apply(predictions, c(1,3), quantile, 0.025),
+                 u95 =  apply(predictions, c(1,3), quantile, 0.975),
+                 growth = growth)
   return(output)
 }
 
 
 # Plot hazard and mortality curves
-plot_mortality <- function(model_fit, model_data, cov_name='rho', wd_values=c(200,800),
-                           growth_name='growth_dt', growth_range=NULL,
-                           mortality_curve = FALSE, xaxis_on=TRUE,legend=TRUE, haz_lim=NULL,xlim=xlim) {
-
-  output <- sim_mortality(model_fit = model_fit, model_data = model_data, cov_name= cov_name, wd_values=wd_values, growth_name=growth_name, growth_range=growth_range, mortality_curve = mortality_curve)
-
-  if (mortality_curve == TRUE){
-    plot(mn[,1]*100~ new_growth_dt_s, type='n', data=output, ylim=c(0,100),
-         xaxt='n', ylab='Pr(Mortality)/year', xlab=NA)
-
-    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
-            c(output$l95[,1]*100, rev(output$u95[,1]*100)),
-            col=rgb(1,0,0,0.5), border=NA)
-
-    lines(mn[,1]*100~new_growth_dt_s, type='l', lwd=2, data=output, col='darkred')
-
-    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
-            c(output$l95[,2]*100, rev(output$u95[,2]*100)),
-            col=rgb(0,0,1,0.5), border=NA)
-
-    lines(mn[,2]*100~new_growth_dt_s, type='l', lwd=2, data=output, lty=2, col='blue')
+plot_compare_rho_mortality <- function(subset_growth ='dbh_dt', xlab = 'dbh dt', 
+                                       rho=c(200,800), growth_range=NULL, mortality_curve = TRUE, 
+                                       ylim=c(0,1), legend = TRUE) {
+  if(length(rho) >2) {
+    stop("Only two curves can be plotted at any one time")
   }
-
-  else {
-    if (is.null(haz_lim)) {
-      haz_lim <- range(pretty(output$u95))
-    }
-    plot(mn[,1]~ new_growth_dt_s, type='n', data=output, ylim=haz_lim,
-         xaxt='n', ylab='Instantaneous hazard rate', xlab=NA)
-
-    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
-            c(output$l95[,1], rev(output$u95[,1])),
-            col=rgb(1,0,0,0.5), border=NA)
-
-    lines(mn[,1]~new_growth_dt_s, type='l', lwd=2, data=output, col='darkred')
-
-    polygon(c(output$new_growth_dt_s, rev(output$new_growth_dt_s)),
+  par(xaxs='i')
+  output <- sim_mortality(subset_growth = subset_growth, rho = rho, growth_range = growth_range, mortality_curve = mortality_curve)
+  plot(mn[,1] ~ growth, type='n', data=output, ylim=ylim, 
+       ylab='Pr(Mortality)/year', xlab= xlab)
+  
+  polygon(c(output$growth, rev(output$growth)),
+          c(output$l95[,1], rev(output$u95[,1])),
+          col=rgb(1,0,0,0.5), border=NA)
+  lines(mn[,1] ~ growth, type='l', lwd=2, data=output, col='darkred')
+  
+  if(length(rho)>1) {
+    polygon(c(output$growth, rev(output$growth)),
             c(output$l95[,2], rev(output$u95[,2])),
             col=rgb(0,0,1,0.5), border=NA)
-
-    lines(mn[,2]~new_growth_dt_s, type='l', lwd=2, data=output, lty=2, col='blue')
-  }
-  if(legend == TRUE){
-    legend('topright',
-           legend = c(paste(cov_name, '=', wd_values[1]), (paste(cov_name, '=', wd_values[2]))),
-           bty = 'n', col=c('darkred', 'blue'), lty=c(1,2), lwd=2)
-  }
-  if(xaxis_on==TRUE){
-    axis(1,at = pretty(output$new_growth_dt_s),
-         label= round(pretty(output$new_growth_dt_s)*(2 * sd(model_data$growth_dt)),3))
-    title(xlab ='DBH growth (m)')
-  }
-  else
-    axis(1,at = pretty(output$new_growth_dt_s), label= NA)
-}
-
-#3-dimensional plot
-plot3d <- function(model_fit, model_data,  cov_name='rho', wd_values=seq(200:800, by=5),
-                    growth_name='growth_dt', growth_range=NULL,
-                    mortality_curve = FALSE, legend=TRUE, haz_lim=NULL, theta=110, phi=20,
-                    ticktype='detailed') {
-
-
-  output <- sim_mortality(model_fit = model_fit, model_data = model_data, cov_name= cov_name,
-                          wd_values=wd_values, growth_name=growth_name, growth_range=growth_range,
-                          mortality_curve = mortality_curve)
-
-  nrz <- nrow(output$mn)
-  ncz <- ncol(output$mn)
-  jet.colors <- colorRampPalette(c('blue','yellow','orange', 'red'))
-  # Generate the desired number of colors from this palette
-  nbcol <- 10000
-  color <- jet.colors(nbcol)
-  # Compute the z-value at the facet centres
-  zfacet <- output$mn[-1, -1] + output$mn[-1, -ncz] + output$mn[-nrz, -1] + output$mn[-nrz, -ncz]
-  # Recode facet z-values into color indices
-  facetcol <- cut(zfacet, nbcol)
-
-  if (mortality_curve==TRUE){
-    persp(output$new_growth_dt_s*(sd(model_data[[growth_name]])), wd_values, output$mn,
-          col = color[facetcol], xlab= 'dbh growth', ylab='rho',
-          zlab='Mortality probablity/yr', theta=theta, phi=phi, border=NA,ticktype=ticktype)
-  }
-  else {
-    persp(output$new_growth_dt_s*(sd(model_data[[growth_name]])), wd_values, output$mn,
-          col = color[facetcol], xlab= 'dbh growth', ylab='rho',
-          zlab='Instantaneous hazard rate', theta=theta, phi=phi, border=NA,ticktype=ticktype)
+    lines(mn[,2] ~ growth, type='l', lwd=2, data=output, lty=2, col='blue')
+    
+    if(legend==TRUE) {
+      legend('topright',
+             legend = c(paste('rho', '=', rho[1]), (paste('rho', '=', rho[2]))),
+             bty = 'n', col=c('darkred', 'blue'), lty=c(1,2), lwd=2)
+    }
   }
 }
