@@ -1,5 +1,5 @@
-get_model_chunks <- function(pars) {
-  rho_combo <- pars$rho_combo
+get_model_chunks <- function(tasks) {
+  rho_combo <- tasks$rho_combo
   if(nchar(rho_combo) > 0) {
     rho_combo <- sapply(seq_len(nchar(rho_combo)), function(i) substr(rho_combo, i, i))
   }
