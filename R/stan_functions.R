@@ -1,23 +1,23 @@
-create_dirs <- function(pars_list) {
-  tmp <- lapply(pars_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
+create_dirs <- function(task_list) {
+  tmp <- lapply(task_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
 }
 
-model_compiler <- function(pars) {
-  data <- readRDS(pars$fold_data)
+model_compiler <- function(tasks) {
+  data <- readRDS(tasks$fold_data)
   
   ## Assemble the stan model:
-  chunks <- get_model_chunks(pars)
-  model <- make_stan_model(chunks, growth_measure=pars$growth_measure)
+  chunks <- get_model_chunks(tasks)
+  model <- make_stan_model(chunks, growth_measure=tasks$growth_measure)
   
   ## Actually run the model
   res <- run_single_stan_chain(model, data,
-                               chain_id=pars$chain,
-                               iter=pars$iter)
+                               chain_id=tasks$chain,
+                               iter=tasks$iter)
   
   ## The model output is large so instead of returning it we'll just
   ## dump into a file.
-  saveRDS(res, pars$filename)
-  pars$filename
+  saveRDS(res, tasks$filename)
+  tasks$filename
 }
 
 combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
