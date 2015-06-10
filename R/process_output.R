@@ -3,15 +3,15 @@ compile_growth_model_fits <- function(subset_growth=NULL, pool_kfolds = FALSE) {
   if(any(!subset_growth %in% c('dbh_dt','dbh_dt_rel','basal_area_dt', 'basal_area_dt_rel'))) {
     stop("subset_growth can either be NULL or contain one or multiple of the following: 'dbh_dt', 'dbh_dt_rel', 'basal_area_dt', 'basal_area_dt_rel'")
   }
-  pars <- pars_growth() 
+  growth_tasks <- tasks_growth() 
 
   if(!is.null(subset_growth)) {
-   pars <- pars[pars$growth_measure %in% subset_growth,]
+    growth_tasks <- growth_tasks[growth_tasks$growth_measure %in% subset_growth,]
   }
   if(pool_kfolds==FALSE) {
-    sets <- split(pars, pars$modelid)
+    sets <- split(growth_tasks, growth_tasks$modelid)
   } else {
-    sets <- split(pars, pars$growth_measure)
+    sets <- split(growth_tasks, growth_tasks$growth_measure)
   }
   lapply(sets,function(s) {
       files <- s[['filename']]
@@ -24,15 +24,15 @@ compile_rho_model_fits <- function(subset_rho_combos=NULL, pool_kfolds = FALSE) 
   if(any(!subset_rho_combos %in% c("","a","b","c","ab","ac","bc","abc"))) {
     stop("subset_rho_combos can either be NULL or contain one or multiple of the following:'','a','b','c','ab','ac','bc','abc'")
   }
-  pars <- pars_rho_combos(growth_measure = 'dbh_dt') 
+  rho_combo_tasks <- tasks_rho_combos(growth_measure = 'dbh_dt') # Need to change once best growth measure determined. 
  
   if(!is.null(subset_rho_combos)) {
-   pars <- pars[pars$rho_combo %in% subset_rho_combos,]
+    rho_combo_tasks <- rho_combo_tasks[rho_combo_tasks$rho_combo %in% subset_rho_combos,]
   }
   if(pool_kfolds==FALSE) {
-    sets <- split(pars, pars$modelid)
+    sets <- split(rho_combo_tasks, rho_combo_tasks$modelid)
   } else {
-    sets <- split(pars, pars$rho_combo)
+    sets <- split(rho_combo_tasks, rho_combo_tasks$rho_combo)
   }
 
   lapply(sets,function(s) {
@@ -101,10 +101,10 @@ rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = 
 
 coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), param_names = NULL, subset_growth ='dbh_dt', xlab = NA, ylab = NA, x_tick_labs = TRUE) {
   models <- growth_summaries(subset_params, subset_growth,pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))[[subset_growth]]
-  plot(models[,'mean'], rev(seq_len(nrow(models))), xlab=xlab, ylab=ylab, yaxt='n', xaxt='n', pch=21, bg='black',
+  plot(models[,'mean'], rev(seq_len(nrow(models))), xlab=xlab, ylab=NA, yaxt='n', xaxt='n', pch=21, bg='black',
        xlim=range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
-  segments(models[, '2.5%'], seq_len(nrow(models)), models[, '97.5%'], lwd=1, lend=1)
-  segments(models[, '10%'], seq_len(nrow(models)), models[, '90%'], lwd=2, lend=1)
+  segments(models[, '2.5%'], rev(seq_len(nrow(models))), models[, '97.5%'], lwd=1, lend=1)
+  segments(models[, '10%'], rev(seq_len(nrow(models))), models[, '90%'], lwd=2, lend=1)
   abline(v=0, lty=2)
   if(is.null(param_names)) {
     axis(2, at=seq_len(nrow(models)), labels=rev(subset_params), las=1)
@@ -116,6 +116,7 @@ coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), param_names = NU
   } else {
     axis(1)
   }
+  title(ylab = ylab, line = 5)
 }
 
 #Plot - rho effects for each model
