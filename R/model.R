@@ -8,7 +8,7 @@ get_model_chunks <- function(pars) {
     pars = c("a0_raw","a0_mu","a0_sigma","a0","a1_raw","a1_mu","a1_sigma","a1",if("a" %in% rho_combo) "a2",
              "b0_raw","b0_mu","b0_sigma","b0","b1_raw","b1_mu","b1_sigma","b1",if("b" %in% rho_combo) "b2",
              "c0_raw","c0_mu","c0_sigma","c0","c1_raw","c1_mu","c1_sigma","c1",if("c" %in% rho_combo) "c2",
-             "log_lik_fit_total","log_lik_tilde_total"),
+             "log_lik_fit", "log_lik_tilde","log_lik_fit_total","log_lik_tilde_total"),
     parameters = sprintf("
     real a0_raw[n_spp];
     real a0_mu;
@@ -120,7 +120,7 @@ get_model_chunks <- function(pars) {
       real b_log_fit;
       real c_log_fit;
       real cumulative_hazard_fit;
-      real log_lik_fit;
+      real log_lik_fit[n_obs];
       real log_lik_fit_total;
       
       // Heldout objects
@@ -128,7 +128,7 @@ get_model_chunks <- function(pars) {
       real b_log_tilde;
       real c_log_tilde;
       real cumulative_hazard_tilde;
-      real log_lik_tilde;
+      real log_lik_tilde[n_obs_tilde];
       real log_lik_tilde_total;
       
       // Initialization of summed log likelihoods
@@ -142,12 +142,12 @@ get_model_chunks <- function(pars) {
         c_log_fit <- c0[spp[i]] + c1[census[i]]%s;
         cumulative_hazard_fit <- -census_length[i] * (exp(a_log_fit - exp(b_log_fit) * growth_dt[i]) + exp(c_log_fit));
         if (y[i] == 0) {
-          log_lik_fit <- cumulative_hazard_fit;
+          log_lik_fit[i] <- cumulative_hazard_fit;
         }
         else {
-          log_lik_fit <- log1m_exp(cumulative_hazard_fit);
+          log_lik_fit[i] <- log1m_exp(cumulative_hazard_fit);
         }
-        log_lik_fit_total <- log_lik_fit_total + log_lik_fit;
+        log_lik_fit_total <- log_lik_fit_total + log_lik_fit[i];
       }
       
       // log likelihood for held out data
@@ -159,12 +159,12 @@ get_model_chunks <- function(pars) {
         cumulative_hazard_tilde <- -census_length_tilde[i] * (exp(a_log_tilde - exp(b_log_tilde) * growth_dt_tilde[i]) + exp(c_log_tilde));
         
         if (y_tilde[i] == 0) {
-          log_lik_tilde <- cumulative_hazard_tilde;
+          log_lik_tilde[i] <- cumulative_hazard_tilde;
         } 
         else {
-          log_lik_tilde <- log1m_exp(cumulative_hazard_tilde);
+          log_lik_tilde[i] <- log1m_exp(cumulative_hazard_tilde);
         }
-        log_lik_tilde_total <- log_lik_tilde_total + log_lik_tilde;
+        log_lik_tilde_total <- log_lik_tilde_total + log_lik_tilde[i];
       }",ifelse("a" %in% rho_combo, " + a2 * log_rho_c[spp[i]]", ""),
          ifelse("b" %in% rho_combo, " + b2 * log_rho_c[spp[i]]", ""),
          ifelse("c" %in% rho_combo, " + c2 * log_rho_c[spp[i]]", ""),
