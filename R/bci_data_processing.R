@@ -168,7 +168,8 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
       dead_next_census = mortality_in_next_census(dfstatus),
       dbh_prev = c(NA, drop_last(dbh))) %>%
     # Only keep alive stems
-    filter(dfstatus=="alive") %>%
+    filter(dfstatus=="alive" &
+           census_interval < 8) %>%
     filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt) & 
              !is.na(dbh_dt) & 
              !is.na(dead_next_census)) %>%
