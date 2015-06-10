@@ -35,7 +35,7 @@ In tropical rain forests, wood density, the biomass invested per unit wood volum
 
 \pagebreak
 
-In this study we build a hierarchical Bayesian logistic regression that attempts to partitions 15-years of tropical tree mortality into growth-dependent and growth-independent hazards (i.e. death not related to growth). We then use this model to address three questions: 1) Does wood density affect the growth-mortality relationship? 2) Where does wood density have the greatest effect growth-dependent or growth-independent hazards? And 3) Do the observed relationships dependent on the choice of growth measure?
+In this study we build a hierarchical Bayesian cloglog regression that attempts to partition 15-years of tropical tree mortality into growth-dependent and growth-independent hazards (i.e. death not related to growth). We then use this model to address three questions: 1) Does wood density affect the growth-mortality relationship? 2) Where does wood density have the greatest effect growth-dependent or growth-independent hazards? And 3) Do the observed relationships dependent on the choice of growth measure?
 
 We hypothesize that wood density will decrease both growth-dependent and growth-independent sources of mortality. Specifically, we expect wood density to affect the growth-mortality relationship by decreasing its intercept, (i.e. mortality rates at zero growth) and steepening its slope (i.e. more negative, Fig 5). We also expect that the effect of wood density will be greatest for growth-independent mortality, and that these relationships will be broadly consistent across growth measures.
 
@@ -61,33 +61,39 @@ mtext(side=1, 'Growth rate',line = 1, outer=TRUE)
 \pagebreak
 
 ## Data
+We evaluate how wood density affects both the growth–mortality trade-off and growth-indepenent mortality using survival and growth data of 179 940 trees spanning 203 species from within the 50 ha tropical rainforest plot on Barro Colorado Island (BCI), Panama. Within this plot, the diameter and survival status of all free-standing woody plants with a diameter at breast height (dbh) greater or equal to 1 cm were recorded in 1982, 1990, 1995, 2000, 2005 and 2010 @BarroColoradofores:2012up. For the purpose of this study, we excluded data collected in 1982 and 1985 censuses because diameter measurements were rounded to the nearest 5 mm whereas later censuses were rounded to the nearest millimetre. We also excluded palms and ferns because they lack dbh growth @Wright:2010fl, multistemmed plants, species that did not contain a wood density estimate or contained fewer than 10 individuals and individuals that were not consistently measured at 1.3 m or that 'returned from the dead'. We also removed individuals that were deemed to contain erroneous observations using the CTFS error checker. This removed individuals that had annual dbh growth rates greater than 75 mm/yr and individuals that had excessively negative growth rates (> - 4 mm/yr). 
 
-We are fitting our model to growth and mortality data collected from a tropical rainforest on Barro Colorado Island, Panama @BarroColoradofores:2012up. This rainforest plot has been surveyed every 5 years since 1985 and includes size, growth and status (alive, dead) observations from more than 200,000 individuals across 286 species.
+Because we were interested in determining how growth influenced annual mortality rates and whether the type of growth rate affected the  predictive capacity or the effects of wood density we calculated four commonly used growth rate measures: absolute dbh and basal growth, and relative dbh and basal growth. Absolute dbh growth rate was calculated as: $\frac{dbh_t - dbh_{t-1}}{\Delta{days/365.25}}$ and relative dbh growth was calculated as: $\frac{ \log_e(dbh_t) - \log_e(dbh_{t-1})}{\Delta{days/365.25}}$. Basal area for each individual in each census was calculated as: $0.25 \times \pi \times dbh_t^2$. Absolute and relative basal area growth were then calculated the same way as dbh. All growth rates were measured in metres/yr.
 
-In this study we only use data recorded between 1990 and 2010 for single stemmed plants. Furthermore, we only used species that had an estimate for wood density. We removed multistemmed plants because of difficulties discerning mainstem.
+Wood density for each species was estimated by coring trees located within 15 km of the BCI plot because increment borers are prohibited within the plot @Wright:2010fl. Cores were broken into pieces, each 5 cm long and specific gravity of each piece was determined by oven drying (100oc) and dividing by the fresh volume (as measured by water displacement). Wood density was then calculated as an area-weighted average, where area refers to the annulus represented by each piece, assuming a circular trunk. These measurements were then converted to kg/m3.
 
-For more details about the data, or to download it, please click [here](https://repository.si.edu/handle/10088/20925).
-Currently species trait data is not publically available.
+##Model Description
 
-## Model Description
+We extend a common functional form, $M= \alpha \times \exp(-\beta \times growth)$, used to examine the growth-mortality relationship [@Kobe:1997vy] to include mortality associated with growth independent processes. Specifically, we extend this negative exponential to include an asymptote parameter,$\gamma$, such that the functional form now becomes $M= \alpha \times \exp(-\beta \times growth) + \gamma$. The advantage of adding $\gamma$ is that when growth rates are high the negative exponential asymptotes at a mortality rate above zero. This allows for deaths to occur at high growth rates that would otherwise not be accounted for in the original functional form. Another advantage of this functional form is that all parameters are biologically interpretable. $\alpha$ and $\beta$ are interpreted similarly to how they have been elsewhere [kobe1997]; $\alpha$ represents the mortality rate at zero growth (and controls where the function crosses the y-axis) and $\beta$ represents the sensitivity of mortality rates to changes in growth rate (corresponding to the function's decay). We interpret $\gamma$ as the growth-independent mortality rate (corresponding to where the function asymptotes). This parameter accounts for mortality not related to growth (e.g. windfall, fire).
 
-We used a hierarchical generalized linear model to examine how wood density affected growth-dependent and growth-independent tree mortality. These models are well suited to data sets that have a hierarchical structure (e.g. individuals within species) because they can account for observation error and partition both explained and unexplained variation at multiple levels of a dataset [@Gelman:2007te; @Kery:2010tp]. We used Bayesian inference and fitted models to data using Markov chain Monte Carlo (MCMC) sampling in R 3.1.3 using package rstan version 2.6 [@StanDevelopmentTeam:2015uz]. Before commencing model fit, we first scaled growth by dividing by two standard deviations. We then centered and scaled wood density, $rho$, by first log-transforming it and then substracting its mean and dividing by two standard deviations. The advantage of centering and standardizing is that it allows for better mixing of chains and easier interpretation, with intercepts interpreted as average responses and slope terms as partial dependencies conditional on other continuous variables at their mean. Furthermore, standardizing by two standard deviations allows the magnitude of effects to be directly compared between binary and continuous covariates (Gelman and Hill 2007). Three independent chains were executed and in all cases modeled parameters converged within 1000 iterations. Convergence was assessed through both visual inspection of chains and reference to the Brooks-Gelman-Rubin convergence diagnostic [@Gelman:1992ts; @Brooks:1998ju]. After discarding the first 1000 iterations as ‘burn in’, a further 1000 iterations were taken from the joint posterior. The residuals of the model were checked graphically against predictions with none showing any systematic pattern or severe heteroscedasticity. To ensure the effect of wood density was identifiable, and to examine it's effect on all three parameters (i.e growth-mortality intercept and slope, and growth-independent hazard) we selectively removed it from each and visually inspected whether the direction and magnitude of effects were severely altered. Below we describe the full model structure, parameters and priors. We also supply the stan code below.
+While this model can be used to examine mortality for individual species, it has limited capacity to provide general insights into the mechanisms affecting multiple species. One way add this capacity is to allow $\alpha$, $\beta$ and $\gamma$ to vary by traits (measures of species strategy). Furthermore, we can also include a species level random effect on these parameters that will effectively account for observation error and partition both explained and unexplained variation at multiple levels of a dataset (e.g. individuals, species, census)[@Gelman:2007te; @Kery:2010tp].
 
-We were interested in examining how wood density affected growth-dependent and growth-independent individual tree mortality.
-However, our observations, $y_i$, were binary (0 = alive, 1 = dead) for each individual $i$. Consequently, we modeled these observations as a random realization from a Bernoulli distribution based on the model-fitted probability that individual $i$ would die, $p_i$:
+Using this model, coupled with k-fold cross validation we address four questions:
+1) Which growth measure is most predictive of plant mortality? 2) Does wood density influence both the growth-mortality trade-off and growth independent mortality? 3) Does the effects of wood density vary with growth measure? and 4) What is the most parismonous mortality model in terms of wood density effects?
+
+##Model implementation
+
+We used Bayesian inference and fit models to data using Markov chain Monte Carlo (MCMC) sampling in R 3.1.3 using package rstan version 2.6 [@StanDevelopmentTeam:2015uz]. Before commencing model fit, we first log transformed wood density, $\rho$, and then centered it on 600 kg m3 (i.e. $\log_e(\rho_i) - \log_e(600)). This was done for easier interpretation, with intercepts interpreted as average woody species responses (as opposed to species responses at $\rho$ = 0; an biologically unrealistic state for a woody plant) (Gelman and Hill 2007). Three independent chains were executed and in all cases modeled parameters converged within 1000 iterations. Convergence was assessed through both visual inspection of chains and reference to the Brooks-Gelman-Rubin convergence diagnostic [@Gelman:1992ts; @Brooks:1998ju]. After discarding the first 1000 iterations as ‘burn in’, a further 1000 iterations were taken from the joint posterior. The residuals of the model were checked graphically against predictions with none showing any systematic pattern or severe heteroscedasticity.  Below we describe the full model structure, parameters and priors. We also supply the stan code (see here).
+
+Our observations, $y_i$, were binary (0 = alive, 1 = dead) for each individual $i$. Consequently, we modeled these observations as a random realization from a Bernoulli distribution based on the model-fitted probability that individual $i$ would die, $p_i$:
 
 \begin{equation} \label{eq:obs_model}
 p_i \sim \textrm{bernoulli}(p_i) \end{equation}
 
-We modelled the probability of drying, $p_i$, using a complimentary-log-log link, $\log_e(-\log_e(1-p))$. Unlike the traditional logit link, $\log_e(p/1-p)$, the complimentary-log-log allows regression coefficients to be interpreted as hazard ratios. That is, the hazard for one individual relative to another [@Kleinbaum:2012tn]. It is also asymmetrical and can explicitly account for variable census length [@Allison:1982vd; @Kleinbaum:2012tn], which is particularly important with large-scale monitoring programs such as BCI, where the period of time between revisits of individual trees varies within a single census because there are so many individuals that they cannot be observed simulataneously [@Condit:1995ux].
+The probability of drying, $p_i$, was modelled using a complimentary-log-log link, $\log_e(-\log_e(1-p))$. Unlike the traditional logit link, $\log_e(p/1-p)$, the complimentary-log-log allows regression coefficients to be interpreted as hazard ratios. That is, the hazard for one individual relative to another [@Kleinbaum:2012tn]. It is also asymmetrical and can explicitly account for variable census length [@Allison:1982vd; @Kleinbaum:2012tn], which is particularly important with large-scale monitoring programs such as BCI, where the period of time between revisits of individual trees varies within a single census because there are so many individuals that they cannot be observed simulataneously [@Condit:1995ux].
 
-$p_i$ is modelled as a function of census length (ranging from 3.8 to 5.8 years) and the cumulative hazard $\lambda_i$ for each individual:
+$p_i$ is modelled as a function of census length (ranging from 3.8 to 5.8 years) and the instantaneous hazard rate $\lambda_i$ for each individual:
 
 \begin{equation} \label{eq:pred_model}
 \log_e(-\log_e(1-p_i)) = \log_e\left(\textrm{census-length}_i \times \lambda_i\right)
 \end{equation}
 
-Here, the cumulative hazard, $\lambda_i$, is the sum of two independent hazards - growth-dependent hazard (i.e. death via carbon starvation) and growth-independent (death by all other causes). Growth-dependent hazard encapsulates the growth-mortality relationship by allowing the probability of dying to decrease exponentially with growth rate [@Buchman:1983vx; @Kobe:1997vy; @Wyckoff:2002ul; @Mantgem:2003dw]. This relationship consists of two species varying parameters $alpha$, the intercept term that defines the instantaneous hazard rate at zero growth, and $beta$, the slope term that defines the decrease in hazard rate per scaled unit growth (Fig.6). By contrast, the growth independent hazard is assumed to be linear and is defined by one species varying parameter, ho. Note: we estimate growth as $\frac{dbh_t - dbh_{t-1}}{\Delta{t}}$.
+Here, the instantaneous hazard, $\lambda_i$, is the sum of two independent hazards. The first is the growth-dependent hazard (i.e. death via carbon starvation, as described by $\alpha \times \exp(-\beta \times growth)$). This encapsulates the growth-mortality relationship by allowing the instantaneous mortality rate to decrease exponentially with growth rate [@Buchman:1983vx; @Kobe:1997vy; @Wyckoff:2002ul; @Mantgem:2003dw].  The second hazard is the growth-independent (death by all other causes, as described by $\gamma$).
 
 \begin{equation} \label{eq:lambda}
 \lambda_i =
@@ -96,7 +102,7 @@ Here, the cumulative hazard, $\lambda_i$, is the sum of two independent hazards 
 \frac{\textrm{growth}_i}{2 \times \sigma(\textrm{growth})}
 \right)
 }^{\text{Growth dependent hazard}} +
-\overbrace{\exp(ho_{s[i]})
+\overbrace{\exp(gamma_{s[i]})
 }^{\text{Growth independent hazard}}\right)
 \end{equation}
 
@@ -126,38 +132,49 @@ par(mfrow=c(2,1), mar=c(3,4,1,1), xaxs='i')
 
 **Fig 6:** Interpreting model parameters. Top = Hazard curves (i.e. instantaneous mortality rates); Bottom = Mortality probability/year based on estimated hazard rates. The intercept at zero growth is defined by $alpha$. The slope is defined by $beta$. The asymptote is defined by $ho$ and represents the growth-independent hazard.
 
-
-
-
-We modelled $alpha$, $beta$ and $ho$, by allowing their intercepts to vary by species and by including wood density as a species level predictor:
+To account for species strategy and partition variance into explained and unexplained at the observation, species and sampling period level we modelled $alpha$, $beta$ and $ho$, by allowing their intercepts to vary by species and sampling period and by including wood density as a species level predictor:
 
 \begin{equation} \label{eq:alpha}
-alpha_s = \alpha0_s + \alpha1 \times \frac{(\log_e(\rho_s) - \mu(\log_e(\rho)))}{2 \times(\sigma(\log(\rho)))}
+alpha_s = \alpha0_s + \alpha1_t + \alpha2 \times (\log_e(\rho_s) - \log_e(600))
 \end{equation}
 
 \begin{equation} \label{eq:beta}
-beta_s = \beta0_s + \beta1 \times \frac{(\log_e(\rho_s) - \mu(\log_e(\rho)))}{2 \times(\sigma(\log(\rho)))}
+beta_s = \beta0_s + \beta1_t + \beta2 \times (\log_e(\rho_s) - \log_e(600))
 \end{equation}
 
-\begin{equation} \label{eq:ho}
-ho_s = \gamma0_s + \gamma1 \times \frac{(\log_e(\rho_s) - \mu(\log_e(\rho)))}{2 \times(\sigma(\log(\rho)))}
+\begin{equation} \label{eq:gamma}
+ho_s = \gamma0_s + \gamma1_t + \gamma2 \times (\log_e(\rho_s) - \log_e(600))
 \end{equation}
 
-Here, the terms $\alpha1$, $\beta1$ and $\gamma1$ represent the effect of wood density on the intercept, slope and growth-independent hazard, respectively. The terms, $\alpha0_s$, $\beta0_s$ and $\gamma0_s$, respectively represent the growth-dependent intercept and slope and growth-independent intercept for species $s$ within which individual $i$ belongs. We estimates these varying terms from a normal distribution centred on the average species intercept (i.e. $\alpha_{\mu}$,$\gamma_{\mu}$) or slope ($\beta_{\mu}$) and the standard deviation of the species variation ($\alpha spp$,$\beta spp$, $\gamma spp$).
+Here, the terms $\alpha2$, $\beta2$ and $\gamma2$ represent the effect of log transformed wood density on $\alpha$, $\beta$ and $\gamma$. The terms, $\alpha0_s$, $\beta0_s$ and $\gamma0_s$, represent the species-level random effect for species $s$ within which individual $i$ belongs. $\alpha1_t$, $\beta1_t$ and $\gamma1_t$, represents the sample-level random effect for which time $t$ an individual was sampled. Both random effects were estimated from a normal distribution centred on a species or sample time mean (i.e. $\alpha0_{\mu}$, $\beta0_{\mu}$,$\gamma0_{\mu}$) and $\alpha1_{\mu}$,$\beta1_{\mu}$,$\gamma1_{\mu}$, respectively) and an associated standard deviation (i.e. $\alpha0_{\mu}$, $\beta0_{\sigma}$,$\gamma0_{\sigma}$) and $\alpha1_{\sigma}$,$\beta1_{\sigma}$,$\gamma1_{\sigma}$, respectively).
 
 \begin{equation} \label{eq:alpha0}
-\alpha_s \sim \textrm{Normal}(\alpha_{\mu}, \sigma_{\alpha spp})
+\alpha_s \sim \textrm{Normal}(\alpha_{\mu}, \sigma_{\alpha0 spp})
 \end{equation}
 
 \begin{equation} \label{eq:beta0}
-\beta_s \sim \textrm{Normal}(\beta_{\mu}, \sigma_{\beta spp})
+\beta_s \sim \textrm{Normal}(\beta_{\mu}, \sigma_{\beta0 spp})
 \end{equation}
 
 \begin{equation} \label{eq:gamma0}
-\gamma_s \sim \textrm{Normal}(\gamma_{\mu}, \sigma_{\gamma spp})
+\gamma_s \sim \textrm{Normal}(\gamma_{\mu}, \sigma_{\gamma0 spp})
 \end{equation}
 
-Because we used Bayesian inference we needed to specify prior distributions for all model parameters. For wood density effects ($\alpha1$, $\beta1$ and $\gamma1$) and mean hyperparamters ($\alpha_{\mu}$, $\beta_{mu}$ and $\gamma_{\mu}$) we used stan's default uninformative prior, $\textrm{Uniform(-2,2)}. For hyperparamater standard deviations we used $\textrm{Uniform(0,2)}$.
+
+#Priors - THIS NEEDS UPDATING
+Because we used Bayesian inference we needed to specify prior distributions for all model parameters. The effects of wood density on all three parameters ($\alpha2$, $\beta2$ and $\gamma2$), were sampled from weakly informative normal priors with a mean of 0 and a standard deviation of 5.
+
+census random effects: we assumed little variation so centred on zero with a standard deviation of 0.1
+alpha species mu - we extracted from Kobe et al 1995 and are the parameter estimates currently used in SORTIE
+gamma species mu - we extracted from chambers 2013
+beta species mu - we had no idea about, especially as this parameter is likely to change with different growth rates. As such we fitted a uniform prior bounded between -20 and 20. 
+All sigma's were drawn from a half cauchy distribution with a mean of zero and a standard deviation of 2.5.
+
+
+
+
+
+and mean hyperparamters ($\alpha_{\mu}$, $\beta_{mu}$ and $\gamma_{\mu}$) we used stan's default uninformative prior, $\textrm{Uniform(-2,2)}. For hyperparamater standard deviations we used $\textrm{Uniform(0,2)}$.
 
 ## Analysis plan
 
