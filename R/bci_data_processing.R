@@ -170,7 +170,8 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
     # Only keep alive stems
     filter(dfstatus=="alive" &
            census_interval < 8) %>%
-    filter(CTFS_sanity_check(dbh, dbh_increment, dbh_dt) & 
+    filter(dbh_increment < 0.075 &
+             dbh_increment/(dbh - dbh_increment) > -0.25 & 
              !is.na(dbh_dt) & 
              !is.na(dead_next_census)) %>%
     group_by(sp) %>%
@@ -211,7 +212,7 @@ reduce_to_single_ind_obs <- function(data) {
       select(-keep) %>%
       ungroup() %>%
     select(sp, sp_id, censusid, dead_next_census,
-           census_interval, rho, dbh_dt, dbh_dt_rel,
+           census_interval, rho, dbh, dbh_dt, dbh_dt_rel,
            basal_area_dt, basal_area_dt_rel)
 }
 
