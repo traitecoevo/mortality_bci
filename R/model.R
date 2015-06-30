@@ -209,7 +209,7 @@ get_model_chunks <- function(tasks) {
            dbh_dt='(true_dbh2_heldout[j] - true_dbh1_heldout[j])/census_length_heldout[j]',
            dbh_dt_rel='(log(true_dbh2_heldout[j]) - log(true_dbh1_heldout[j]))/census_length_heldout[j]',
            basal_area_dt='(0.25*pi()*true_dbh2_heldout[j]^2 - 0.25*pi()*true_dbh1_heldout[j]^2)/census_length_heldout[j]',
-           basal_area_dt_rel='(log(0.25*pi()*true_dbh2_heldout[i]^2) - log(0.25*pi()*true_dbh1_heldout[j]^2))/census_length_heldout[j]'),
+           basal_area_dt_rel='(log(0.25*pi()*true_dbh2_heldout[j]^2) - log(0.25*pi()*true_dbh1_heldout[j]^2))/census_length_heldout[j]'),
     ifelse("a" %in% rho_combo, "log_a2 ~ normal(0,5);", ""),
     ifelse("b" %in% rho_combo, "log_b2 ~ normal(0,5);", ""),
     ifelse("c" %in% rho_combo, "log_c2 ~ normal(0,5);", "")),  
