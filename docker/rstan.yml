@@ -7,8 +7,15 @@ r_packages:
 commands:
   rstan:
     # neither on cran nor github and a pain to install
+    #
+    # At the moment, (https://github.com/stan-dev/rstan/issues/163) we
+    # can't use the current BH verison on CRAN.  Not sure when this
+    # will be reflected by a new release, but once that happens,
+    # remove the BH downgrade.
     command: |
-      RUN MAKEVARS="-j1" install2.r --error
+      RUN \
+        r -e 'devtools::install_version("BH", version="1.55.0-3")' && \
+        MAKEVARS="-j1" install2.r --error
         --repos=http://cran.rstudio.com
         --repos=http://rstan.org/repo
         rstan

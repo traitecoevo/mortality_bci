@@ -3,13 +3,15 @@
 deps_only: true
 # Keep the .git directory in the work clone
 keep_git: true
+# Use non broken versions of apt sources
+apt_unstable: true
 
 names:
   test: richfitz/mortality_bci
 
 modules:
-  - rrqueue
   - remake
+  - rrqueue
   - rstan
 
 r_packages:
