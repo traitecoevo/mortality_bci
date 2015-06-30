@@ -67,7 +67,7 @@ load_trait_data <- function(file) {
   names(data) <- tolower(names(data)) # lowers trait column names for merging
   data$sp <- tolower(data$sp) # lowers species code names for merging
 
-  mutate(data, rho = sg100c_avg*1000) %>% # converts wood density to kg/m2
+  mutate(data, rho = sg100c_avg) %>% # in g/cm3
   select(-sg100c_avg)
 }
 
@@ -78,37 +78,11 @@ is_zombie <- function(dbh) {
   any(diff(is.na(dbh)) == -1)
 }
 
-#Calculates growth rate as a function of past size
-calculate_growth_rate <- function(x, t, f=function(y) y){
-  dt = diff(t)/365.25
-  if(any(dt < 0, na.rm=TRUE)){
-    stop("time must be sorted")
-  }
-  c(NA, diff(f(x))/dt)
-}
-
 drop_last <- function(x) {
   if(length(x) > 0)
     x[seq_len(length(x)-1)]
   else
     NULL
-}
-
-# Function to identify bad data. Adapted from function in CTFS R package
-CTFS_sanity_check <- function(dbh, dbh_increment, dbasal_diam_dt) {
-
-  slope <- 0.006214
-  intercept <- 0.9036 /1000   #convert from mm to m
-  error_limit <- 4
-  max_growth <- 75 / 1000     #convert from mm to m
-
-  accept <- rep(TRUE, length(dbh))
-  # Remove records based on max growth rate
-  accept[dbasal_diam_dt > max_growth] <- FALSE
-  # Remove records based on min growth rate, estimated from allowbale error
-  allowable.decrease <- -error_limit * (slope * dbh + intercept)
-  accept[dbh_increment < allowable.decrease] <- FALSE
-  accept
 }
 
 mortality_in_next_census <- function(status){
@@ -120,7 +94,7 @@ mortality_in_next_census <- function(status){
   as.numeric(c(status[i] == 'alive' & status[i+1] == 'dead', NA))
 }
 
-BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
+BCI_clean <- function(BCI_data, spp_table) {
 
   data <- BCI_data %>%
     arrange(sp, treeid, exactdate) %>%
@@ -130,8 +104,8 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
       census = ifelse(censusid==171, 7,censusid),
       species = lookup_latin(sp, spp_table),
       family = lookup_family(sp, spp_table),
-      #Converts dbh from mm to m
-      dbh=dbh/1000) %>%
+      #Converts dbh from mm to cm
+      dbh=dbh/10) %>%
     # Remove stems from earlier census, measured with course resolution
     # First measurement in 1990 ='1990-02-06'
     filter(census >= 3) %>%
@@ -159,40 +133,20 @@ BCI_calculate_individual_growth <- function(BCI_data, spp_table) {
       # First measurement in 1990 ='1990-02-06'
       julian = as.vector(julian(as.Date(exactdate,"%Y-%m-%d"), as.Date("1990-02-06", "%Y-%m-%d"))),
       census_interval = c(NA, diff(julian/365.25)),
-      dbh_increment = c(NA, diff(dbh)),
-      dbh_dt = calculate_growth_rate(dbh, julian),
-      dbh_dt_rel = calculate_growth_rate(dbh, julian, log),
-      basal_area = 0.25*pi*dbh^2,
-      basal_area_dt = calculate_growth_rate(basal_area, julian),
-      basal_area_dt_rel = calculate_growth_rate(basal_area, julian, log),
       dead_next_census = mortality_in_next_census(dfstatus),
       dbh_prev = c(NA, drop_last(dbh))) %>%
     # Only keep alive stems
     filter(dfstatus=="alive" &
            census_interval < 8) %>%
-    filter(dbh_increment < 0.075 &
-             dbh_increment/(dbh - dbh_increment) > -0.25 & 
-             !is.na(dbh_dt) & 
+    filter(!is.na(census_interval) & 
              !is.na(dead_next_census)) %>%
     group_by(sp) %>%
     mutate(n_ind = length(unique(treeid))) %>%
     filter(n_ind >=10) %>% # ensures at least 1 individual is in the heldout dataset.
     ungroup() %>%
     select(sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
-           dbh,dbh_dt,dbh_dt_rel,basal_area,basal_area_dt,
-           basal_area_dt_rel,dead_next_census, dbh_prev)
+           dbh_prev,dbh,dead_next_census)
   }
-#Final counts between 1990 and 2010 censuses:
-#No. Obs = 775871
-#No. Inds = 203277
-#No. Sp = 286
-#No. Deaths = 200968 (~26% from 1990 to 2010)
-#No. CTFS observed errors = 35385 observations
-#No. Zombies = 7330 individuals
-#No. Multistems = 54614 individuals
-#No. non dbh growth families = 17067 observations
-#No. NA spcodes = 0. New dataset fixed this issue
-#No. Inidividuals only recorded once = 103023
 
 reduce_to_single_ind_obs <- function(data) {
   # set seed so that same subsetting is implemented on all machines
@@ -212,8 +166,7 @@ reduce_to_single_ind_obs <- function(data) {
       select(-keep) %>%
       ungroup() %>%
     select(sp, sp_id, censusid, dead_next_census,
-           census_interval, rho, dbh, dbh_dt, dbh_dt_rel,
-           basal_area_dt, basal_area_dt_rel)
+           census_interval, rho, dbh_prev, dbh)
 }
 
 # split into k equally sized datasets
