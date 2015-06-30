@@ -50,7 +50,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     y = as.integer(data$train$dead_next_census),
     census_length = data$train$census_interval,
     growth_dt =  data$train[[growth_measure]],
-    log_rho_c  = (log(unique(data$train$rho)) - log(600)),
+    log_rho_c  = (log(unique(data$train$rho)) - log(0.6)),
     n_obs_tilde = nrow(data$heldout),
     n_spp_tilde = length(unique(data$heldout$sp)),
     spp_tilde = as.numeric(factor(data$heldout$sp)),
@@ -58,7 +58,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     y_tilde = as.integer(data$heldout$dead_next_census),
     census_length_tilde = data$heldout$census_interval,
     growth_dt_tilde =  data$heldout[[growth_measure]],
-    log_rho_c_tilde  = (log(unique(data$heldout$rho)) - log(600))
+    log_rho_c_tilde  = (log(unique(data$heldout$rho)) - log(0.6))
   )
 }
 
