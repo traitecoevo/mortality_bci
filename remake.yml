@@ -47,7 +47,7 @@ targets:
     cleanup_level: purge
 
   BCI_demography:
-    command: BCI_calculate_individual_growth(BCI_50haplot, BCI_nomenclature)
+    command: BCI_clean(BCI_50haplot, BCI_nomenclature)
     cleanup_level: purge
 
   BCI_traits:
