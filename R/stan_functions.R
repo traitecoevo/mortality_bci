@@ -7,7 +7,7 @@ model_compiler <- function(tasks) {
   
   ## Assemble the stan model:
   chunks <- get_model_chunks(tasks)
-  model <- make_stan_model(chunks, growth_measure=tasks$growth_measure)
+  model <- make_stan_model(chunks)
   
   ## Actually run the model
   res <- run_single_stan_chain(model, data,
@@ -27,7 +27,7 @@ combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
 run_single_stan_chain <- function(model, data, chain_id, iter=1000,
                                   sample_file=NA, diagnostic_file=NA) {
   
-  data_for_stan <- prep_data_for_stan(data, model$growth_measure)
+  data_for_stan <- prep_data_for_stan(data)
   stan(model_code = model$model_code,
        data = data_for_stan,
        pars = model$pars,
@@ -39,7 +39,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        diagnostic_file=diagnostic_file)
 }
 
-prep_data_for_stan <- function(data, growth_measure) {
+prep_data_for_stan <- function(data) {
   
   list(
     n_obs = nrow(data$train),
@@ -49,24 +49,25 @@ prep_data_for_stan <- function(data, growth_measure) {
     census = as.numeric(factor(data$train$censusid)),
     y = as.integer(data$train$dead_next_census),
     census_length = data$train$census_interval,
-    growth_dt =  data$train[[growth_measure]],
+    obs_dbh1 = data$train$dbh_prev,
+    obs_dbh2 = data$train$dbh,
     log_rho_c  = (log(unique(data$train$rho)) - log(0.6)),
-    n_obs_tilde = nrow(data$heldout),
-    n_spp_tilde = length(unique(data$heldout$sp)),
-    spp_tilde = as.numeric(factor(data$heldout$sp)),
-    census_tilde = as.numeric(factor(data$heldout$censusid)),
-    y_tilde = as.integer(data$heldout$dead_next_census),
-    census_length_tilde = data$heldout$census_interval,
-    growth_dt_tilde =  data$heldout[[growth_measure]],
-    log_rho_c_tilde  = (log(unique(data$heldout$rho)) - log(0.6))
+    n_obs_heldout = nrow(data$heldout),
+    n_spp_heldout = length(unique(data$heldout$sp)),
+    spp_heldout = as.numeric(factor(data$heldout$sp)),
+    census_heldout = as.numeric(factor(data$heldout$censusid)),
+    y_heldout = as.integer(data$heldout$dead_next_census),
+    census_length_heldout = data$heldout$census_interval,
+    obs_dbh1_heldout = data$heldout$dbh_prev,
+    obs_dbh2_heldout = data$heldout$dbh,
+    log_rho_c_heldout  = (log(unique(data$heldout$rho)) - log(0.6))
   )
 }
 
 
-make_stan_model <- function(chunks, growth_measure) {
+make_stan_model <- function(chunks) {
   list(
     pars = chunks$pars,
-    growth_measure = growth_measure,
     model_code = sprintf("
       data {
         int<lower=1> n_obs;
@@ -76,33 +77,32 @@ make_stan_model <- function(chunks, growth_measure) {
         int<lower=1> census[n_obs];
         int<lower=0, upper=1> y[n_obs];
         vector[n_obs] census_length;
-        vector[n_obs] growth_dt;
+        vector[n_obs] obs_dbh1;
+        vector[n_obs] obs_dbh2;
         vector[n_spp] log_rho_c;
         
         // Held out data
-        int<lower=1> n_obs_tilde;
-        int<lower=1> n_spp_tilde;
-        int<lower=1> spp_tilde[n_obs_tilde];
-        int<lower=1> census_tilde[n_obs_tilde];
-        int<lower=0, upper=1> y_tilde[n_obs_tilde];
-        vector[n_obs_tilde] census_length_tilde;
-        vector[n_obs_tilde] growth_dt_tilde;
-        vector[n_spp_tilde] log_rho_c_tilde;
+        int<lower=1> n_obs_heldout;
+        int<lower=1> n_spp_heldout;
+        int<lower=1> spp_heldout[n_obs_heldout];
+        int<lower=1> census_heldout[n_obs_heldout];
+        int<lower=0, upper=1> y_heldout[n_obs_heldout];
+        vector[n_obs_heldout] census_length_heldout;
+        vector[n_obs_heldout] obs_dbh1_heldout;
+        vector[n_obs_heldout] obs_dbh2_heldout;
+        vector[n_spp_heldout] log_rho_c_heldout;
       }
       
       parameters { 
         %s
       }
-      
-      transformed parameters {
-        %s
-      }
+  
       model {
         %s
       }
       
       generated quantities {
         %s
-      }", chunks$parameters, chunks$transformed_parameters, chunks$model, chunks$generated_quantities)
+      }", chunks$parameters, chunks$model, chunks$generated_quantities)
   )
 }
