@@ -6,12 +6,12 @@ get_model_chunks <- function(tasks) {
   }
   
   list(
-    pars = c('log_mu_true_dbh1','log_sigma_true_dbh1','log_mu_dbh_increment','log_sigma_dbh_increment',
+    pars = c("log_mu_true_dbh1","log_sigma_true_dbh1","log_mu_dbh_increment","log_sigma_dbh_increment",
              'log_mu_true_dbh1_heldout','log_sigma_true_dbh1_heldout','log_mu_dbh_increment_heldout','log_sigma_dbh_increment_heldout',
-             "log_raw_a0","log_mu_a0","log_sigma_a0","log_a0","log_raw_a1","log_mu_a1","log_sigma_a1","log_a1",if("a" %in% rho_combo) "log_a2",
-             "log_raw_b0","log_mu_b0","log_sigma_b0","log_b0","log_raw_b1","log_mu_b1","log_sigma_b1","log_b1",if("b" %in% rho_combo) "log_b2",
-             "log_raw_c0","log_mu_c0","log_sigma_c0","log_c0","log_raw_c1","log_mu_c1","log_sigma_c1","log_c1",if("c" %in% rho_combo) "log_c2",
-             "log_lik_fit", "log_lik_heldout","sum_log_lik_fit","sum_log_lik_heldout"),
+             "log_mu_a0","log_sigma_a0","log_a0","log_mu_a1","log_sigma_a1","log_a1",if("a" %in% rho_combo) "log_a2",
+             "log_mu_b0","log_sigma_b0","log_b0","log_mu_b1","log_sigma_b1","log_b1",if("b" %in% rho_combo) "log_b2",
+             "log_mu_c0","log_sigma_c0","log_c0","log_mu_c1","log_sigma_c1","log_c1",if("c" %in% rho_combo) "log_c2",
+             "sum_log_lik_fit","sum_log_lik_heldout"),
     parameters = sprintf("
       // DBH measurement error parameters for fitted data
       real log_raw_true_dbh1[n_obs];
@@ -42,7 +42,7 @@ get_model_chunks <- function(tasks) {
       real<lower=0> log_sigma_a1;
       
       real log_raw_b0[n_spp];
-      real<lower= -20, upper=20> log_mu_b0;  
+      real log_mu_b0;  
       real<lower=0> log_sigma_b0;
       
       real log_raw_b1[n_census];
@@ -65,15 +65,15 @@ get_model_chunks <- function(tasks) {
     ifelse("c" %in% rho_combo, "real log_c2;", "")),
   model = sprintf("
     // Declaring DBH error parameters
-    real true_dbh1[n_obs];
-    real true_dbh2[n_obs];
-    real dbh_increment[n_obs];
-    real growth_dt[n_obs];
+    real true_dbh1;
+    real true_dbh2;
+    real dbh_increment;
+    real growth_dt;
 
-    real true_dbh1_heldout[n_obs_heldout];
-    real true_dbh2_heldout[n_obs_heldout];
-    real dbh_increment_heldout[n_obs_heldout];
-    real growth_dt_heldout[n_obs_heldout];
+    real true_dbh1_heldout;
+    real true_dbh2_heldout;
+    real dbh_increment_heldout;
+    real growth_dt_heldout;
 
     // Declaring mortality parameters
     real log_alpha;
@@ -106,10 +106,10 @@ get_model_chunks <- function(tasks) {
     
     for (i in 1:n_obs) {
       // Calculating true growth for fitted data
-      true_dbh1[i] <- exp(log_raw_true_dbh1[i] * log_sigma_true_dbh1 + log_mu_true_dbh1);
-      dbh_increment[i] <- exp(log_raw_dbh_increment[i] * log_sigma_dbh_increment + log_mu_dbh_increment);
-      true_dbh2[i] <- true_dbh1[i] + dbh_increment[i];
-      growth_dt[i] <- %s;
+      true_dbh1 <- exp(log_raw_true_dbh1[i] * log_sigma_true_dbh1 + log_mu_true_dbh1);
+      dbh_increment <- exp(log_raw_dbh_increment[i] * log_sigma_dbh_increment + log_mu_dbh_increment);
+      true_dbh2 <- true_dbh1 + dbh_increment;
+      growth_dt <- %s;
       
       // Calculating mortality parameters
       log_alpha <- log_a0[spp[i]] + log_a1[census[i]]%s;
@@ -118,15 +118,15 @@ get_model_chunks <- function(tasks) {
 
     // Likelihood for both dbh measurement errors
     // SDs come from mixture model run on data explicitly collected to examine measurement error
-    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh1[i], true_dbh1[i], 0.085871 + 0.005716 * true_dbh1[i]),
-                                   log(0.046908) + normal_log(obs_dbh1[i], true_dbh1[i], 3.496852))); 
+    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh1[i], true_dbh1, 0.085871 + 0.005716 * true_dbh1),
+                                   log(0.046908) + normal_log(obs_dbh1[i], true_dbh1, 3.496852))); 
 
-    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh2[i], true_dbh2[i], 0.085871 + 0.005716 * true_dbh2[i]),
-                                   log(0.046908) + normal_log(obs_dbh2[i], true_dbh2[i], 3.496852))); 
+    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh2[i], true_dbh2, 0.085871 + 0.005716 * true_dbh2),
+                                   log(0.046908) + normal_log(obs_dbh2[i], true_dbh2, 3.496852))); 
 
 
     // Likelihood for hazard model
-    cumulative_hazard <- -census_length[i] * (exp(log_alpha - exp(log_beta) * growth_dt[i]) + exp(log_gamma));
+    cumulative_hazard <- -census_length[i] * (exp(log_alpha - exp(log_beta) * growth_dt) + exp(log_gamma));
       
       if (y[i] == 0) {
         increment_log_prob(cumulative_hazard);
@@ -138,16 +138,16 @@ get_model_chunks <- function(tasks) {
       
     for (j in 1:n_obs_heldout) {
       // Calculating true growth for heldout data
-      true_dbh1_heldout[j] <- exp(log_raw_true_dbh1_heldout[j] * log_sigma_true_dbh1_heldout + log_mu_true_dbh1_heldout);
-      dbh_increment_heldout[j] <- exp(log_raw_dbh_increment_heldout[j] * log_sigma_dbh_increment_heldout + log_mu_dbh_increment_heldout);
-      true_dbh2_heldout[j] <- true_dbh1_heldout[j] + dbh_increment_heldout[j];
-      growth_dt_heldout[j] <- %s;
+      true_dbh1_heldout <- exp(log_raw_true_dbh1_heldout[j] * log_sigma_true_dbh1_heldout + log_mu_true_dbh1_heldout);
+      dbh_increment_heldout <- exp(log_raw_dbh_increment_heldout[j] * log_sigma_dbh_increment_heldout + log_mu_dbh_increment_heldout);
+      true_dbh2_heldout <- true_dbh1_heldout + dbh_increment_heldout;
+      growth_dt_heldout <- %s;
 
-    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh1_heldout[j], true_dbh1_heldout[j], 0.085871 + 0.005716 * true_dbh1_heldout[j]),
-                                   log(0.046908) + normal_log(obs_dbh1_heldout[j], true_dbh1_heldout[j], 3.496852))); 
+    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh1_heldout[j], true_dbh1_heldout, 0.085871 + 0.005716 * true_dbh1_heldout),
+                                   log(0.046908) + normal_log(obs_dbh1_heldout[j], true_dbh1_heldout, 3.496852))); 
 
-    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh2_heldout[j], true_dbh2_heldout[j], 0.085871 + 0.005716 * true_dbh2_heldout[j]),
-                                   log(0.046908) + normal_log(obs_dbh2_heldout[j], true_dbh2_heldout[j], 3.496852))); 
+    increment_log_prob(log_sum_exp(log1m(0.046908) + normal_log(obs_dbh2_heldout[j], true_dbh2_heldout, 0.085871 + 0.005716 * true_dbh2_heldout),
+                                   log(0.046908) + normal_log(obs_dbh2_heldout[j], true_dbh2_heldout, 3.496852))); 
   }
     
     // Priors
@@ -198,27 +198,27 @@ get_model_chunks <- function(tasks) {
     %s
     %s", 
     switch(growth_measure,
-           dbh_dt='(true_dbh2[i] - true_dbh1[i])/census_length[i]',
-           dbh_dt_rel='(log(true_dbh2[i]) - log(true_dbh1[i]))/census_length[i]',
-           basal_area_dt='(0.25*pi()*true_dbh2[i]^2 - 0.25*pi()*true_dbh1[i]^2)/census_length[i]',
-           basal_area_dt_rel='(log(0.25*pi()*true_dbh2[i]^2) - log(0.25*pi()*true_dbh1[i]^2))/census_length[i]'),
+           dbh_dt='(true_dbh2 - true_dbh1)/census_length[i]',
+           dbh_dt_rel='(log(true_dbh2) - log(true_dbh1))/census_length[i]',
+           basal_area_dt='(0.25*pi()*true_dbh2^2 - 0.25*pi()*true_dbh1^2)/census_length[i]',
+           basal_area_dt_rel='(log(0.25*pi()*true_dbh2^2) - log(0.25*pi()*true_dbh1^2))/census_length[i]'),
     ifelse("a" %in% rho_combo, " + log_a2 * log_rho_c[spp[i]]", ""),
     ifelse("b" %in% rho_combo, " + log_b2 * log_rho_c[spp[i]]", ""),
     ifelse("c" %in% rho_combo, " + log_c2 * log_rho_c[spp[i]]", ""),
     switch(growth_measure,
-           dbh_dt='(true_dbh2_heldout[j] - true_dbh1_heldout[j])/census_length_heldout[j]',
-           dbh_dt_rel='(log(true_dbh2_heldout[j]) - log(true_dbh1_heldout[j]))/census_length_heldout[j]',
-           basal_area_dt='(0.25*pi()*true_dbh2_heldout[j]^2 - 0.25*pi()*true_dbh1_heldout[j]^2)/census_length_heldout[j]',
-           basal_area_dt_rel='(log(0.25*pi()*true_dbh2_heldout[j]^2) - log(0.25*pi()*true_dbh1_heldout[j]^2))/census_length_heldout[j]'),
+           dbh_dt='(true_dbh2_heldout - true_dbh1_heldout)/census_length_heldout[j]',
+           dbh_dt_rel='(log(true_dbh2_heldout) - log(true_dbh1_heldout))/census_length_heldout[j]',
+           basal_area_dt='(0.25*pi()*true_dbh2_heldout^2 - 0.25*pi()*true_dbh1_heldout^2)/census_length_heldout[j]',
+           basal_area_dt_rel='(log(0.25*pi()*true_dbh2_heldout^2) - log(0.25*pi()*true_dbh1_heldout^2))/census_length_heldout[j]'),
     ifelse("a" %in% rho_combo, "log_a2 ~ normal(0,5);", ""),
     ifelse("b" %in% rho_combo, "log_b2 ~ normal(0,5);", ""),
     ifelse("c" %in% rho_combo, "log_c2 ~ normal(0,5);", "")),  
   generated_quantities = sprintf("
     // Declaring fitted parameters
-    real true_dbh1[n_obs];
-    real true_dbh2[n_obs];
-    real dbh_increment[n_obs];
-    real growth_dt[n_obs];
+    real true_dbh1;
+    real true_dbh2;
+    real dbh_increment;
+    real growth_dt;
 
     real log_a0[n_spp];
     real log_a1[n_census];
@@ -233,20 +233,20 @@ get_model_chunks <- function(tasks) {
     real log_beta_fit;
     real log_gamma_fit;
     real cumulative_hazard_fit;
-    real log_lik_fit[n_obs];
+    real log_lik_fit;
     real sum_log_lik_fit;
     
     // Declaring heldout parameters
-    real true_dbh1_heldout[n_obs_heldout];
-    real true_dbh2_heldout[n_obs_heldout];
-    real dbh_increment_heldout[n_obs_heldout];
-    real growth_dt_heldout[n_obs_heldout];
+    real true_dbh1_heldout;
+    real true_dbh2_heldout;
+    real dbh_increment_heldout;
+    real growth_dt_heldout;
 
     real log_alpha_heldout;
     real log_beta_heldout;
     real log_gamma_heldout;
     real cumulative_hazard_heldout;
-    real log_lik_heldout[n_obs_heldout];
+    real log_lik_heldout;
     real sum_log_lik_heldout;
     
     // Initialization of summed log likelihoods
@@ -270,62 +270,62 @@ get_model_chunks <- function(tasks) {
     // log likelihood for fitted model
     for (i in 1:n_obs) {
       // recalculating true growth for fitted data
-      true_dbh1[i] <- exp(log_raw_true_dbh1[i] * log_sigma_true_dbh1 + log_mu_true_dbh1);
-      dbh_increment[i] <- exp(log_raw_dbh_increment[i] * log_sigma_dbh_increment + log_mu_dbh_increment);
-      true_dbh2[i] <- true_dbh1[i] + dbh_increment[i];
-      growth_dt[i] <- %s;
+      true_dbh1 <- exp(log_raw_true_dbh1[i] * log_sigma_true_dbh1 + log_mu_true_dbh1);
+      dbh_increment <- exp(log_raw_dbh_increment[i] * log_sigma_dbh_increment + log_mu_dbh_increment);
+      true_dbh2 <- true_dbh1 + dbh_increment;
+      growth_dt <- %s;
 
       log_alpha_fit <- log_a0[spp[i]] + log_a1[census[i]]%s;
       log_beta_fit <- log_b0[spp[i]] + log_b1[census[i]]%s;
       log_gamma_fit <- log_c0[spp[i]] + log_c1[census[i]]%s;
       
-      cumulative_hazard_fit <- -census_length[i] * (exp(log_alpha_fit - exp(log_beta_fit) * growth_dt[i]) + exp(log_gamma_fit));
+      cumulative_hazard_fit <- -census_length[i] * (exp(log_alpha_fit - exp(log_beta_fit) * growth_dt) + exp(log_gamma_fit));
       
       if (y[i] == 0) {
-        log_lik_fit[i] <- cumulative_hazard_fit;
+        log_lik_fit <- cumulative_hazard_fit;
       }
       else {
-        log_lik_fit[i] <- log1m_exp(cumulative_hazard_fit);
+        log_lik_fit <- log1m_exp(cumulative_hazard_fit);
       }
-      sum_log_lik_fit <- sum_log_lik_fit + log_lik_fit[i];
+      sum_log_lik_fit <- sum_log_lik_fit + log_lik_fit;
     }
     
     // log likelihood for held out data
     for (j in 1:n_obs_heldout) {
       // recalculating true growth for heldout data
-      true_dbh1_heldout[j] <- exp(log_raw_true_dbh1_heldout[j] * log_sigma_true_dbh1_heldout + log_mu_true_dbh1_heldout);
-      dbh_increment_heldout[j] <- exp(log_raw_dbh_increment_heldout[j] * log_sigma_dbh_increment_heldout + log_mu_dbh_increment_heldout);
-      true_dbh2_heldout[j] <- true_dbh1_heldout[j] + dbh_increment_heldout[j];
-      growth_dt_heldout[j] <- %s;
+      true_dbh1_heldout <- exp(log_raw_true_dbh1_heldout[j] * log_sigma_true_dbh1_heldout + log_mu_true_dbh1_heldout);
+      dbh_increment_heldout <- exp(log_raw_dbh_increment_heldout[j] * log_sigma_dbh_increment_heldout + log_mu_dbh_increment_heldout);
+      true_dbh2_heldout <- true_dbh1_heldout + dbh_increment_heldout;
+      growth_dt_heldout <- %s;
 
       log_alpha_heldout <- log_a0[spp_heldout[j]] + log_a1[census_heldout[j]]%s;
       log_beta_heldout <- log_b0[spp_heldout[j]] + log_b1[census_heldout[j]]%s;
       log_gamma_heldout <- log_c0[spp_heldout[j]] + log_c1[census_heldout[j]]%s;
       
-      cumulative_hazard_heldout <- -census_length_heldout[j] * (exp(log_alpha_heldout - exp(log_beta_heldout) * growth_dt_heldout[j]) + exp(log_gamma_heldout));
+      cumulative_hazard_heldout <- -census_length_heldout[j] * (exp(log_alpha_heldout - exp(log_beta_heldout) * growth_dt_heldout) + exp(log_gamma_heldout));
       
       if (y_heldout[j] == 0) {
-        log_lik_heldout[j] <- cumulative_hazard_heldout;
+        log_lik_heldout <- cumulative_hazard_heldout;
       } 
       else {
-        log_lik_heldout[j] <- log1m_exp(cumulative_hazard_heldout);
+        log_lik_heldout <- log1m_exp(cumulative_hazard_heldout);
       }
-      sum_log_lik_heldout <- sum_log_lik_heldout + log_lik_heldout[j];
+      sum_log_lik_heldout <- sum_log_lik_heldout + log_lik_heldout;
     }",
  
          switch(growth_measure,
-                dbh_dt='(true_dbh2[i] - true_dbh1[i])/census_length[i]',
-                dbh_dt_rel='(log(true_dbh2[i]) - log(true_dbh1[i]))/census_length[i]',
-                basal_area_dt='(0.25*pi()*true_dbh2[i]^2 - 0.25*pi()*true_dbh1[i]^2)/census_length[i]',
-                basal_area_dt_rel='(log(0.25*pi()*true_dbh2[i]^2) - log(0.25*pi()*true_dbh1[i]^2))/census_length[i]'),
+                dbh_dt='(true_dbh2 - true_dbh1)/census_length[i]',
+                dbh_dt_rel='(log(true_dbh2) - log(true_dbh1))/census_length[i]',
+                basal_area_dt='(0.25*pi()*true_dbh2^2 - 0.25*pi()*true_dbh1^2)/census_length[i]',
+                basal_area_dt_rel='(log(0.25*pi()*true_dbh2^2) - log(0.25*pi()*true_dbh1^2))/census_length[i]'),
          ifelse("a" %in% rho_combo, " + log_a2 * log_rho_c[spp[i]]", ""),
          ifelse("b" %in% rho_combo, " + log_b2 * log_rho_c[spp[i]]", ""),
          ifelse("c" %in% rho_combo, " + log_c2 * log_rho_c[spp[i]]", ""),
          switch(growth_measure,
-                dbh_dt='(true_dbh2_heldout[j] - true_dbh1_heldout[j])/census_length_heldout[j]',
-                dbh_dt_rel='(log(true_dbh2_heldout[j]) - log(true_dbh1_heldout[j]))/census_length_heldout[j]',
-                basal_area_dt='(0.25*pi()*true_dbh2_heldout[j]^2 - 0.25*pi()*true_dbh1_heldout[j]^2)/census_length_heldout[j]',
-                basal_area_dt_rel='(log(0.25*pi()*true_dbh2_heldout[j]^2) - log(0.25*pi()*true_dbh1_heldout[j]^2))/census_length_heldout[j]'),
+                dbh_dt='(true_dbh2_heldout - true_dbh1_heldout)/census_length_heldout[j]',
+                dbh_dt_rel='(log(true_dbh2_heldout) - log(true_dbh1_heldout))/census_length_heldout[j]',
+                basal_area_dt='(0.25*pi()*true_dbh2_heldout^2 - 0.25*pi()*true_dbh1_heldout^2)/census_length_heldout[j]',
+                basal_area_dt_rel='(log(0.25*pi()*true_dbh2_heldout^2) - log(0.25*pi()*true_dbh1_heldout^2))/census_length_heldout[j]'),
          ifelse("a" %in% rho_combo, " + log_a2 * log_rho_c_heldout[spp_heldout[j]]", ""),
          ifelse("b" %in% rho_combo, " + log_b2 * log_rho_c_heldout[spp_heldout[j]]", ""),
          ifelse("c" %in% rho_combo, " + log_c2 * log_rho_c_heldout[spp_heldout[j]]", ""))
