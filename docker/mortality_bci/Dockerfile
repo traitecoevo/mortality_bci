@@ -23,14 +23,11 @@ RUN rm /usr/local/bin/install2.r && \
   && chmod +x /usr/local/bin/install2.r
 
 RUN install2.r --error  \
-    crayon \
     devtools \
-    digest \
-    docopt \
     downloader \
     dplyr \
     inline \
-    R6 \
+    plyr \
     RcppEigen \
     RcppRedis \
     RCurl \
@@ -50,14 +47,10 @@ RUN installGithub.r  \
     richfitz/remake \
     ropensci/RedisAPI \
     richfitz/RedisHeartbeat \
-    gaborcsardi/progress
+    gaborcsardi/progress \
+    traitecoevo/rrqueue
 
 RUN r -e 'dockertest:::copy_scripts_dir("/usr/local/bin")'
-
-COPY local /local
-
-RUN R CMD INSTALL /local/rrqueue \
-  && rm -rf /local
 
 RUN r -e 'remake:::install_remake("/usr/local/bin")'
 

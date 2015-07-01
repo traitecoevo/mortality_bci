@@ -7,7 +7,7 @@ keep_git: true
 apt_unstable: true
 
 names:
-  test: richfitz/mortality_bci
+  test: traitecoevo/mortality_bci
 
 modules:
   - remake
@@ -19,5 +19,6 @@ r_packages:
   - RCurl
   - downloader
   - rmarkdown
-r_local_packages:
-  - ../rrqueue
+  - plyr
+r_github_packages:
+  - traitecoevo/rrqueue
