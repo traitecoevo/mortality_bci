@@ -15,6 +15,7 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
   ret$fold_data <- sprintf("export/bci_data_%s.rds", ret$kfold)
   create_dirs(unique(dirname(ret$filename)))
   if(isTRUE(tasks_run)) {
+    tasks <- tasks_growth()
     i <- match(do.call(paste, ret[, c('chain', 'growth_measure', 'rho_combo', 'kfold')]),
                do.call(paste, tasks[, c('chain', 'growth_measure', 'rho_combo', 'kfold')]))
     ff <- file.copy(tasks$filename[na.omit(i)], ret$filename[which(!is.na(i))])
@@ -29,7 +30,7 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
 
 
 # What growth rate best predicts mortality using full model
-tasks_growth <- function(iter=2000, name = 'growth_comparisons') {
+tasks_growth <- function(iter=2000, name = 'growth_comparison') {
   tasks_2_run(iter, 
     name=name, 
     growth_measure =  c("dbh_dt", 
