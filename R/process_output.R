@@ -24,7 +24,7 @@ compile_rho_model_fits <- function(subset_rho_combos=NULL, pool_kfolds = FALSE) 
   if(any(!subset_rho_combos %in% c("","a","b","c","ab","ac","bc","abc"))) {
     stop("subset_rho_combos can either be NULL or contain one or multiple of the following:'','a','b','c','ab','ac','bc','abc'")
   }
-  rho_combo_tasks <- tasks_rho_combos(growth_measure = 'dbh_dt') # Need to change once best growth measure determined. 
+  rho_combo_tasks <- tasks_rho_combos(growth_measure = 'dbh_dt',tasks_run = FALSE) # Need to change once best growth measure determined. 
  
   if(!is.null(subset_rho_combos)) {
     rho_combo_tasks <- rho_combo_tasks[rho_combo_tasks$rho_combo %in% subset_rho_combos,]
