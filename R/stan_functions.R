@@ -34,7 +34,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        iter = iter,
        chains=1, chain_id=chain_id,
        control =list(adapt_delta=0.9, max_treedepth=15),
-       refresh=100,
+       refresh=1,
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
 }
