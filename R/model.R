@@ -16,20 +16,20 @@ get_model_chunks <- function(tasks) {
       // DBH measurement error parameters for fitted data
       real log_raw_true_dbh1[n_obs];
       real log_mu_true_dbh1;
-      real log_sigma_true_dbh1;
+      real<lower=0> log_sigma_true_dbh1;
 
       real log_raw_dbh_increment[n_obs];
       real log_mu_dbh_increment;
-      real log_sigma_dbh_increment;
+      real<lower=0> log_sigma_dbh_increment;
 
       // DBH measurement error parameters for heldout data
       real log_raw_true_dbh1_heldout[n_obs_heldout];
       real log_mu_true_dbh1_heldout;
-      real log_sigma_true_dbh1_heldout;
+      real<lower=0> log_sigma_true_dbh1_heldout;
 
       real log_raw_dbh_increment_heldout[n_obs_heldout];
       real log_mu_dbh_increment_heldout;
-      real log_sigma_dbh_increment_heldout;
+      real<lower=0> log_sigma_dbh_increment_heldout;
 
 
       // Mortality model parameters
