@@ -1,6 +1,5 @@
 true_dbh_model <- function(tasks) {
 data <-make('BCI_model_dataset_unique')
-data <- data[1:10000,]
 
 # Extract Sigma from dbh error model
 if (!file.exists('results/dbh_error/dbh_error_model.rds')){
