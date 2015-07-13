@@ -133,12 +133,15 @@ BCI_clean <- function(BCI_data, spp_table) {
       # First measurement in 1990 ='1990-02-06'
       julian = as.vector(julian(as.Date(exactdate,"%Y-%m-%d"), as.Date("1990-02-06", "%Y-%m-%d"))),
       census_interval = c(NA, diff(julian/365.25)),
+      dbh_dt = calculate_growth_rate(dbh, julian),
       dead_next_census = mortality_in_next_census(dfstatus),
       dbh_prev = c(NA, drop_last(dbh))) %>%
     # Only keep alive stems
     filter(dfstatus=="alive" &
            census_interval < 8) %>%
-    filter(!is.na(census_interval) & 
+    filter((dbh_dt) < 7.5 &
+             dbh_dt/(dbh) > -0.25 & 
+             !is.na(census_interval) & 
              !is.na(dead_next_census)) %>%
     group_by(sp) %>%
     mutate(n_ind = length(unique(treeid))) %>%
@@ -209,4 +212,13 @@ export_data <- function(data, filename) {
   for (i in seq_along(data)) {
     saveRDS(data[[i]], filename_sub[[i]])
   }
+}
+
+#Calculates growth rate as a function of past size
+calculate_growth_rate <- function(x, t, f=function(y) y){
+  dt = diff(t)/365.25
+  if(any(dt < 0, na.rm=TRUE)){
+    stop("time must be sorted")
+  }
+  c(NA, diff(f(x))/dt)
 }
