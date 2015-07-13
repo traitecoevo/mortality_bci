@@ -7,7 +7,7 @@ model_compiler <- function(tasks) {
   
   ## Assemble the stan model:
   chunks <- get_model_chunks(tasks)
-  model <- make_stan_model(chunks)
+  model <- make_stan_model(chunks, growth_measure = tasks$growth_measure)
   
   ## Actually run the model
   res <- run_single_stan_chain(model, data,
@@ -27,20 +27,21 @@ combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
 run_single_stan_chain <- function(model, data, chain_id, iter=1000,
                                   sample_file=NA, diagnostic_file=NA) {
   
-  data_for_stan <- prep_data_for_stan(data)
+  data_for_stan <- prep_data_for_stan(data, model$growth_measure)
   stan(model_code = model$model_code,
        data = data_for_stan,
        pars = model$pars,
        iter = iter,
        chains=1, chain_id=chain_id,
-       control =list(adapt_delta=0.9, max_treedepth=15),
+       control =list(stepsize=0.1,adapt_delta=0.9, max_treedepth=15),
        refresh=1,
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
 }
 
-prep_data_for_stan <- function(data) {
-  
+prep_data_for_stan <- function(data, growth_measure) {
+  data$train <- data$train[1:5000,]
+  data$heldout <- data$heldout[1:5000,]
   list(
     n_obs = nrow(data$train),
     n_spp = length(unique(data$train$sp)),
@@ -49,8 +50,7 @@ prep_data_for_stan <- function(data) {
     census = as.numeric(factor(data$train$censusid)),
     y = as.integer(data$train$dead_next_census),
     census_length = data$train$census_interval,
-    obs_dbh1 = data$train$dbh_prev,
-    obs_dbh2 = data$train$dbh,
+    growth_dt = data$train[[growth_measure]],
     log_rho_c  = (log(unique(data$train$rho)) - log(0.6)),
     n_obs_heldout = nrow(data$heldout),
     n_spp_heldout = length(unique(data$heldout$sp)),
@@ -58,16 +58,16 @@ prep_data_for_stan <- function(data) {
     census_heldout = as.numeric(factor(data$heldout$censusid)),
     y_heldout = as.integer(data$heldout$dead_next_census),
     census_length_heldout = data$heldout$census_interval,
-    obs_dbh1_heldout = data$heldout$dbh_prev,
-    obs_dbh2_heldout = data$heldout$dbh,
+    growth_dt_heldout = data$heldout[[growth_measure]],
     log_rho_c_heldout  = (log(unique(data$heldout$rho)) - log(0.6))
   )
 }
 
 
-make_stan_model <- function(chunks) {
+make_stan_model <- function(chunks, growth_measure) {
   list(
     pars = chunks$pars,
+    growth_measure = growth_measure,
     model_code = sprintf("
       data {
         int<lower=1> n_obs;
@@ -77,8 +77,7 @@ make_stan_model <- function(chunks) {
         int<lower=1> census[n_obs];
         int<lower=0, upper=1> y[n_obs];
         vector[n_obs] census_length;
-        vector[n_obs] obs_dbh1;
-        vector[n_obs] obs_dbh2;
+        vector[n_obs] growth_dt;
         vector[n_spp] log_rho_c;
         
         // Held out data
@@ -88,8 +87,7 @@ make_stan_model <- function(chunks) {
         int<lower=1> census_heldout[n_obs_heldout];
         int<lower=0, upper=1> y_heldout[n_obs_heldout];
         vector[n_obs_heldout] census_length_heldout;
-        vector[n_obs_heldout] obs_dbh1_heldout;
-        vector[n_obs_heldout] obs_dbh2_heldout;
+        vector[n_obs_heldout] growth_dt_heldout;
         vector[n_spp_heldout] log_rho_c_heldout;
       }
       
