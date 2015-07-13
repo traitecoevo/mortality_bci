@@ -1,3 +1,16 @@
+# Task bulider for estimating true dbh.
+true_dbh_tasks <- function(name ='true_dbh', iter=1000) {
+  n_chains <- 3
+  ret <- expand.grid(experiment=name,
+                     iter=iter,
+                     chain=seq_len(n_chains))
+  ret$filename <- sprintf('results/%s/true_dbh_model_%s.rds',name, ret$chain)
+  create_dirs(sprintf('results/%s', name))
+  ret
+}
+
+
+# Task builder function for growth and rho comparisons
 tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_run) {
   n_kfolds <- 10
   n_chains <- 3
@@ -20,7 +33,7 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
                do.call(paste, tasks[, c('chain', 'growth_measure', 'rho_combo', 'kfold')]))
     ff <- file.copy(tasks$filename[na.omit(i)], ret$filename[which(!is.na(i))])
     if(!all(ff)) {
-      warning(sprintf('Some previously run model outputs failed to copy:\n%s',
+      warning(sprintf('Some previously run growth comparison models outputs failed to copy:\n%s',
                       paste(tasks$filename[na.omit(i)][!ff], collapse='\n')))
     }
     return(ret[is.na(i), ]  )
@@ -28,8 +41,13 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
   ret
 }
 
+# True DBH tasks
+run_true_dbh_model <- function(iter=1000, name="true_dbh") {
+  tasks <- true_dbh_tasks(iter = iter, name = name)
+  ret <- mclapply(df_to_list(tasks), true_dbh_model, mc.cores=3)
+}
 
-# What growth rate best predicts mortality using full model
+# Growth comparison tasks
 tasks_growth <- function(iter=2000, name = 'growth_comparison') {
   tasks_2_run(iter, 
     name=name, 
@@ -41,7 +59,7 @@ tasks_growth <- function(iter=2000, name = 'growth_comparison') {
     tasks_run=FALSE)
 }
 
-# Based on best growth rate model which combination of rho effects is most parsimonous
+# Rho combination tasks
 tasks_rho_combos <- function(iter=2000, growth_measure, name="rho_combinations", tasks_run) {
   rho_combo <- expand.grid(a=c('','a'), b=c('','b'), c=c('','c'), stringsAsFactors = FALSE)
   rho_combo <- sapply(split(rho_combo, seq_len(nrow(rho_combo))), function(x) paste0(x, collapse=''))
@@ -62,10 +80,6 @@ run_growth_comparison <- function(iter=2000) {
 
 run_rho_combination <- function(iter=2000, growth_measure) {
   tasks <- tasks_rho_combos(iter = iter, growth_measure = growth_measure, tasks_run=TRUE)
-
-  # Check is any of tasks already run in prev experiment, if so copy across and give correct id
   tasks_done <- tasks_growth(iter = iter)
-  # TO DO : check parameter columns for same values in table above, then copy results to new directory
-  # and remove from list to run
   ret <- mclapply(df_to_list(tasks), model_compiler)
 }
