@@ -214,11 +214,23 @@ export_data <- function(data, filename) {
   }
 }
 
-#Calculates growth rate as a function of past size
+# Calculates growth rate as a function of past size
 calculate_growth_rate <- function(x, t, f=function(y) y){
   dt = diff(t)/365.25
   if(any(dt < 0, na.rm=TRUE)){
     stop("time must be sorted")
   }
   c(NA, diff(f(x))/dt)
+}
+
+# Add true growth rate estimates to data
+add_true_growth <- function(data) {
+  true_dbh_mod <- readRDS('results/true_dbh/true_dbh_model.rds')
+  data$true_dbh1 <- as.vector(get_posterior_mean(true_dbh_mod, 'true_dbh1')[,'mean-all chains'])
+  data$true_dbh2 <- as.vector(get_posterior_mean(true_dbh_mod, 'true_dbh2')[,'mean-all chains'])
+  data$true_dbh_dt <- (data$true_dbh2 - data$true_dbh1)/data$census_interval
+  data$true_dbh_dt_rel <- (log(data$true_dbh2) - log(data$true_dbh1))/data$census_interval
+  data$true_basal_area_dt <- ((0.25 * pi * data$true_dbh2^2) -  (0.25 * pi * data$true_dbh1^2))/data$census_interval
+  data$true_basal_area_dt_rel <- (log(0.25 * pi * data$true_dbh2^2) -  log(0.25 * pi * data$true_dbh1^2))/data$census_interval
+  data
 }
