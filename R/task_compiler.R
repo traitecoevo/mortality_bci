@@ -1,15 +1,3 @@
-# Task bulider for estimating true dbh.
-true_dbh_tasks <- function(name ='true_dbh', iter=1000) {
-  n_chains <- 3
-  ret <- expand.grid(experiment=name,
-                     iter=iter,
-                     chain=seq_len(n_chains))
-  ret$filename <- sprintf('results/%s/true_dbh_model_%s.rds',name, ret$chain)
-  create_dirs(sprintf('results/%s', name))
-  ret
-}
-
-
 # Task builder function for growth and rho comparisons
 tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_run) {
   n_kfolds <- 10
@@ -41,20 +29,14 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
   ret
 }
 
-# True DBH tasks
-run_true_dbh_model <- function(iter=1000, name="true_dbh") {
-  tasks <- true_dbh_tasks(iter = iter, name = name)
-  ret <- mclapply(df_to_list(tasks), true_dbh_model, mc.cores=3)
-}
-
 # Growth comparison tasks
 tasks_growth <- function(iter=2000, name = 'growth_comparison') {
   tasks_2_run(iter, 
     name=name, 
-    growth_measure =  c("dbh_dt", 
-                        "dbh_dt_rel", 
-                        "basal_area_dt",
-                        "basal_area_dt_rel"),
+    growth_measure =  c("true_dbh_dt", 
+                        "true_dbh_dt_rel", 
+                        "true_basal_area_dt",
+                        "true_basal_area_dt_rel"),
     rho_combo="abc",
     tasks_run=FALSE)
 }
