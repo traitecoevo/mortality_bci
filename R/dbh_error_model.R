@@ -1,4 +1,7 @@
 run_dbh_error_model <- function(iter=1000) {
+  if (file.exists('results/dbh_error/dbh_error_model.rds')){
+    stop('dbh error model has already been run')
+    }
 dat <- readRDS('data/dbh_error_data.rds')
 #supplied directly from Ruger. 
 # Need to do a bit of cleaning & MYSQL work if we wish to use the open source.
