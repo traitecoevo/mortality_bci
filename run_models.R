@@ -13,6 +13,9 @@ for (s in sources) {
   source(s)
 }
 
+# First download & clean data using:
+make('BCI_model_dataset_full')
+
 # The following code is to run each set of models.
 # The models must be run consecutively as later models 
 # either depend on estimate of previous models (e.g. true dbh estimates)
@@ -27,8 +30,9 @@ run_dbh_error_model()
 # 2) Estimate true dbh (time: ~ 9 hours)
 run_true_dbh_model()
 
-## After running steps 1 & 2
-remake::make()
+# After running steps 1 & 2 the following will make 
+# all the datasets used in subsequent analyses
+make()
 
 # NOTE the following models run 100's of chains
 # each taking X hours. These models are best run on a cluster.
@@ -51,5 +55,3 @@ tasks <- tasks_rho_combos(iter = 10,growth_measure = 'dbh_dt')
 tasks <- tasks[c(1,4,215,232),]
 create_dirs(unique(dirname(tasks$filename)))
 ret <- mclapply(df_to_list(tasks), model_compiler)
-
-xx <- sflist2stanfit(c(readRDS('results/test_growth_nc/1.rds'),readRDS('results/test_growth_nc/2.rds'),readRDS('results/test_growth_nc/3.rds')))
