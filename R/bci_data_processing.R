@@ -139,7 +139,7 @@ BCI_clean <- function(BCI_data, spp_table) {
     # Only keep alive stems
     filter(dfstatus=="alive" &
            census_interval < 8) %>%
-    filter((dbh_dt) < 7.5 &
+    filter((dbh_dt) < 5 &
              dbh_dt/(dbh) > -0.25 & 
              !is.na(census_interval) & 
              !is.na(dead_next_census)) %>%
