@@ -33,15 +33,18 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        pars = model$pars,
        iter = iter,
        chains=1, chain_id=chain_id,
-       control =list(stepsize=0.01,adapt_delta=0.9, max_treedepth=15),
+       control =list(stepsize=0.1, adapt_delta=0.9, max_treedepth=15),
        refresh=1,
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
 }
 
 prep_data_for_stan <- function(data, growth_measure) {
-  data$train 
-  data$heldout
+  full_data <- make('BCI_model_dataset_true_unique', verbose = FALSE)
+  data$train <- data$train
+  data$heldout <- data$heldout
+  scale <- sd(full_data[[growth_measure]])
+  
   list(
     n_obs = nrow(data$train),
     n_spp = length(unique(data$train$sp)),
@@ -50,7 +53,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     census = as.numeric(factor(data$train$censusid)),
     y = as.integer(data$train$dead_next_census),
     census_length = data$train$census_interval,
-    growth_dt = data$train[[growth_measure]]/sd(data$train[[growth_measure]]),
+    growth_dt = data$train[[growth_measure]]/scale,
     log_rho_c  = (log(unique(data$train$rho)) - log(0.6)),
     n_obs_heldout = nrow(data$heldout),
     n_spp_heldout = length(unique(data$heldout$sp)),
@@ -58,7 +61,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     census_heldout = as.numeric(factor(data$heldout$censusid)),
     y_heldout = as.integer(data$heldout$dead_next_census),
     census_length_heldout = data$heldout$census_interval,
-    growth_dt_heldout = data$heldout[[growth_measure]]/sd(data$heldout[[growth_measure]]),
+    growth_dt_heldout = data$heldout[[growth_measure]]/scale,
     log_rho_c_heldout  = (log(unique(data$heldout$rho)) - log(0.6))
   )
 }
