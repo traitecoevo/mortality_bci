@@ -29,15 +29,16 @@ sigma ~ cauchy(0, 2.5);
 discrep ~ normal(0,sigma);
 }'
 
-fit <- sflist2stanfit(mclapply(1:3, mc.cores = 3, 
-                   function(i) stan(model_code = dbh_error_model, 
-                                    data= stan_data,
-                                    pars = c("sigma"), 
-                                    chains = 1, chain_id=i, 
-                                    iter = iter, 
-                                    control=list(stepsize=0.01, adapt_delta=0.99),
-                                    refresh=1)))
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+fit <-stan(model_code = dbh_error_model, 
+           data= stan_data,
+           pars = c("sigma"), 
+           chains = 3, 
+           iter = iter, 
+           control=list(stepsize=0.01, adapt_delta=0.99),
+           refresh=1)
 
-fit@.MISC <- emptyenv()
+#fit@.MISC <- emptyenv()
 saveRDS(fit, 'results/dbh_error/dbh_error_model.rds')
 }
