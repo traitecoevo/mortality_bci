@@ -81,6 +81,7 @@ run_true_dbh_model <- function() {
                                         thin=5)
                                  }))
   
+  create_dirs('results/true_dbh')
   #fit@.MISC <- emptyenv()
   saveRDS(fit, 'results/true_dbh/true_dbh_model.rds')
 }
