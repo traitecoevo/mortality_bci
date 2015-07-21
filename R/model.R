@@ -6,9 +6,9 @@ get_model_chunks <- function(tasks) {
   }
   
   list(
-    pars = c("log_mu_a0","log_sigma_a0","log_a0","log_mu_a1","log_sigma_a1","log_a1",if("a" %in% rho_combo) "log_a2",
-             "log_mu_b0","log_sigma_b0","log_b0","log_mu_b1","log_sigma_b1","log_b1",if("b" %in% rho_combo) "log_b2",
-             "log_mu_c0","log_sigma_c0","log_c0","log_mu_c1","log_sigma_c1","log_c1",if("c" %in% rho_combo) "log_c2",
+    pars = c("log_mu_a0","log_sigma_a0","log_a0","log_sigma_a1","log_a1",if("a" %in% rho_combo) "log_a2",
+             "log_mu_b0","log_sigma_b0","log_b0","log_sigma_b1","log_b1",if("b" %in% rho_combo) "log_b2",
+             "log_mu_c0","log_sigma_c0","log_c0","log_sigma_c1","log_c1",if("c" %in% rho_combo) "log_c2",
              "sum_log_lik_fit","sum_log_lik_heldout"),
     parameters = sprintf("
       // Mortality model parameters
@@ -17,7 +17,6 @@ get_model_chunks <- function(tasks) {
       real<lower=0> log_sigma_a0;
       
       real log_raw_a1[n_census];
-      real log_mu_a1;
       real<lower=0> log_sigma_a1;
       
       real log_raw_b0[n_spp];
@@ -25,7 +24,6 @@ get_model_chunks <- function(tasks) {
       real<lower=0> log_sigma_b0;
       
       real log_raw_b1[n_census];
-      real log_mu_b1;  
       real<lower=0> log_sigma_b1;
       
       real log_raw_c0[n_spp];
@@ -33,7 +31,6 @@ get_model_chunks <- function(tasks) {
       real<lower=0> log_sigma_c0;
       
       real log_raw_c1[n_census];
-      real log_mu_c1;  
       real<lower=0> log_sigma_c1;
       
       %s
@@ -60,16 +57,16 @@ get_model_chunks <- function(tasks) {
     
     // Calculating species random effects
     for (s in 1:n_spp) {
-      log_a0[s] <- log_raw_a0[s] * log_sigma_a0 + log_mu_a0;
+      log_a0[s] <- log_raw_a0[s] * log_sigma_a0 + log_mu_a0; // e.g. implies normal(log_mu_a0, log_sigma_a0)
       log_b0[s] <- log_raw_b0[s] * log_sigma_b0 + log_mu_b0;
       log_c0[s] <- log_raw_c0[s] * log_sigma_c0 + log_mu_c0;
     }
     
     // Calculating census period random effects
     for (t in 1:n_census) {
-      log_a1[t] <- log_raw_a1[t] * log_sigma_a1 + log_mu_a1;
-      log_b1[t] <- log_raw_b1[t] * log_sigma_b1 + log_mu_b1;
-      log_c1[t] <- log_raw_c1[t] * log_sigma_c1 + log_mu_c1;
+      log_a1[t] <- log_raw_a1[t] * log_sigma_a1; // e.g. implies normal(0, log_sigma_a1)
+      log_b1[t] <- log_raw_b1[t] * log_sigma_b1;
+      log_c1[t] <- log_raw_c1[t] * log_sigma_c1;
     }
     
     for (i in 1:n_obs) {
@@ -92,38 +89,35 @@ get_model_chunks <- function(tasks) {
 
     //Mortality model priors
     log_raw_a0 ~ normal(0,1);
-    log_mu_a0 ~ normal(-0.87, 1);
+    log_mu_a0 ~ normal(-0.87, 0.75);
     log_sigma_a0 ~ cauchy(0, 2.5);
     
     log_raw_b0 ~ normal(0, 1);
-    log_mu_b0 ~ normal(0, 10);
+    log_mu_b0 ~ normal(0, 2.5);
     log_sigma_b0 ~ cauchy(0, 2.5);
     
     log_raw_c0 ~ normal(0, 1);
-    log_mu_c0 ~ normal(-4.42, 1);
+    log_mu_c0 ~ normal(-4.43, 0.23);
     log_sigma_c0 ~ cauchy(0, 2.5);  
     
     log_raw_a1 ~ normal(0,1);
-    log_mu_a1 ~ normal(0, 1); 
     log_sigma_a1 ~ cauchy(0, 2.5);
     
     log_raw_b1 ~ normal(0, 1);
-    log_mu_b1  ~ normal(0, 1);
     log_sigma_b1 ~ cauchy(0, 2.5);
     
     log_raw_c1 ~ normal(0, 1);
-    log_mu_c1  ~ normal(0, 1);
     log_sigma_c1 ~ cauchy(0, 2.5);
-    
-    %s 
+                  
+    %s
     %s
     %s", 
     ifelse("a" %in% rho_combo, " + log_a2 * log_rho_c[spp[i]]", ""),
     ifelse("b" %in% rho_combo, " + log_b2 * log_rho_c[spp[i]]", ""),
     ifelse("c" %in% rho_combo, " + log_c2 * log_rho_c[spp[i]]", ""),
-    ifelse("a" %in% rho_combo, "log_a2 ~ normal(0,10);", ""),
-    ifelse("b" %in% rho_combo, "log_b2 ~ normal(0,10);", ""),
-    ifelse("c" %in% rho_combo, "log_c2 ~ normal(0,10);", "")),  
+    ifelse("a" %in% rho_combo, "log_a2 ~ normal(0,2.5);", ""),
+    ifelse("b" %in% rho_combo, "log_b2 ~ normal(0,2.5);", ""),
+    ifelse("c" %in% rho_combo, "log_c2 ~ normal(0,2.5);", "")), 
   generated_quantities = sprintf("
     // Declaring fitted parameters
     real log_a0[n_spp];
@@ -163,9 +157,9 @@ get_model_chunks <- function(tasks) {
     
     // recalulate species random effects
     for (t in 1:n_census) {
-      log_a1[t] <- log_raw_a1[t] * log_sigma_a1 + log_mu_a1;
-      log_b1[t] <- log_raw_b1[t] * log_sigma_b1 + log_mu_b1;
-      log_c1[t] <- log_raw_c1[t] * log_sigma_c1 + log_mu_c1;
+      log_a1[t] <- log_raw_a1[t] * log_sigma_a1;
+      log_b1[t] <- log_raw_b1[t] * log_sigma_b1;
+      log_c1[t] <- log_raw_c1[t] * log_sigma_c1;
     }
     
     // log likelihood for fitted model
