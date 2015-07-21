@@ -68,19 +68,18 @@ run_true_dbh_model <- function() {
       }
     }', sigma)
   
-  fit <- sflist2stanfit(mclapply(1:3, mc.cores=3,
-                                 function(i){
-                                   stan(model_code = true_dbh_model, 
-                                        data= stan_data,
-                                        pars = c("log_mu_true_dbh1","log_sigma_true_dbh1"), 
-                                        chains = 1,
-                                        chain_id=i,
-                                        iter = 1000, 
-                                        control=list(adapt_delta=0.9,stepsize=0.05),
-                                        refresh=1,
-                                        thin=5)
-                                 }))
+  rstan_options(auto_write = TRUE)
+  options(mc.cores = parallel::detectCores())
   
+  fit <- stan(model_code = true_dbh_model, 
+              data= stan_data,
+              pars = c("log_mu_true_dbh1","log_sigma_true_dbh1"), 
+              chains = 3,
+              iter = 1000, 
+              control=list(adapt_delta=0.9,stepsize=0.05),
+              refresh=1,
+              thin=5)
+
   create_dirs('results/true_dbh')
   #fit@.MISC <- emptyenv()
   saveRDS(fit, 'results/true_dbh/true_dbh_model.rds')
