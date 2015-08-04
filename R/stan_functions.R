@@ -34,7 +34,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        iter = iter,
        chains=1, 
        chain_id=chain_id,
-       #control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15),
+       control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15),
        refresh=1,
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
@@ -42,8 +42,8 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
 
 prep_data_for_stan <- function(data, growth_measure) {
   full_data <- readRDS('export/bci_data_full.rds')
-  data$train <- data$train[1:2000,]
-  data$heldout <- data$heldout[1:2000,]
+  data$train <- data$train[1:20000,]
+  #data$heldout <- data$heldout[1:10000,]
   scale <- sd(full_data$train[[growth_measure]])
   
   list(
@@ -63,7 +63,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     y_heldout = as.integer(data$heldout$dead_next_census),
     census_length_heldout = data$heldout$census_interval,
     growth_dt_heldout = data$heldout[[growth_measure]]/scale,
-    log_rho_c_heldout  = (log(unique(data$heldout$rho))) #- log(0.6))
+    rho_c_heldout  = unique(data$heldout$rho/0.6)
   )
 }
 
@@ -92,7 +92,7 @@ make_stan_model <- function(chunks, growth_measure) {
         int<lower=0, upper=1> y_heldout[n_obs_heldout];
         vector[n_obs_heldout] census_length_heldout;
         vector[n_obs_heldout] growth_dt_heldout;
-        vector[n_spp_heldout] log_rho_c_heldout;
+        vector[n_spp_heldout] rho_c_heldout;
       }
       
       parameters { 
