@@ -32,18 +32,19 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        data = data_for_stan,
        pars = model$pars,
        iter = iter,
-       chains=1, chain_id=chain_id,
-       control =list(stepsize=0.1, adapt_delta=0.9, max_treedepth=15),
+       chains=1, 
+       chain_id=chain_id,
+       #control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15),
        refresh=1,
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
 }
 
 prep_data_for_stan <- function(data, growth_measure) {
-  full_data <- make('BCI_model_dataset_true_unique', verbose = FALSE)
-  data$train <- data$train
-  data$heldout <- data$heldout
-  scale <- sd(full_data[[growth_measure]])
+  full_data <- readRDS('export/bci_data_full.rds')
+  data$train <- data$train[1:2000,]
+  data$heldout <- data$heldout[1:2000,]
+  scale <- sd(full_data$train[[growth_measure]])
   
   list(
     n_obs = nrow(data$train),
@@ -54,7 +55,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     y = as.integer(data$train$dead_next_census),
     census_length = data$train$census_interval,
     growth_dt = data$train[[growth_measure]]/scale,
-    log_rho_c  = (log(unique(data$train$rho)) - log(0.6)),
+    rho_c  = unique(data$train$rho)/0.6,
     n_obs_heldout = nrow(data$heldout),
     n_spp_heldout = length(unique(data$heldout$sp)),
     spp_heldout = as.numeric(factor(data$heldout$sp)),
@@ -62,7 +63,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     y_heldout = as.integer(data$heldout$dead_next_census),
     census_length_heldout = data$heldout$census_interval,
     growth_dt_heldout = data$heldout[[growth_measure]]/scale,
-    log_rho_c_heldout  = (log(unique(data$heldout$rho)) - log(0.6))
+    log_rho_c_heldout  = (log(unique(data$heldout$rho))) #- log(0.6))
   )
 }
 
@@ -81,7 +82,7 @@ make_stan_model <- function(chunks, growth_measure) {
         int<lower=0, upper=1> y[n_obs];
         vector[n_obs] census_length;
         vector[n_obs] growth_dt;
-        vector[n_spp] log_rho_c;
+        vector[n_spp] rho_c;
         
         // Held out data
         int<lower=1> n_obs_heldout;
