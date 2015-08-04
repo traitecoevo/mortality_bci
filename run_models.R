@@ -47,7 +47,7 @@ run_rho_combination(iter = 1000, growth_measure = 'dbh_dt')
 # Remove this code once testing is complete
 # Test on subset - growth combinations
 tasks <- tasks_growth(iter = 2000,name = 'pleaserun')
-tasks <- tasks[c(1),]
+tasks <- tasks[c(1,2,3),]
 create_dirs(unique(dirname(tasks$filename)))
 ret <- mclapply(df_to_list(tasks), model_compiler, mc.cores=3)
 # Test on subset - rho combinations
