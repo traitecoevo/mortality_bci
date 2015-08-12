@@ -195,11 +195,11 @@ get_model_chunks <- function(tasks) {
       }
       sum_log_lik_heldout <- sum_log_lik_heldout + log_lik_heldout[j];
     }",
-         ifelse("a" %in% rho_combo, " * pow(log_rho_c[spp[i]], a2)", ""),
-         ifelse("b" %in% rho_combo, " * pow(log_rho_c[spp[i]], b2)", ""),
-         ifelse("c" %in% rho_combo, " * pow(log_rho_c[spp[i]], c2)", ""),
-         ifelse("a" %in% rho_combo, " * pow(log_rho_c_heldout[spp_heldout[j]], a2)", ""),
-         ifelse("b" %in% rho_combo, " * pow(log_rho_c_heldout[spp_heldout[j]], b2)", ""),
-         ifelse("c" %in% rho_combo, " * pow(log_rho_c_heldout[spp_heldout[j]], c2)", ""))
+         ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a2)", ""),
+         ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b2)", ""),
+         ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c2)", ""),
+         ifelse("a" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], a2)", ""),
+         ifelse("b" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], b2)", ""),
+         ifelse("c" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], c2)", ""))
     )
 }
