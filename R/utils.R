@@ -4,7 +4,12 @@ create_dirs <- function(dirs) {
     dir.create(d, FALSE, TRUE)
   }
 }
-  
+
+to.png <- function(expr, filename, ...) {
+  png(filename, ...)
+  on.exit(dev.off())
+  eval.parent(substitute(expr))
+}
 
 pandoc_build <- function(file){
   args <- list('--template=data/include.tex', '--latex-engine=xelatex')

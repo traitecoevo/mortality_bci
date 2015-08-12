@@ -42,9 +42,9 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
 
 prep_data_for_stan <- function(data, growth_measure) {
   full_data <- readRDS('export/bci_data_full.rds')
-  data$train <- data$train[1:20000,]
+  data$train <- data$train[1:50000,]
   #data$heldout <- data$heldout[1:10000,]
-  scale <- sd(full_data$train[[growth_measure]])
+  scale <- median(full_data$train[[growth_measure]])
   
   list(
     n_obs = nrow(data$train),
