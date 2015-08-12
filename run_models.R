@@ -1,4 +1,4 @@
-packages <- c("rstan","plyr","parallel","remake")
+packages <- c("plyr","parallel","remake","rstan")
 sources <- c("R/dbh_error_model.r",
              "R/true_dbh_model.r",
              "R/model.R",
@@ -27,7 +27,7 @@ make('BCI_model_dataset_full')
 # 1) Estimate dbh measurement error (time: few seconds)
 run_dbh_error_model()
 
-# 2) Estimate true dbh (time: ~ 9 hours)
+# 2) Estimate true dbh (time: ~ 10 hours)
 run_true_dbh_model()
 
 # After running steps 1 & 2 the following will make 
@@ -46,10 +46,10 @@ run_rho_combination(iter = 1000, growth_measure = 'dbh_dt')
 
 # Remove this code once testing is complete
 # Test on subset - growth combinations
-tasks <- tasks_growth(iter = 2000,name = 'basic_model_test')
+tasks <- tasks_growth(iter = 2000,name = 'final_test')
 tasks <- tasks[c(1:12),]
 create_dirs(unique(dirname(tasks$filename)))
-ret <- mclapply(df_to_list(tasks), model_compiler, mc.cores=3)
+ret <- mclapply(df_to_list(tasks), model_compiler, mc.cores=12)
 # Test on subset - rho combinations
 tasks <- tasks_rho_combos(iter = 10,growth_measure = 'dbh_dt')
 tasks <- tasks[c(1,4,215,232),]
