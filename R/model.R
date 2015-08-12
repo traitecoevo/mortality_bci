@@ -36,9 +36,9 @@ get_model_chunks <- function(tasks) {
       %s
       %s
       %s",
-    ifelse("a" %in% rho_combo, "real<lower=0> a2;", ""),
-    ifelse("b" %in% rho_combo, "real<lower=0> b2;", ""),
-    ifelse("c" %in% rho_combo, "real<lower=0> c2;", "")),
+    ifelse("a" %in% rho_combo, "real a2;", ""),
+    ifelse("b" %in% rho_combo, "real b2;", ""),
+    ifelse("c" %in% rho_combo, "real c2;", "")),
   model = sprintf("
     // Declaring mortality parameters
     real alpha;
@@ -90,34 +90,34 @@ get_model_chunks <- function(tasks) {
     //Mortality model priors
     raw_log_a0 ~ normal(0,1);
     mu_log_a0 ~ normal(-0.87, 0.75);
-    sigma_log_a0 ~ cauchy(0, 2.5);
+    sigma_log_a0 ~ cauchy(0, 25);
 
     raw_log_b0 ~ normal(0, 1);
     mu_log_b0 ~ normal(0, 5);
-    sigma_log_b0 ~ cauchy(0, 2.5);
+    sigma_log_b0 ~ cauchy(0, 25);
 
     raw_log_c0 ~ normal(0, 1);
     mu_log_c0 ~ normal(-4.43, 1);
-    sigma_log_c0 ~ cauchy(0, 2.5);
+    sigma_log_c0 ~ cauchy(0, 25);
 
     raw_log_a1 ~ normal(0,1);
-    sigma_log_a1 ~ cauchy(0, 2.5);
+    sigma_log_a1 ~ cauchy(0, 25);
 
     raw_log_b1 ~ normal(0, 1);
-    sigma_log_b1 ~ cauchy(0, 2.5);
+    sigma_log_b1 ~ cauchy(0, 25);
 
     raw_log_c1 ~ normal(0, 1);
-    sigma_log_c1 ~ cauchy(0, 2.5);
+    sigma_log_c1 ~ cauchy(0, 25);
 
     %s
     %s
     %s",
-    ifelse("a" %in% rho_combo, " * pow(log_rho_c[spp[i]], a2)", ""),
-    ifelse("b" %in% rho_combo, " * pow(log_rho_c[spp[i]], b2)", ""),
-    ifelse("c" %in% rho_combo, " * pow(log_rho_c[spp[i]], c2)", ""),
-    ifelse("a" %in% rho_combo, "a2 ~ lognormal(0,5);", ""),
-    ifelse("b" %in% rho_combo, "b2 ~ lognormal(0,5);", ""),
-    ifelse("c" %in% rho_combo, "c2 ~ lognormal(0,5);", "")),
+    ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a2)", ""),
+    ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b2)", ""),
+    ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c2)", ""),
+    ifelse("a" %in% rho_combo, "a2 ~ normal(0,5);", ""),
+    ifelse("b" %in% rho_combo, "b2 ~ normal(0,5);", ""),
+    ifelse("c" %in% rho_combo, "c2 ~ normal(0,5);", "")),
   generated_quantities = sprintf("
     // Declaring fitted parameters
     real a0[n_spp];
