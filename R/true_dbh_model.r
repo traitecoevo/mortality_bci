@@ -55,7 +55,7 @@ run_true_dbh_model <- function() {
       log_mu_true_dbh1 ~ normal(0,2.5);
       log_sigma_true_dbh1 ~ cauchy(0,2.5);
       true_dbh1 ~ lognormal(log_mu_true_dbh1, log_sigma_true_dbh1);
-      dbh_increment ~ lognormal(0,1);
+      dbh_increment ~ normal(0,5);
       
     }
     
@@ -82,5 +82,5 @@ run_true_dbh_model <- function() {
 
   create_dirs('results/true_dbh')
   #fit@.MISC <- emptyenv()
-  saveRDS(fit, 'results/true_dbh/true_dbh_model.rds')
+  saveRDS(fit, 'results/true_dbh/true_dbh_model_full_half_norm.rds')
 }
