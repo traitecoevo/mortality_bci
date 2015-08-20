@@ -90,24 +90,24 @@ get_model_chunks <- function(tasks) {
     //Mortality model priors
     raw_log_a0 ~ normal(0,1);
     mu_log_a0 ~ normal(-0.87, 0.75);
-    sigma_log_a0 ~ cauchy(0, 25);
+    sigma_log_a0 ~ cauchy(0, 2.5);
 
     raw_log_b0 ~ normal(0, 1);
     mu_log_b0 ~ normal(0, 5);
-    sigma_log_b0 ~ cauchy(0, 25);
+    sigma_log_b0 ~ cauchy(0, 2.5);
 
     raw_log_c0 ~ normal(0, 1);
-    mu_log_c0 ~ normal(-4.43, 1);
-    sigma_log_c0 ~ cauchy(0, 25);
+    mu_log_c0 ~ normal(-3.86, 0.2);
+    sigma_log_c0 ~ cauchy(0, 2.5);
 
     raw_log_a1 ~ normal(0,1);
-    sigma_log_a1 ~ cauchy(0, 25);
+    sigma_log_a1 ~ cauchy(0, 2.5);
 
     raw_log_b1 ~ normal(0, 1);
-    sigma_log_b1 ~ cauchy(0, 25);
+    sigma_log_b1 ~ cauchy(0, 2.5);
 
     raw_log_c1 ~ normal(0, 1);
-    sigma_log_c1 ~ cauchy(0, 25);
+    sigma_log_c1 ~ cauchy(0, 2.5);
 
     %s
     %s
