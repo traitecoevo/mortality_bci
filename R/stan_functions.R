@@ -34,7 +34,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        iter = iter,
        chains=1, 
        chain_id=chain_id,
-       control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15),
+       control =list(stepsize=0.01, max_treedepth=15),
        refresh=1,
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
@@ -42,8 +42,6 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
 
 prep_data_for_stan <- function(data, growth_measure) {
   full_data <- readRDS('export/bci_data_full.rds')
-  data$train <- data$train[1:50000,]
-  #data$heldout <- data$heldout[1:10000,]
   scale <- median(full_data$train[[growth_measure]])
   
   list(
