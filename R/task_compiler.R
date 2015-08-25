@@ -34,9 +34,7 @@ tasks_growth <- function(iter=2000, name = 'growth_comparison') {
   tasks_2_run(iter, 
     name=name, 
     growth_measure =  c("true_dbh_dt", 
-                        "true_dbh_dt_rel", 
-                        "true_basal_area_dt",
-                        "true_basal_area_dt_rel"),
+                        "true_basal_area_dt"),
     rho_combo="abc",
     tasks_run=FALSE)
 }
