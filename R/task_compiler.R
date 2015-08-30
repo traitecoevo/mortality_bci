@@ -30,7 +30,7 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
 }
 
 # Growth comparison tasks
-tasks_growth <- function(iter=2000, name = 'growth_comparison') {
+tasks_growth <- function(iter=1000, name = 'growth_comparison') {
   tasks_2_run(iter, 
     name=name, 
     growth_measure =  c("true_dbh_dt", 
@@ -40,7 +40,7 @@ tasks_growth <- function(iter=2000, name = 'growth_comparison') {
 }
 
 # Rho combination tasks
-tasks_rho_combos <- function(iter=2000, growth_measure, name="rho_combinations", tasks_run) {
+tasks_rho_combos <- function(iter=1000, growth_measure, name="rho_combinations", tasks_run) {
   rho_combo <- expand.grid(a=c('','a'), b=c('','b'), c=c('','c'), stringsAsFactors = FALSE)
   rho_combo <- sapply(split(rho_combo, seq_len(nrow(rho_combo))), function(x) paste0(x, collapse=''))
   tasks_2_run(iter, 
@@ -51,14 +51,14 @@ tasks_rho_combos <- function(iter=2000, growth_measure, name="rho_combinations",
 }
 
 # Launching growth comparison analysis
-run_growth_comparison <- function(iter=2000) {
+run_growth_comparison <- function(iter=1000) {
   tasks <- tasks_growth(iter = iter, name="growth_comparison")
   ret <- mclapply(df_to_list(tasks), model_compiler)
 }
 
 # Launching rho combination analysis
 
-run_rho_combination <- function(iter=2000, growth_measure) {
+run_rho_combination <- function(iter=1000, growth_measure) {
   tasks <- tasks_rho_combos(iter = iter, growth_measure = growth_measure, tasks_run=TRUE)
   tasks_done <- tasks_growth(iter = iter)
   ret <- mclapply(df_to_list(tasks), model_compiler)
