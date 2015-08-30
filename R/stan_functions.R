@@ -48,8 +48,6 @@ prep_data_for_stan <- function(data, growth_measure) {
     n_obs = nrow(data$train),
     n_spp = length(unique(data$train$sp)),
     spp = as.numeric(factor(data$train$sp)),
-    n_census = length(unique(data$train$censusid)),
-    census = as.numeric(factor(data$train$censusid)),
     y = as.integer(data$train$dead_next_census),
     census_length = data$train$census_interval,
     growth_dt = data$train[[growth_measure]]/scale,
@@ -57,9 +55,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     n_obs_heldout = nrow(data$heldout),
     n_spp_heldout = length(unique(data$heldout$sp)),
     spp_heldout = as.numeric(factor(data$heldout$sp)),
-    census_heldout = as.numeric(factor(data$heldout$censusid)),
     y_heldout = as.integer(data$heldout$dead_next_census),
-    census_length_heldout = data$heldout$census_interval,
     growth_dt_heldout = data$heldout[[growth_measure]]/scale,
     rho_c_heldout  = unique(data$heldout$rho/0.6)
   )
@@ -75,8 +71,6 @@ make_stan_model <- function(chunks, growth_measure) {
         int<lower=1> n_obs;
         int<lower=1> n_spp;
         int<lower=1> spp[n_obs];
-        int<lower=1> n_census;
-        int<lower=1> census[n_obs];
         int<lower=0, upper=1> y[n_obs];
         vector[n_obs] census_length;
         vector[n_obs] growth_dt;
@@ -86,7 +80,6 @@ make_stan_model <- function(chunks, growth_measure) {
         int<lower=1> n_obs_heldout;
         int<lower=1> n_spp_heldout;
         int<lower=1> spp_heldout[n_obs_heldout];
-        int<lower=1> census_heldout[n_obs_heldout];
         int<lower=0, upper=1> y_heldout[n_obs_heldout];
         vector[n_obs_heldout] census_length_heldout;
         vector[n_obs_heldout] growth_dt_heldout;
