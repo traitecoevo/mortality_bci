@@ -43,6 +43,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
 prep_data_for_stan <- function(data, growth_measure) {
   full_data <- readRDS('export/bci_data_full.rds')
   scale <- median(full_data$train[[growth_measure]])
+  data$train <- data$train[1:50000,]
   
   list(
     n_obs = nrow(data$train),
@@ -56,6 +57,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     n_spp_heldout = length(unique(data$heldout$sp)),
     spp_heldout = as.numeric(factor(data$heldout$sp)),
     y_heldout = as.integer(data$heldout$dead_next_census),
+    census_length_heldout = data$heldout$census_interval,
     growth_dt_heldout = data$heldout[[growth_measure]]/scale,
     rho_c_heldout  = unique(data$heldout$rho/0.6)
   )
