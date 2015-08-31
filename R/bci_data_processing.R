@@ -96,25 +96,31 @@ mortality_in_next_census <- function(status){
 
 BCI_clean <- function(BCI_data, spp_table) {
 
+  #Add taxonomic information
+  BCI_data$species = lookup_latin(BCI_data$sp, spp_table)
+  BCI_data$family = lookup_family(BCI_data$sp, spp_table)
+
+  #census id for period 7 was entered incorrectly
+  BCI_data$census <-   BCI_data$censusid
+  BCI_data$census[ BCI_data$census==171] <- 7
+
+ #Converts dbh from mm to cm
+  BCI_data$dbh <- BCI_data$dbh/10
+
   data <- BCI_data %>%
     arrange(sp, treeid, exactdate) %>%
-    select(sp, treeid, nostems, censusid, exactdate, dfstatus, pom, dbh) %>%
-    mutate(
-      #census id for period 7 was entered incorrectly
-      census = ifelse(censusid==171, 7,censusid),
-      species = lookup_latin(sp, spp_table),
-      family = lookup_family(sp, spp_table),
-      #Converts dbh from mm to cm
-      dbh=dbh/10) %>%
-    # Remove stems from earlier census, measured with course resolution
-    # First measurement in 1990 ='1990-02-06'
-    filter(census >= 3) %>%
-    # Remove families that don't exhibit dbh growth e.g. palms
-    filter(!family %in% c('Arecaceae', 'Cyatheaceae', 'Dicksoniaceae', 'Metaxyaceae',
+    select(sp, species, family, treeid, nostems, census, exactdate, dfstatus, pom, dbh) %>%
+    filter(
+      # Remove stems from earlier census, measured with course resolution
+      # First measurement in 1990 ='1990-02-06'
+      census >= 3 &
+      # Remove families that don't exhibit dbh growth e.g. palms
+      !family %in% c('Arecaceae', 'Cyatheaceae', 'Dicksoniaceae', 'Metaxyaceae',
                           'Cibotiaceae', 'Loxomataceae', 'Culcitaceae', 'Plagiogyriaceae',
-                          'Thyrsopteridaceae')) %>%
-    # Remove observations without a species code
-    filter(!is.na(sp)) %>%
+                          'Thyrsopteridaceae') &
+      # Remove observations without a species code
+      !is.na(sp)
+    ) %>%
     # For each individual..
     group_by(treeid) %>%
     # Filter plants with multiple stems
@@ -127,28 +133,41 @@ BCI_clean <- function(BCI_data, spp_table) {
     filter(pom == '1.3' | dfstatus=='dead') %>%
     # Remove individuals that are not alive for at least 2 censuses
     mutate(
-      n_census = length(unique(census[dfstatus=='alive']))) %>%
-    filter(n_census >1) %>%
+      dead_next_census = mortality_in_next_census(dfstatus)) %>%
+    filter(
+      # Only keep alive stems
+      dfstatus=="alive" &
+      #Removes data from most recent survey because survival unknown
+      !is.na(dead_next_census)
+      ) %>%
     mutate(
+      n_census = length(census),
       # First measurement in 1990 ='1990-02-06'
       julian = as.vector(julian(as.Date(exactdate,"%Y-%m-%d"), as.Date("1990-02-06", "%Y-%m-%d"))),
       census_interval = c(NA, diff(julian/365.25)),
       dbh_dt = calculate_growth_rate(dbh, julian),
-      dead_next_census = mortality_in_next_census(dfstatus),
-      dbh_prev = c(NA, drop_last(dbh))) %>%
-    # Only keep alive stems
-    filter(dfstatus=="alive" &
-           census_interval < 8) %>%
-    filter((dbh_dt) < 5 &
-             dbh_dt/(dbh) > -0.25 & 
-             !is.na(census_interval) & 
-             !is.na(dead_next_census)) %>%
+      dbh_prev = c(NA, drop_last(dbh))
+      ) %>%
+    filter(
+          # Some individuals
+          n_census > 1 &
+          # Some individuals skipped a census and therefore have interval much more than 5 years
+          census_interval < 8  &
+          # Remove extreme growth rates
+          dbh_dt < 5 &
+          dbh_dt/(dbh) > -0.25 &
+          # Remove anything where don't have adequate growth from previous period
+          !is.na(census_interval*dbh_dt)
+          ) %>%
+    ungroup() %>%
     group_by(sp) %>%
     mutate(n_ind = length(unique(treeid))) %>%
-    filter(n_ind >=10) %>% # ensures at least 1 individual is in the heldout dataset.
+    # ensures at least 1 individual is in the heldout dataset
+    filter(n_ind >=10) %>%
     ungroup() %>%
     select(sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
            dbh_prev,dbh,dead_next_census)
+
   }
 
 reduce_to_single_ind_obs <- function(data) {
