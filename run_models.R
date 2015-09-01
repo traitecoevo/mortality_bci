@@ -13,26 +13,9 @@ for (s in sources) {
   source(s)
 }
 
-# First download & clean data using:
-make('BCI_model_dataset_full')
 
-# The following code is to run each set of models.
-# The models must be run consecutively as later models 
-# either depend on estimate of previous models (e.g. true dbh estimates)
-# or won't run the full suite of models as some are run in previous runs.
-# Also because these models use mclapply they cannot be run via R or Rstuido's
-# gui reliably. Run these models in R via the terminal.
-
-
-# 1) Estimate dbh measurement error (time: few seconds)
-run_dbh_error_model()
-
-# 2) Estimate true dbh (time: ~ 10 hours)
-run_true_dbh_model()
-
-# After running steps 1 & 2 the following will make 
-# all the datasets used in subsequent analyses
-make()
+# FIRST run make stage 1:
+#make() not functional yet
 
 # NOTE the following models run 100's of chains
 # each taking X hours. These models are best run on a cluster.
