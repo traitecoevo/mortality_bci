@@ -1,20 +1,7 @@
-run_true_dbh_model <- function() {
-  data <-make('BCI_model_dataset_unique')
-  
-  # Extract Sigma from dbh error model
-  if(file.exists('results/true_dbh/true_dbh_model.rds')) {
-    stop("true_dbh_model has already been run")
-  }
-  if (!file.exists('results/dbh_error/dbh_error_model.rds')) {
-    warning('dbh error model must be run first')
-    }
-  else {
-    error_mod <- readRDS('results/dbh_error/dbh_error_model.rds')
-    error_mod@.MISC <- new.env(parent = globalenv())
-  }
-  sigma <- summary(error_mod, 'sigma')$summary
+run_true_dbh_model <- function(data, error_model) {
+
+  sigma <- summary(error_model, 'sigma')$summary
   sigma <- round(sigma[,'mean'],3)
-  
   
   stan_data <- list(
     n_obs = nrow(data),
@@ -79,8 +66,6 @@ run_true_dbh_model <- function() {
               control=list(adapt_delta=0.9,stepsize=0.05),
               refresh=1,
               thin=5)
-
-  create_dirs('results/true_dbh')
-  #fit@.MISC <- emptyenv()
-  saveRDS(fit, 'results/true_dbh/true_dbh_model_full_half_norm.rds')
+  
+  fit
 }
