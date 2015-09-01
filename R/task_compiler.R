@@ -33,8 +33,7 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
 tasks_growth <- function(iter=1000, name = 'growth_comparison') {
   tasks_2_run(iter, 
     name=name, 
-    growth_measure =  c("true_dbh_dt", 
-                        "true_basal_area_dt"),
+    growth_measure =  c("true_dbh_dt","true_basal_area_dt"),
     rho_combo="",
     tasks_run=FALSE)
 }
@@ -49,6 +48,7 @@ tasks_rho_combos <- function(iter=1000, growth_measure, name="rho_combinations",
        rho_combo=rho_combo,
        tasks_run=tasks_run)
 }
+
 
 # Launching growth comparison analysis
 run_growth_comparison <- function(iter=1000) {
