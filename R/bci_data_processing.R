@@ -49,6 +49,14 @@ BCI_load_nomenclature <- function(file){
   data
 }
 
+BCI_load_dbh_error_data <- function(file) {
+data <-  load_rdata(file)
+data$dbh1 <- data$dbh1/10 # convert mm to cm
+data$dbh2 <- data$dbh2/10 # convert mm to cm 
+data$discrep <- data$dbh1 - data$dbh2
+data
+}
+
 #Look up family
 lookup_family <- function(tag, spp_table){
   i <- match(tag, tolower(spp_table[['sp']]))
