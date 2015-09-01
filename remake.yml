@@ -42,7 +42,7 @@ targets:
     cleanup_level: purge
   
   BCI_model_dataset_true_unique:
-    command: add_true_growth(BCI_model_dataset_unique)
+    command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
     cleanup_level: purge
   
   BCI_true_dbh_model:
