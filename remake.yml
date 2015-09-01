@@ -8,13 +8,15 @@ packages:
 sources:
   - R/bci_data_processing.R
   - R/utils.R
+  - R/dbh_error_model.R
+  - R/true_dbh_model.R
 
 targets:
   all:
     depends:
-      - data
+      - export_1
 
-  data:
+  export_1:
     depends:
       - export/bci_data.rds
       - export/bci_data_full.rds
@@ -38,11 +40,25 @@ targets:
   BCI_model_dataset_folds:
     command: split_into_kfolds(BCI_model_dataset_true_unique)
     cleanup_level: purge
-
+  
   BCI_model_dataset_true_unique:
     command: add_true_growth(BCI_model_dataset_unique)
     cleanup_level: purge
-
+  
+  BCI_true_dbh_model:
+    command: run_true_dbh_model(BCI_model_dataset_unique, BCI_dbh_error_model)
+    cleanup_level: never
+    check: exists
+  
+  BCI_dbh_error_model:
+    command: run_dbh_error_model(BCI_dbh_error_data)
+    cleanup_level: never
+    check: exists
+  
+  BCI_dbh_error_data:
+    command: BCI_load_dbh_error_data("data/dbh_error_data.rdata")
+    cleanup_level: purge
+  
   BCI_model_dataset_unique:
     command: reduce_to_single_ind_obs(BCI_model_dataset_full)
     cleanup_level: purge
