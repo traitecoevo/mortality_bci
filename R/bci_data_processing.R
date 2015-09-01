@@ -251,8 +251,7 @@ calculate_growth_rate <- function(x, t, f=function(y) y){
 }
 
 # Add true growth rate estimates to data
-add_true_growth <- function(data) {
-  true_dbh_mod <- readRDS('results/true_dbh/true_dbh_model.rds')
+add_true_growth <- function(data, true_dbh_mod) {
   data$true_dbh1 <- as.vector(get_posterior_mean(true_dbh_mod, 'true_dbh1')[,'mean-all chains'])
   data$true_dbh2 <- as.vector(get_posterior_mean(true_dbh_mod, 'true_dbh2')[,'mean-all chains'])
   data$obs_dbh_dt <- (data$dbh - data$dbh_prev)/data$census_interval
