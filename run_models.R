@@ -17,5 +17,5 @@ for (s in sources) {
 
 
 # Launching growth comparison analysis - need to replace mclapply
-tasks <- tasks_growth(iter = 20, name="growth_comparison")
+tasks <- tasks_growth(iter = 1000, name="growth_comparison")
 ret <- mclapply(df_to_list(tasks), model_compiler, mc.cores = getOption("mc.cores", 2L))
