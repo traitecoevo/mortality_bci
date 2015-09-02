@@ -3,8 +3,8 @@ title: "Wood density and the growth-dependent & independent mortality"
 author: "J S Camac"
 date: "17 August 2015"
 output: pdf_document
-csl: downloads/style.csl
-bibliography: data/refs.bib
+#csl: downloads/style.csl
+#bibliography: data/refs.bib
 ---
 
 # Introduction
@@ -57,19 +57,21 @@ $\widehat{dbh_{i,t-1}}$ was estimated from a lognormal distribution:
 \begin{equation} \label{eq:true dbh1}
 \widehat{dbh_{i,t-1}} \sim \textrm{lognormal}(\mu_{dbh_{i,t-1}}, \sigma_{dbh_{t-1}}), \end{equation}
 
-where, $\mu_{dbh_{t-1}}$ defines the log of the grand mean initial dbh, and $\sigma_{dbh_{t-1}}$ defines that variation around that mean. $\mu_{dbh_{t-1}}$ was estimated using a normal prior $\textrm{N}(0, 2.5)$, which represents our prior expectation that the mean initial dbh would likely occur between 0 and 148 cm. $\sigma_{dbh{t-1}}$ was estimated using a weakly informative half cauchy prior centered on zero and a scale parameter of 2.5.
+where, $\mu_{dbh_{t-1}}$ defines the log of the grand mean initial dbh, and $\sigma_{dbh_{t-1}}$ defines that variation around that mean. $\mu_{dbh_{t-1}}$ was estimated using a normal prior $\text{N}(0, 2.5)$, which represents our prior expectation that the mean initial dbh would likely occur between 0 and 148 cm. $\sigma_{dbh{t-1}}$ was estimated using a weakly informative half cauchy prior centered on zero and a scale parameter of 2.5.
 
 $\widehat{dbh_{i,t}}$ was estimated as:
 
 \begin{equation} \label{eq:true dbh2}
-\widehat{dbh_{i,t-1}} + R_i \, T_i, \end{equation}
+\widehat{dbh_{i,t-1}} + R_i \, T_i, 
+\end{equation}
 
 where, $R_i$ represents the true annual increase in dbh (cm) and $T_i$ represents the number of days between measurements divided by 365.25. We modelled $R_i$ as a random realisation from a half normal distribution centered on zero and a standard deviation of 5, conveying our prior expectation that annual increases in dbh would be between 0 and 10 cm/yr. We used a half normal as it ensures dbh growth cannot be negative. 
 
 \begin{equation} \label{eq:obs dbh increment}
-R_i \sim \textrm{N+}(0, 5). \end{equation}.
+R_i \sim \textrm{N+}(0, 5). 
+\end{equation}
 
-For computational efficiency, we used the posterior means of $\dbh_t-1$, $dbh_t$ to calculate:
+For computational efficiency, we used the posterior means of $dbh_{t-1}$, $dbh_t$ to calculate:
 
 dbh growth rate:  $\frac{\widehat{dbh_{i,t}} - \widehat{dbh_{i,t-1}}}{T_i}$ 
 basal area growth rate: $\frac{(\pi \, 0.25 \,\widehat{dbh_{i,t}}) - (\pi \, 0.25 \, \widehat{dbh_{i,t-1}})}{T_i}$.
@@ -107,11 +109,12 @@ Second, we assume that the three parameters of eq. \ref{eq:lambda} are influence
 
 To account for species strategy and partition variance into explained and unexplained at the observation and species level we modelled $\alpha$, $\beta$ and $\gamma$ via the following submodels:
 \begin{equation} \label{eq:submodels}
-\alpha_s = \alpha_{0,s} \, \rho_s^{\alpha_{1}},
-\beta_s = \beta_{0,s} \, \rho_s^{\alpha_{1}},
-\gamma_s = \gamma_{0,s} \, \rho_s^{\alpha_{1}}.
+\alpha_s = \alpha_{0,s} \, \rho_s^{\alpha_{1}},\\
+\beta_s = \beta_{0,s} \, \rho_s^{\alpha_{1}}, \\
+\gamma_s = \gamma_{0,s} \, \rho_s^{\alpha_{1}}. 
 \end{equation}
-Here $\alpha_{0,s}$,$\beta_{0,s}$,$\gamma_{0,s}$ represents the species-level random effect of species $s$ within which individual $i$ belongs and $\alpha_{1}$,$\beta_{1}$,$\gamma_{1}$ represents the effect of standardised wood density $\rho_s$ on $\alpha$,$\beta$ and $\gamma$, respectively. The form of submodels in eq \ref{eq:submodels} ensures that parameters remain positive. On a log scale these submodels \ref{eq:submodels} become additive (e.g. $\log \alpha_s = \log \alpha_{0,s} + \alpha_{1} \, \log \rho_s$, equivalent to a classic proportional hazards model widely used in survival analysis. We standardised wood density via the transformation: $\rho_s = \rho/0.6$), an operation which is equivalent to centering a log-transformed variable at a density of 0.6 g cm${^-3}$. This was done for easier interpretation, allowing $\alpha_{1,t}$ to be interpreted as the hazard for a species with wood density of 0.6cm${^-3}$ (as opposed to species responses at $\rho$ = 0; an biologically unrealistic state for a woody plant) [@Gelman:2007te].
+
+Here $\alpha_{0,s}$,$\beta_{0,s}$,$\gamma_{0,s}$ represents the species-level random effect of species $s$ within which individual $i$ belongs and $\alpha_{1}$,$\beta_{1}$,$\gamma_{1}$ represents the effect of standardised wood density $\rho_s$ on $\alpha$,$\beta$ and $\gamma$, respectively. The form of submodels in eq \ref{eq:submodels} ensures that parameters remain positive. On a log scale these submodels \ref{eq:submodels} become additive (e.g. $\log \alpha_s = \log \alpha_{0,s} + \alpha_{1} \, \log \rho_s$, equivalent to a classic proportional hazards model widely used in survival analysis. We standardised wood density via the transformation: $\rho_s = \frac{\rho}{0.6}$), an operation which is equivalent to centering a log-transformed variable at a density of 0.6 g cm${^-3}$. This was done for easier interpretation, allowing $\alpha_{1,t}$ to be interpreted as the hazard for a species with wood density of 0.6cm${^-3}$ (as opposed to species responses at $\rho$ = 0; an biologically unrealistic state for a woody plant) [@Gelman:2007te].
 
 The species random effects on each parameter were assumed to be a random realistation from a log-normal distribution:
 \begin{equation} \label{eq:RE_species}
@@ -128,12 +131,11 @@ We estimated $\mu_{\log \alpha_0}$, the average log species effect at zero growt
 
 This distribution was derived from data published by Kobe et al 1995, who estimated the probability of dying at zero growth/2.5 years for juveniles of 10 hardwood species across north-eastern America. Note that these data are also used to define the growth-mortality relationship in SORTIE-ND a spatially explicit forest dynamic model (REF). We converted these probabilities/2.5 years to instantaneous hazard rates by using $\lambda = -\log(1 - Pr(Death))/2.5$, and then log transforming these values and calculating the mean (i.e. -0.61) and standard error (i.e. 0.57). Based on this prior, we assumed that the average probability of death was between 16 and 81% with the central tendency being 42%/yr.
 
-EXAMPLE:
 ```{r}
 # white ash
 median(c(0.999,0.55,0.998))
 # sugar maple
-median(c(0.998, 0.148, 0.999)
+median(c(0.998, 0.148, 0.999))
 # American beech
 median(c(0.014,0.12))
 # Yellow Birch
@@ -160,13 +162,13 @@ mean(log(k))
 sd(log(k))/sqrt(10)
 ```
 
-Similarly, we used prior information from Korning and Balslev et al (1994) to estimate, $\mu_{\log \gamma_0$, the average log species effect on $\gamma$, such that:
+Similarly, we used prior information from Korning and Balslev et al (1994) to estimate, $\mu_{\log \gamma_0}$, the average log species effect on $\gamma$, such that:
 
 \begin{equation} \label{eq:gamma0}
-\mu_{\log \gamma_0 \sim \text{normal}\left(-3.86, 0.2\right).\\
+\mu_{\log \gamma_0} \sim \textrm{N}\left(-3.86, 0.2\right).\\
 \end{equation}
 
-This distribution was estimated the same way as in $\mu_{\log \alpha_0$. That is we converted annual mortality probabilities of 17 tropical lowland tree species in Amazonian Ecuador that encompass the range of forest structure (i.e. understory species, small stemmed midcanopy species, large stemmed midcanopy species and canopy species) to instantaneous hazard rate, and then log transformed these and calculated the mean (i.e. -3.86) and standard error (i.e. 0.2) These annual mortality estimates were averaged over size and growth rates, and as such are likely to be an overestimate of the true value of $\gamma$. However, based on this prior, we assume that the average growth-independent species mortality will be 2.1%/yr with 95% of species growth-independent probabilities of occuring between 1.4% and 3.1%.
+This distribution was estimated the same way as in $\mu_{\log \alpha_0}$. That is we converted annual mortality probabilities of 17 tropical lowland tree species in Amazonian Ecuador that encompass the range of forest structure (i.e. understory species, small stemmed midcanopy species, large stemmed midcanopy species and canopy species) to instantaneous hazard rate, and then log transformed these and calculated the mean (i.e. -3.86) and standard error (i.e. 0.2) These annual mortality estimates were averaged over size and growth rates, and as such are likely to be an overestimate of the true value of $\gamma$. However, based on this prior, we assume that the average growth-independent species mortality will be 2.1%/yr with 95% of species growth-independent probabilities of occuring between 1.4% and 3.1%.
 
 EXAMPLE:
 ```{r}
@@ -175,14 +177,14 @@ k = - log(1-M)/1
 mean(log(k))
 
 # standard error
-sd(log(k))/sqrt(length(M)) 
-```
+sd(log(k))/sqrt(length(M))
 
-As we fitted our model to two growth measures (i.e. dbh growth and basal area growth), we used weak normal priors on $\mu_{\log \beta_0$, the average log species decay rate where:
+```
+As we fitted our model to two growth measures (i.e. dbh growth and basal area growth), we used weak normal priors on $\mu_{\log \beta_0}$, the average log species decay rate where:
 
 
 \begin{equation} \label{eq:beta_0}
-\mu_{\log \beta_0 \sim \text{normal}\left(0, 5\right).\\
+\mu_{\log \beta_0} \sim \text{N}\left(0, 5\right).\\
 \end{equation}
 
 This prior, regardless of growth measure, spans a range such that the decay of the negative exponential can be rapid or is flat, suggesting no effect of growth rate on mortality rates.
@@ -190,14 +192,14 @@ This prior, regardless of growth measure, spans a range such that the decay of t
 
 The effect of wood density on all three parameters (i.e. $\alpha_1$, $\beta_1$ and $\gamma_1$) were given normal priors centered on zero and a standard deviation of 5:
 
-\begin{equation} \label{eq:a2b2c2}
-\alpha_2, \beta_2, \gamma_2 \sim \text{normal}\left(0, 5\right).\\
+\begin{equation} \label{eq:a1b1c1}
+\alpha_1, \beta_1, \gamma_1 \sim \text{N}\left(0, 5\right).\\
 \end{equation}
 
 
 Standard deviations associated with species random effects (i.e. $\sigma_{a0}$, $\sigma_{b0}$, $\sigma_{c0}$), were all sampled from positive half cauchy priors with centered on zero with a scale of 2.5.
 
-\begin{equation} \label{eq:a1b1c1,s}
+\begin{equation} \label{eq:sigma}
 \sigma_{a0},\sigma_{b0},\sigma_{c0} \sim \text{cauchy+}\left(0, 2.5\right).\\
 \end{equation}
 
