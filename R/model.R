@@ -6,9 +6,9 @@ get_model_chunks <- function(tasks) {
   }
 
   list(
-    pars = c("mu_log_a0","sigma_log_a0","a0",if("a" %in% rho_combo) "a2",
-             "mu_log_b0","sigma_log_b0","b0",if("b" %in% rho_combo) "b2",
-             "mu_log_c0","sigma_log_c0","c0",if("c" %in% rho_combo) "c2",
+    pars = c("mu_log_a0","sigma_log_a0","a0",if("a" %in% rho_combo) "a1",
+             "mu_log_b0","sigma_log_b0","b0",if("b" %in% rho_combo) "b1",
+             "mu_log_c0","sigma_log_c0","c0",if("c" %in% rho_combo) "c1",
              "sum_log_lik_fit","sum_log_lik_heldout"),
     parameters = sprintf("
       // Mortality model parameters
@@ -27,9 +27,9 @@ get_model_chunks <- function(tasks) {
       %s
       %s
       %s",
-    ifelse("a" %in% rho_combo, "real a2;", ""),
-    ifelse("b" %in% rho_combo, "real b2;", ""),
-    ifelse("c" %in% rho_combo, "real c2;", "")),
+    ifelse("a" %in% rho_combo, "real a1;", ""),
+    ifelse("b" %in% rho_combo, "real b1;", ""),
+    ifelse("c" %in% rho_combo, "real c1;", "")),
   model = sprintf("
     // Declaring mortality parameters
     real alpha;
@@ -84,12 +84,12 @@ get_model_chunks <- function(tasks) {
     %s
     %s
     %s",
-    ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a2)", ""),
-    ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b2)", ""),
-    ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c2)", ""),
-    ifelse("a" %in% rho_combo, "a2 ~ normal(0,5);", ""),
-    ifelse("b" %in% rho_combo, "b2 ~ normal(0,5);", ""),
-    ifelse("c" %in% rho_combo, "c2 ~ normal(0,5);", "")),
+    ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a1)", ""),
+    ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b1)", ""),
+    ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c1)", ""),
+    ifelse("a" %in% rho_combo, "a1 ~ normal(0,5);", ""),
+    ifelse("b" %in% rho_combo, "b1 ~ normal(0,5);", ""),
+    ifelse("c" %in% rho_combo, "c1 ~ normal(0,5);", "")),
   generated_quantities = sprintf("
     // Declaring fitted parameters
     real a0[n_spp];
@@ -158,11 +158,11 @@ get_model_chunks <- function(tasks) {
       }
       sum_log_lik_heldout <- sum_log_lik_heldout + log_lik_heldout[j];
     }",
-         ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a2)", ""),
-         ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b2)", ""),
-         ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c2)", ""),
-         ifelse("a" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], a2)", ""),
-         ifelse("b" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], b2)", ""),
-         ifelse("c" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], c2)", ""))
+         ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a1)", ""),
+         ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b1)", ""),
+         ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c1)", ""),
+         ifelse("a" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], a1)", ""),
+         ifelse("b" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], b1)", ""),
+         ifelse("c" %in% rho_combo, " * pow(rho_c_heldout[spp_heldout[j]], c1)", ""))
     )
 }
