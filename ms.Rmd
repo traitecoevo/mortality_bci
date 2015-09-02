@@ -64,23 +64,29 @@ $\widehat{dbh_{i,t}}$ was estimated as:
 \begin{equation} \label{eq:true dbh2}
 \widehat{dbh_{i,t-1}} + R_i \, T_i, \end{equation}
 
-where, $R_i$ represents the true annual increase in dbh (cm) and $T_i$ represents the number of days between measurements divided by 365.25. We modelled $R_i$ as a random realisation from a lognormal distribution centered on zero and a standard deviation of 1, conveying our prior expectation that annual increases in dbh would be between 0.13 and 7.4 cm/yr. We used a lognormal as it ensures dbh growth cannot be negative. 
+where, $R_i$ represents the true annual increase in dbh (cm) and $T_i$ represents the number of days between measurements divided by 365.25. We modelled $R_i$ as a random realisation from a half normal distribution centered on zero and a standard deviation of 5, conveying our prior expectation that annual increases in dbh would be between 0 and 10 cm/yr. We used a half normal as it ensures dbh growth cannot be negative. 
 
-We calculated basal area growth rate using: $\frac{(\pi \, 0.25 \,\widehat{dbh_{i,t}}) - (\pi \, 0.25 \, \widehat{dbh_{i,t-1}})}{T_i}$.
+\begin{equation} \label{eq:obs dbh increment}
+R_i \sim \textrm{N+}(0, 5). \end{equation}.
 
-We then calculated the mean posterior growth rate estimate for each individual and used these as our estimates of true dbh growth for the subsequent mortality analysis.
+For computational efficiency, we used the posterior means of $\dbh_t-1$, $dbh_t$ to calculate:
+
+dbh growth rate:  $\frac{\widehat{dbh_{i,t}} - \widehat{dbh_{i,t-1}}}{T_i}$ 
+basal area growth rate: $\frac{(\pi \, 0.25 \,\widehat{dbh_{i,t}}) - (\pi \, 0.25 \, \widehat{dbh_{i,t-1}})}{T_i}$.
+
+These estimates of individual post growth were then used in the subsequent mortality analysis.
 
 
 ## Mortality model description
 
-We extend a common functional form used to model the growth-mortality relationship [e.g. @Kobe:1997vy] to include a growth-independent baseline hazard, such that the functional form becomes
+We extend a common functional form used to model the growth-mortality relationship [e.g. @Kobe:1995] to include a growth-independent baseline hazard, such that the functional form becomes
 \begin{equation} \label{eq:lambda}
 \lambda = \overbrace{\alpha \, \exp\left(-\beta \, G \right)}^{\text{Growth dependent}} + \overbrace{\gamma}^{\text{Growth independent}}
 \end{equation}
 
 By adding $\gamma$ we allow the functional form to asymptote at a mortality rate above zero, which allows for deaths to occur at high growth rates that would otherwise not be accounted for. The advantage of this functional form is that all parameters are biologically interpretable. $\alpha$ represents the intercept and biologically defines the sum of mortality rate at zero growth and baseline hazard. $\beta$ represents the function's decay, or in other words, the sensitivity of mortality rates to change with growth rate. $\gamma$, as stated before, represents asymptote and is referred to as the baseline hazard. $\alpha$ and $\beta$ are intrinsically linked to growth rate, and as such are growth-dependent parameters. By contrast, $\gamma$ accounts for mortality not related to growth caused by stachastic events (e.g. windfall, fire) and consequently is a growth-independent parameter.
 
-To incorporate varability in species mortality rates, we add allowed $\alpha$, $\beta$ and $\gamma$ to vary by wood density - a species trait thought to encapsulate a species growth strategy (REFs). In addition to this, we also allowed the three parameters to vary by species ID and census period, by doing this, we effectively allow the model to partition variation explained by wood density from the residual variation explained by species, census and individual levels [@Gelman:2007te; @Kery:2010tp].
+To incorporate varability in species mortality rates, we add allowed $\alpha$, $\beta$ and $\gamma$ to vary by wood density - a species trait thought to encapsulate a species growth strategy (REFs). In addition to this, we also allowed the three parameters to vary by species ID, by doing this, we effectively allow the model to partition variation explained by wood density from the residual variation explained by species and individual levels [@Gelman:2007te; @Kery:2010tp].
 
 ## Bayesian Hierarchical Model implementation
 
@@ -99,23 +105,28 @@ Our first hypothesis is that the cumulative hazard rate within a census interval
 
 Second, we assume that the three parameters of eq. \ref{eq:lambda} are influenced by 3 factors: wood density, species ID and census year. Because wood density is measured at species-level, its effect is logically a subset of the overall species level effect.
 
-To account for species strategy and partition variance into explained and unexplained at the observation, species and sampling period level we modelled $\alpha$, $\beta$ and $\gamma$ via an equation of the form:
-\begin{equation} \label{eq:alpha}
-\alpha_s = \alpha_{0,s} \, \alpha_{1,t} \, \rho_s^{\alpha_{2}}.
+To account for species strategy and partition variance into explained and unexplained at the observation and species level we modelled $\alpha$, $\beta$ and $\gamma$ via the following submodels:
+\begin{equation} \label{eq:submodels}
+\alpha_s = \alpha_{0,s} \, \rho_s^{\alpha_{1}},
+\beta_s = \beta_{0,s} \, \rho_s^{\alpha_{1}},
+\gamma_s = \gamma_{0,s} \, \rho_s^{\alpha_{1}}.
 \end{equation}
-Here $\alpha_{0,s}$ represents the species-level random effect of species $s$ within which individual $i$ belongs, $\alpha_{1,t}$ represents the sample-level random effect for which time $t$ an individual was sampled, and $\alpha_{2}$ represents the effect of standardised wood density $\rho_s$ on $\alpha_s$. The form of eq \ref{eq:alpha} ensures that parameters remain positive. On a log scale equation \ref{eq:alpha} becomes an additive model,$\log \alpha_s = \log \alpha_{0,s} + \log \alpha_{1,t} + \alpha_{2} \, \log \rho_s$, equivalent to a classic proportional hazards model widely used in survival analysis. We standardised wood density via the transformation: $\rho_s = \rho/0.6$, an operation which is equivalent to centering a log-transformed variable at a density of 0.6 g cm${^-3}$. This was done for easier interpretation, allowing $\alpha_{1,t}$ to be interpreted as the hazard for a species with wood density of 0.6cm${^-3}$ (as opposed to species responses at $\rho$ = 0; an biologically unrealistic state for a woody plant) [@Gelman:2007te].
+Here $\alpha_{0,s}$,$\beta_{0,s}$,$\gamma_{0,s}$ represents the species-level random effect of species $s$ within which individual $i$ belongs and $\alpha_{1}$,$\beta_{1}$,$\gamma_{1}$ represents the effect of standardised wood density $\rho_s$ on $\alpha$,$\beta$ and $\gamma$, respectively. The form of submodels in eq \ref{eq:submodels} ensures that parameters remain positive. On a log scale these submodels \ref{eq:submodels} become additive (e.g. $\log \alpha_s = \log \alpha_{0,s} + \alpha_{1} \, \log \rho_s$, equivalent to a classic proportional hazards model widely used in survival analysis. We standardised wood density via the transformation: $\rho_s = \rho/0.6$), an operation which is equivalent to centering a log-transformed variable at a density of 0.6 g cm${^-3}$. This was done for easier interpretation, allowing $\alpha_{1,t}$ to be interpreted as the hazard for a species with wood density of 0.6cm${^-3}$ (as opposed to species responses at $\rho$ = 0; an biologically unrealistic state for a woody plant) [@Gelman:2007te].
 
-The species and census-level random effects $\alpha_{0,s}, \alpha_{1,t}$ were assumed to follow a log-normal distribution:
-\begin{equation} \label{eq:alpha0_alpha1}
-\alpha_i \sim \text{log-normal}\left(\mu_{\log \alpha_i}, \sigma_{\log \alpha_i}\right),\\
+The species random effects on each parameter were assumed to be a random realistation from a log-normal distribution:
+\begin{equation} \label{eq:RE_species}
+\alpha_{0,s} \sim \text{log-normal}\left(\mu_{\log \alpha_0}, \sigma_{\log \alpha_0}\right),\\
+\beta_{0,s} \sim \text{log-normal}\left(\mu_{\log \beta_0}, \sigma_{\log \beta_0}\right),\\
+\alpha_{0,s} \sim \text{log-normal}\left(\mu_{\log \gamma_0}, \sigma_{\log \gamma_0}\right),\\
 \end{equation}
-where $\mu_{\log \alpha_i},  \sigma_{\log \alpha_i}$ are the mean and standard deviation of log-transformed variables. We estimated $\mu_{\log \alpha_{0,s}}$, the average species effect at zero growth using the following informative prior:
+
+We estimated $\mu_{\log \alpha_0}$, the average log species effect at zero growth using the following informative prior:
 
 \begin{equation} \label{eq:alpha0}
-\mu_{\log \alpha_{0,s}} \sim \text{normal}\left(-0.61, 0.57\right).\\
+\mu_{\log \alpha_{0}} \sim \text{normal}\left(-0.61, 0.57\right).\\
 \end{equation}
 
-This distribution was derived from data presented by Kobe et al 1995, who estimated the probability of dying at zero growth/2.5 years for juveniles of 10 hardwood species across north-eastern America. Note that these data are also used to define the growth-mortality relationship in SORTIE-ND a spatially explicit forest dynamic model (REF). We converted these probabilities to instantaneous hazard rates by using $\lambda = -\log(1 - Pr(Death))/2.5$, and then log transforming these values and calculating the mean (i.e. -0.61) associated standard error (i.e. 0.). Based on this prior, we assumed that the average probability of death for an average species was 42%/yr with 95% of species effects occuring between 16% and 81%.
+This distribution was derived from data published by Kobe et al 1995, who estimated the probability of dying at zero growth/2.5 years for juveniles of 10 hardwood species across north-eastern America. Note that these data are also used to define the growth-mortality relationship in SORTIE-ND a spatially explicit forest dynamic model (REF). We converted these probabilities/2.5 years to instantaneous hazard rates by using $\lambda = -\log(1 - Pr(Death))/2.5$, and then log transforming these values and calculating the mean (i.e. -0.61) and standard error (i.e. 0.57). Based on this prior, we assumed that the average probability of death was between 16 and 81% with the central tendency being 42%/yr.
 
 EXAMPLE:
 ```{r}
@@ -149,13 +160,13 @@ mean(log(k))
 sd(log(k))/sqrt(10)
 ```
 
-Similarly, we used prior information from Korning and Balslev et al (1994) to estimate the average species effect on $\gamma$, the growth-independent hazard rate, such that:
+Similarly, we used prior information from Korning and Balslev et al (1994) to estimate, $\mu_{\log \gamma_0$, the average log species effect on $\gamma$, such that:
 
 \begin{equation} \label{eq:gamma0}
-\mu_{\log \gamma_{0,s}} \sim \text{normal}\left(-3.86, 0.2\right).\\
+\mu_{\log \gamma_0 \sim \text{normal}\left(-3.86, 0.2\right).\\
 \end{equation}
 
-This distribution was estimated the same way as in $\mu_{\log \alpha_{0,s}}$. That is we converted annual mortality probabilities of 17 tropical lowland tree species in Amazonian Ecuador that encompass the range of forest structure (i.e. understory species, small stemmed midcanopy species, large stemmed midcanopy species and canopy species) to instantaneous hazard rate, and then log transformed these and calculated the mean (i.e. -3.86) and standard error (i.e. 0.2) These annual mortality estimates were averaged over size and growth rates, and as such are likely to be an overestimate of the true value of $\gamma$. However, based on this prior, we assume that the average growth-independent species mortality will be 2.1%/yr with 95% of species growth-independent probabilities of occuring between 1.4% and 3.1%.
+This distribution was estimated the same way as in $\mu_{\log \alpha_0$. That is we converted annual mortality probabilities of 17 tropical lowland tree species in Amazonian Ecuador that encompass the range of forest structure (i.e. understory species, small stemmed midcanopy species, large stemmed midcanopy species and canopy species) to instantaneous hazard rate, and then log transformed these and calculated the mean (i.e. -3.86) and standard error (i.e. 0.2) These annual mortality estimates were averaged over size and growth rates, and as such are likely to be an overestimate of the true value of $\gamma$. However, based on this prior, we assume that the average growth-independent species mortality will be 2.1%/yr with 95% of species growth-independent probabilities of occuring between 1.4% and 3.1%.
 
 EXAMPLE:
 ```{r}
@@ -167,35 +178,55 @@ mean(log(k))
 sd(log(k))/sqrt(length(M)) 
 ```
 
-As we are fitting our model to two growth measures, we used weak priors to define the common log-normal distribution for the species effects on $\beta$:
+As we fitted our model to two growth measures (i.e. dbh growth and basal area growth), we used weak normal priors on $\mu_{\log \beta_0$, the average log species decay rate where:
 
 
-\begin{equation} \label{eq:beta_0,s}
-\mu_{\log \beta_{0,s}} \sim \text{lognormal}\left(0, 5\right).\\
+\begin{equation} \label{eq:beta_0}
+\mu_{\log \beta_0 \sim \text{normal}\left(0, 5\right).\\
 \end{equation}
 
 This prior, regardless of growth measure, spans a range such that the decay of the negative exponential can be rapid or is flat, suggesting no effect of growth rate on mortality rates.
 
-The census random effects, $\alpha_1$, $\beta_1$ and $\gamma_1$ were all sampled from lognormal distributions centered on zero with a standard deviations estimated from the data. For example:
 
-\begin{equation} \label{eq:a1b1c1,s}
-\alpha_{1,t} \sim \text{lognormal}\left(0, \sigma_{a1}\right).\\
-\end{equation}
-
-The effect of wood density on all three parameters (i.e. $\alpha_2$, $\beta_2$ and $\gamma_2$) were given normal priors centered on zero and a standard deviation of 5:
+The effect of wood density on all three parameters (i.e. $\alpha_1$, $\beta_1$ and $\gamma_1$) were given normal priors centered on zero and a standard deviation of 5:
 
 \begin{equation} \label{eq:a2b2c2}
 \alpha_2, \beta_2, \gamma_2 \sim \text{normal}\left(0, 5\right).\\
 \end{equation}
 
 
-Standard deviations associated with both species random effects (i.e. $\sigma_{a0}$, $\sigma_{b0}$, $\sigma_{c0}$) and those associated with census random effects (i.e. $\sigma_{a1}$, $\sigma_{b1}$, $\sigma_{c1}$), were all sampled from half cauchy priors with centered on zero with a scale of 2.5.
+Standard deviations associated with species random effects (i.e. $\sigma_{a0}$, $\sigma_{b0}$, $\sigma_{c0}$), were all sampled from positive half cauchy priors with centered on zero with a scale of 2.5.
 
 \begin{equation} \label{eq:a1b1c1,s}
-\sigma_{a0},\sigma_{b0},\sigma_{c0},\sigma_{a1},\sigma_{b1},\sigma_{c1} \sim \text{cauchy+}\left(0, 2.5\right).\\
+\sigma_{a0},\sigma_{b0},\sigma_{c0} \sim \text{cauchy+}\left(0, 2.5\right).\\
 \end{equation}
 
+
+## Cross validation
+
+To implement K-fold cross-validation in Stan we need to repeatedly fit the model to one subset of the data and use it to predict the held-out set. The way we recommend setting this up is to do the partitioning in R (or Python, or whatever data-processing environment is being used) and then pass the training data and held-out data to Stan in two pieces. With linear regression, for example, we start with the Stan model on page 4, passing in the training data as N, y, X and the held-out set as N holdout, y holdout, X holdout, with the data block augmented accordingly. We then keep the data block and model as is, and just alter the generated quantities block to operate on the held-out data.
+
+For a model $M$, training data $D$, and test data $D^*$, we want to calculate
+
+$$p(D^* | D,M) = \int p(\theta | D, M) \, p(D^* | \theta, M) \, d \theta$$
+
+The distribution $p(\theta | D, M)$ gives the likelihood of parameter values $\theta$ given the training data (obtained from fitting the model) and is calculated (via Bayes Rule) as
+
+$$p(\theta | D, M) = \frac{p(\theta) \, p(D|\theta)}{p(D)}.$$
+
+$p(D^* | \theta, M)$ is then the probability of observing the test data given a particular parameter set (i.e the likelihood of the data) and is calculated as
+$$p(D^* | \theta, M) = \prod_i p(D^*_i | \theta, M).$$
+
+Log-likelihoods are easier to deal with and so we have
+
+$$\log p(D^* | \theta, M) = \sum_i \log p(D^*_i | \theta, M).$$
+
+Aki \& Gelman 2014 provide methods for estimating "an importance-sampling approximated LOO directly using the log-likelihood evaluated at the posterior simulations of the parameter values"
+
+
 We fitted these models using package rstan version 2.7 [@StanDevelopmentTeam:2015uz]. Three independent chains were executed and in all cases modelled parameters converged within 1000 iterations. Convergence was assessed through both visual inspection of chains and reference to the Brooks-Gelman-Rubin convergence diagnostic [@Gelman:1992ts; @Brooks:1998ju]. After discarding the first 1000 iterations as ‘burn in’, a further 1000 iterations were taken from the joint posterior. The residuals of the model were checked graphically against predictions with none showing any systematic pattern or severe heteroscedasticity.
+
+
 
 \pagebreak
 
@@ -205,8 +236,6 @@ data {
   int<lower=1> n_obs;
   int<lower=1> n_spp;
   int<lower=1> spp[n_obs];
-  int<lower=1> n_census;
-  int<lower=1> census[n_obs];
   int<lower=0, upper=1> y[n_obs];
   vector[n_obs] census_length;
   vector[n_obs] growth_dt;
@@ -216,7 +245,6 @@ data {
   int<lower=1> n_obs_heldout;
   int<lower=1> n_spp_heldout;
   int<lower=1> spp_heldout[n_obs_heldout];
-  int<lower=1> census_heldout[n_obs_heldout];
   int<lower=0, upper=1> y_heldout[n_obs_heldout];
   vector[n_obs_heldout] census_length_heldout;
   vector[n_obs_heldout] growth_dt_heldout;
@@ -230,26 +258,17 @@ parameters {
   real mu_log_a0;
   real<lower=0> sigma_log_a0;
   
-  real raw_log_a1[n_census];
-  real<lower=0> sigma_log_a1;
-  
   real raw_log_b0[n_spp];
   real mu_log_b0;
   real<lower=0> sigma_log_b0;
-  
-  real raw_log_b1[n_census];
-  real<lower=0> sigma_log_b1;
   
   real raw_log_c0[n_spp];
   real mu_log_c0;
   real<lower=0> sigma_log_c0;
   
-  real raw_log_c1[n_census];
-  real<lower=0> sigma_log_c1;
   
-  real a2;
-  real b2;
-  real c2;
+  
+  
 }
 
 model {
@@ -257,15 +276,12 @@ model {
   // Declaring mortality parameters
   real alpha;
   real a0[n_spp];
-  real a1[n_census];
   
   real beta;
   real b0[n_spp];
-  real b1[n_census];
   
   real gamma;
   real c0[n_spp];
-  real c1[n_census];
   
   real cumulative_hazard;
   
@@ -276,18 +292,11 @@ model {
     c0[s] <- exp(raw_log_c0[s] * sigma_log_c0 + mu_log_c0);
   }
   
-  // Calculating census period random effects
-  for (t in 1:n_census) {
-    a1[t] <- exp(raw_log_a1[t] * sigma_log_a1); // e.g. implies lognormal(0, sigma_log_a1)
-    b1[t] <- exp(raw_log_b1[t] * sigma_log_b1);
-    c1[t] <- exp(raw_log_c1[t] * sigma_log_c1);
-  }
-  
   for (i in 1:n_obs) {
     // Calculating mortality parameters
-    alpha <- a0[spp[i]] * a1[census[i]] * pow(rho_c[spp[i]], a2);
-    beta <- b0[spp[i]] * b1[census[i]] * pow(rho_c[spp[i]], b2);
-    gamma <- c0[spp[i]] * c1[census[i]] * pow(rho_c[spp[i]], c2);
+    alpha <- a0[spp[i]]; 
+    beta <- b0[spp[i]]; 
+    gamma <- c0[spp[i]];
     
     // Likelihood for hazard model
     cumulative_hazard <- -census_length[i] * (alpha * exp(-beta * growth_dt[i]) + gamma);
@@ -303,7 +312,7 @@ model {
   
   //Mortality model priors
   raw_log_a0 ~ normal(0,1);
-  mu_log_a0 ~ normal(-0.87, 0.75);
+  mu_log_a0 ~ normal(-0.61, 0.57);
   sigma_log_a0 ~ cauchy(0, 2.5);
   
   raw_log_b0 ~ normal(0, 1);
@@ -311,38 +320,25 @@ model {
   sigma_log_b0 ~ cauchy(0, 2.5);
   
   raw_log_c0 ~ normal(0, 1);
-  mu_log_c0 ~ normal(-4.43, 1);
+  mu_log_c0 ~ normal(-3.86, 0.2);
   sigma_log_c0 ~ cauchy(0, 2.5);
   
-  raw_log_a1 ~ normal(0,1);
-  sigma_log_a1 ~ cauchy(0, 2.5);
   
-  raw_log_b1 ~ normal(0, 1);
-  sigma_log_b1 ~ cauchy(0, 2.5);
   
-  raw_log_c1 ~ normal(0, 1);
-  sigma_log_c1 ~ cauchy(0, 2.5);
   
-  a2 ~ normal(0,5);
-  b2 ~ normal(0,5);
-  c2 ~ normal(0,5);
 }
 
 generated quantities {
   
   // Declaring fitted parameters
   real a0[n_spp];
-  real a1[n_census];
-  
   real b0[n_spp];
-  real b1[n_census];
-  
   real c0[n_spp];
-  real c1[n_census];
   
   real alpha_fit;
   real beta_fit;
   real gamma_fit;
+  
   real cumulative_hazard_fit;
   real log_lik_fit;
   real sum_log_lik_fit;
@@ -351,6 +347,7 @@ generated quantities {
   real alpha_heldout;
   real beta_heldout;
   real gamma_heldout;
+  
   real cumulative_hazard_heldout;
   real log_lik_heldout[n_obs_heldout];
   real sum_log_lik_heldout;
@@ -366,18 +363,12 @@ generated quantities {
     c0[s] <- exp(raw_log_c0[s] * sigma_log_c0 + mu_log_c0);
   }
   
-  // recalulate species random effects
-  for (t in 1:n_census) {
-    a1[t] <- exp(raw_log_a1[t] * sigma_log_a1);
-    b1[t] <- exp(raw_log_b1[t] * sigma_log_b1);
-    c1[t] <- exp(raw_log_c1[t] * sigma_log_c1);
-  }
   
   // log likelihood for fitted model
   for (i in 1:n_obs) {
-    alpha_fit <- a0[spp[i]] * a1[census[i]] * pow(rho_c[spp[i]], a2);
-    beta_fit <- b0[spp[i]] * b1[census[i]] * pow(rho_c[spp[i]], b2);
-    gamma_fit <- c0[spp[i]] * c1[census[i]] * pow(rho_c[spp[i]], c2);
+    alpha_fit <- a0[spp[i]]; 
+    beta_fit <- b0[spp[i]]; 
+    gamma_fit <- c0[spp[i]];
     
     cumulative_hazard_fit <- -census_length[i] * (alpha_fit * exp(-beta_fit * growth_dt[i]) + gamma_fit);
     
@@ -392,9 +383,9 @@ generated quantities {
   
   // log likelihood for held out data
   for (j in 1:n_obs_heldout) {
-    alpha_heldout <- a0[spp_heldout[j]] * a1[census_heldout[j]] * pow(rho_c_heldout[spp_heldout[j]], a2);
-    beta_heldout <- b0[spp_heldout[j]] * b1[census_heldout[j]] * pow(rho_c_heldout[spp_heldout[j]], b2);
-    gamma_heldout <- c0[spp_heldout[j]] * c1[census_heldout[j]] * pow(rho_c_heldout[spp_heldout[j]], c2);
+    alpha_heldout <- a0[spp_heldout[j]]; 
+    beta_heldout <- b0[spp_heldout[j]]; 
+    gamma_heldout <- c0[spp_heldout[j]];
     
     cumulative_hazard_heldout <- -census_length_heldout[j] * (alpha_heldout * exp(-beta_heldout * growth_dt_heldout[j]) + gamma_heldout);
     
@@ -406,7 +397,7 @@ generated quantities {
     }
     sum_log_lik_heldout <- sum_log_lik_heldout + log_lik_heldout[j];
   }
-}
+} 
 ```
 
 
@@ -435,30 +426,7 @@ Step 4 - based on 3, choose some subsets of models, compare these using both bay
 
 \pagebreak
 
-## Cross validation
 
-We will implement *K-fold cross validation*.
-
-According to [Vehtari & Gelman 2014](http://www.stat.columbia.edu/~gelman/research/unpublished/waic_stan.pdf):
-
-  To implement K-fold cross-validation in Stan we need to repeatedly fit the model to one subset of the data and use it to predict the held-out set. The way we recommend setting this up is to do the partitioning in R (or Python, or whatever data-processing environment is being used) and then pass the training data and held-out data to Stan in two pieces. With linear regression, for example, we start with the Stan model on page 4, passing in the training data as N, y, X and the held-out set as N holdout, y holdout, X holdout, with the data block augmented accordingly. We then keep the data block and model as is, and just alter the generated quantities block to operate on the held-out data.
-
-For a model $M$, training data $D$, and test data $D^*$, we want to calculate
-
-$$p(D^* | D,M) = \int p(\theta | D, M) \, p(D^* | \theta, M) \, d \theta$$
-
-The distribution $p(\theta | D, M)$ gives the likelihood of parameter values $\theta$ given the training data (obtained from fitting the model) and is calculated (via Bayes Rule) as
-
-$$p(\theta | D, M) = \frac{p(\theta) \, p(D|\theta)}{p(D)}.$$
-
-$p(D^* | \theta, M)$ is then the probability of observing the test data given a particular parameter set (i.e the likelihood of the data) and is calculated as
-$$p(D^* | \theta, M) = \prod_i p(D^*_i | \theta, M).$$
-
-Log-likelihoods are easier to deal with and so we have
-
-$$\log p(D^* | \theta, M) = \sum_i \log p(D^*_i | \theta, M).$$
-
-Aki \& Gelman 2014 provide methods for estimating "an importance-sampling approximated LOO directly using the log-likelihood evaluated at the posterior simulations of the parameter values"
 
 
 \pagebreak
