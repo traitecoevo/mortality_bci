@@ -1,3 +1,4 @@
+
 #Compile chains for each growth measure either for each model or across kfolds
 compile_growth_model_fits <- function(subset_growth=NULL, pool_kfolds = FALSE) {
   if(any(!subset_growth %in% c('dbh_dt','dbh_dt_rel','basal_area_dt', 'basal_area_dt_rel'))) {
@@ -228,4 +229,18 @@ plot_compare_rho_mortality <- function(subset_growth ='dbh_dt', xlab = 'dbh dt',
              bty = 'n', col=c('darkred', 'blue'), lty=c(1,2), lwd=2)
     }
   }
+}
+
+plot_obs_v_pred_growth <- function(data) {
+  png('figure/observed_v_pred_growth.png', width=1000,height=1000,pointsize=20)
+  par(mfrow=c(2,2), mar=c(4,4,0.5,0.5))
+  plot(data$dbh_prev ~ data$true_dbh1, xlab = 'Predicted initial dbh', ylab ='Observed initial dbh')
+  abline(0,1)
+  plot(data$dbh ~ data$true_dbh2, xlab = 'Predicted final dbh', ylab ='Observed final dbh')
+  abline(0,1)
+  plot(data$obs_dbh_dt ~ data$true_dbh_dt, xlab = 'Predicted dbh growth rate', ylab ='Observed dbh growth rate')
+  abline(0,1)
+  plot(data$obs_basal_area_dt ~ data$true_basal_area_dt, xlab = 'Predicted basal area growth rate', ylab ='Observed basal area growth rate')
+  abline(0,1)
+  dev.off()
 }
