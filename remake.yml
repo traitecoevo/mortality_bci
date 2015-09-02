@@ -17,6 +17,7 @@ targets:
     depends:
       - export/bci_data.rds
       - export/bci_data_full.rds
+      - figure/plot_obs_v_pred
 
   # Watch out; this one is a bit evil; it also creates sub filenames:
   #   export/bci_data_1.rds ... export_bci_data_10.rds
@@ -37,6 +38,12 @@ targets:
   BCI_model_dataset_folds:
     command: split_into_kfolds(BCI_model_dataset_true_unique)
     cleanup_level: purge
+    
+  figure/plot_obs_v_pred:
+    command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
+    cleanup_level: purge
+    check: exists
+
 
   BCI_model_dataset_true_unique:
     command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
