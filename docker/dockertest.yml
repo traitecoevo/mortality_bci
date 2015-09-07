@@ -15,14 +15,9 @@ names:
 modules:
   - remake
   - rrqueue
-  - rstan
 
 r_packages:
-  - dplyr
-  - RCurl
-  - downloader
-  - rmarkdown
-  - plyr
+  - rstan
 
 r_github_packages:
   - traitecoevo/rrqueue
