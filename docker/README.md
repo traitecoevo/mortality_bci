@@ -16,9 +16,9 @@ Multiple docker containers can be made. Details on how to do this are available 
 Building this docker image takes a lot of memory, primarily because it must install `rstan`. As such, we allow 3GB for compilation.  Using terminal and the Docker command `docker-machine` we can create a new Docker container called `mem3GB`
 
 ```
-docker-machine create --softlayer-memory "3000" --driver virtualbox mem3GB
+docker-machine create --virtualbox-memory "3000" --driver virtualbox mem3GB
 ```
-The `--softlayer-memory "3000"` just tells Docker to allow 3GB of memory for compilation.
+The ` --virtualbox-memory "3000"` just tells Docker to allow 3GB of memory for compilation.
 
 
 To connect to this then run
