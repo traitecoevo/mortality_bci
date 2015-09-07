@@ -2,7 +2,7 @@
 # To do this run remake::('export_1')
 # Note this will take approximately 10 hours as it needs to estimate true growth for every observation in the dataset.
 
-packages <- c("plyr","parallel","remake","rstan")
+packages <- c("rstan")
 sources <- c("R/model.R",
              "R/task_compiler.R",
              "R/stan_functions.R",
@@ -18,4 +18,4 @@ for (s in sources) {
 
 # Launching growth comparison analysis - need to replace mclapply
 tasks <- tasks_growth(iter = 1000, name="growth_comparison")
-ret <- mclapply(df_to_list(tasks), model_compiler, mc.cores = getOption("mc.cores", 2L))
+ret <- parallel::mclapply(df_to_list(tasks), model_compiler, mc.cores = getOption("mc.cores", 2L))

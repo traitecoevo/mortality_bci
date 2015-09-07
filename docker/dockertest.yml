@@ -6,6 +6,9 @@ keep_git: true
 # Use non broken versions of apt sources
 apt_unstable: true
 
+apt_packages:
+  - gfortran
+
 names:
   test: traitecoevo/mortality_bci
 
@@ -20,5 +23,6 @@ r_packages:
   - downloader
   - rmarkdown
   - plyr
+
 r_github_packages:
   - traitecoevo/rrqueue

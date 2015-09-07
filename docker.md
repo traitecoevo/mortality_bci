@@ -28,7 +28,7 @@ Then within that session, start working, in R, create the queue controller:
 
 ```r
 library(rrqueue)
-packages <- c("rstan","plyr","parallel")
+packages <- c("rstan")
 sources <- c("R/model.R",
              "R/task_compiler.R",
              "R/stan_functions.R",

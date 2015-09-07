@@ -15,7 +15,7 @@ Rscript -e 'dockertest::build()'
 or pull the image image from docker hub:
 
 ```sh
-docker pull richfitz/mortality_bci:latest
+docker pull traitecoevo/mortality_bci:latest
 ```
 
 Building the image will clone the source into `self`, but if it's out of date, this will refresh it
@@ -84,7 +84,7 @@ docker-compose rm --force worker
 
 ## Building notes
 
-Building the docker image takes a lot of memory, thanks to `rstan`; allow at least 3GB for compilation to succeed.  Under `boot2docker` that can be done by editing the machine setttings in the VirtualBox manager (Cmd-S and adjust the slider under System) or by running
+Building the docker image takes a lot of memory, thanks to `rstan`; allow at least 3GB for compilation to succeed.  Under `boot2docker` that can be done by editing the machine settings in the VirtualBox manager (Cmd-S and adjust the slider under System) or by running
 
 ```
 VBoxManage modifyvm boot2docker-vm --memory 3000
@@ -92,7 +92,7 @@ VBoxManage modifyvm boot2docker-vm --memory 3000
 
 (you'll need to restart `boot2docker` for the changes to take effect.)
 
-We autogenerate the Dockerfile using [dockertest](https://github.com/richfitz/dockertest); the main configuration file is `docker/dockertest.yml`, which is declarative rather than a list of instructions.
+We auto generate the Dockerfile using [dockertest](https://github.com/traitecoevo/dockertest); the main configuration file is `docker/dockertest.yml`, which is declarative rather than a list of instructions.
 
 To build the image, run
 
@@ -100,10 +100,10 @@ To build the image, run
 dockertest::build()
 ```
 
-which can take a while.  This builds the image `richfitz/mortality_bci` which we also push to dockerhub so that
+which can take a while.  This builds the image `traitecoevo/mortality_bci` which we also push to dockerhub so that
 
 ```
-docker pull richfitz/mortality_bci:latest
+docker pull traitecoevo/mortality_bci:latest
 ```
 
 should also work.

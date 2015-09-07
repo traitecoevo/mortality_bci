@@ -1,3 +1,4 @@
 #!/bin/bash
 set -e
-docker run -v /home/rich/Documents/Projects/veg/mortality_bci:/src -it traitecoevo/mortality_bci $*
+$(boot2docker shellinit 2> /dev/null)
+docker run -v /Users/dfalster/Dropbox/_research/SIEF/mortality_bci:/src -it traitecoevo/mortality_bci $*

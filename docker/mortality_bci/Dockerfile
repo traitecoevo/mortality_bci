@@ -4,6 +4,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends -t unstable \
     ca-certificates \
     curl \
+    gfortran \
     git \
     libcurl4-openssl-dev \
     libhiredis-dev \
