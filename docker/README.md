@@ -1,22 +1,27 @@
 # Using docker
 
-Goal here is run analysis in docker containers. Docker is ....
+Goal here is run our mortality analysis in docker containers. Docker containers wrap up a piece of software in a complete filesystem that contains everything it needs to run: code, runtime, system tools, system libraries – anything you can install on a server. This guarantees that it will always run the same, regardless of the environment it is running in.
 
 ## Installing and setting up docker
 
-You'll need to have docker installed. On OSX we use docker-machine, which can be installed ..... Docker-machine also available for Windows on Linux (???).
+First you'll need to install docker. Docker can be installed on OSX, Windows and Linux. A comprehensive guide can be found [here](http://docs.docker.com/mac/started/).
+
+Once installed, Docker can be opened either via `Docker Quickstart Terminal` found in the docker folder in the applications folder, or accessed directly via the terminal using `docker-machine` followed by Docker commands.
+
+Multiple docker containers can be made. Details on how to do this are available [here](https://docs.docker.com/installation/mac/).
 
 
+## Building / retrieving the `traitecoevo/mortality_bci` docker container
 
-## Building / retrieving the docker containers
-
-Building the docker image takes a lot of memory, thanks to `rstan`; allow at least 3GB for compilation to succeed.  Under `docker-machine` that can be done by creating a new `mem3GB` machine
+Building this docker image takes a lot of memory, primarily because it must install `rstan`. As such, we allow 3GB for compilation.  Using terminal and the Docker command `docker-machine` we can create a new Docker container called `mem3GB`
 
 ```
 docker-machine create --softlayer-memory "3000" --driver virtualbox mem3GB
 ```
+The `--softlayer-memory "3000"` just tells Docker to allow 3GB of memory for compilation.
 
-To use this machine then run
+
+To connect to this then run
 
 ```
 eval "$(docker-machine env mem3GB)"
@@ -27,7 +32,7 @@ We auto generate the Dockerfile using [dockertest](https://github.com/traitecoev
 To build the image, open up a terminal window in the `docker` folder, make sure docker is running, and then run
 
 ```
-Rscript -e 'dockertest::build()'
+Rscript -e 'dockertest::build()' *DOES NOT WORK AS RELIES ON BOOT2DOCKER which is now superceded by docker-machine*
 ```
 
 This builds the image `traitecoevo/mortality_bci`. The build can take a while, so we have pushed a pre-built image to dockerhub, which you can retrieve  using
@@ -51,7 +56,13 @@ clone_or_pull ../ self
 
 Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` image (see previous section).
 
-Then start a container running Redis:
+Then move to parent directory `mortality_bci`:
+
+```
+cd ../
+```
+
+and start a container running Redis:
 
 ```
 docker run --name mortality_bci_redis -d redis
@@ -59,7 +70,18 @@ docker run --name mortality_bci_redis -d redis
 (if you have previously started need to either delete container first using
 `docker rm mortality_bci_redis`)
 
-Start some worker containers listening on queue `rrq` (for now not running in daemon mode, though not actually interactive either; we'll do this with compose or something else later)
+or ?????????
+
+Open up a new terminal tab or window and navigate to `mortality_bci`
+
+install rrqueue
+```
+install.packages(c("RcppRedis", "R6", "digest", "docopt"))
+devtools::install_github(c("gaborcsardi/crayon", "ropensci/RedisAPI", "richfitz/RedisHeartbeat", "richfitz/storr")) # note I had an error with installing RedisHeartbeat
+devtools::install_git("https://github.com/traitecoevo/rrqueue")
+```
+
+Then start some worker containers listening on queue `rrq` (for now not running in daemon mode, though not actually interactive either; we'll do this with compose or something else later)
 
 ```
 docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
@@ -88,7 +110,7 @@ And then start some jobs:
 ```r
 tasks <- tasks_growth(iter = 10) # Set to 20 for testing, set to 1000 for actual deployment
 create_dirs(unique(dirname(tasks$filename)))
-enqueue_bulk(tasks, model_compiler, obj)
+enqueue_bulk(tasks, model_compiler, obj) # This will compile each model but won't go any further due to exhausting virtual memory issues.
 ```
 
 ## Running the analysis in multiple containers via docker-compose
