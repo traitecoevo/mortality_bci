@@ -11,6 +11,7 @@ To build the image:
 ```sh
 Rscript -e 'dockertest::build()'
 ```
+(make sure to check build notes below first)
 
 or pull the image image from docker hub:
 
@@ -39,8 +40,8 @@ docker-compose scale redis=1 worker=4
 In another terminal, launch the controller (this part is the biggest pain)
 ```
 . ./helpers.sh
-boot2docker_init
-docker run --link docker_redis_1:redis -v ${PWD}/self:/root/mortality_bci -it richfitz/mortality_bci:latest R
+docker_machine_init
+docker run --link docker_redis_1:redis -v ${PWD}/self:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
 ```
 
 Then, in this container (which is running `R`) test the system
@@ -84,13 +85,18 @@ docker-compose rm --force worker
 
 ## Building notes
 
-Building the docker image takes a lot of memory, thanks to `rstan`; allow at least 3GB for compilation to succeed.  Under `boot2docker` that can be done by editing the machine settings in the VirtualBox manager (Cmd-S and adjust the slider under System) or by running
+
+Building the docker image takes a lot of memory, thanks to `rstan`; allow at least 3GB for compilation to succeed.  Under `docker-machine` that can be done by creating a new `mem3GB` machine
 
 ```
-VBoxManage modifyvm boot2docker-vm --memory 3000
+docker-machine create --softlayer-memory "3000" --driver virtualbox mem3GB
 ```
 
-(you'll need to restart `boot2docker` for the changes to take effect.)
+To use this machine then run
+
+```
+eval "$(docker-machine env mem3GB)"
+```
 
 We auto generate the Dockerfile using [dockertest](https://github.com/traitecoevo/dockertest); the main configuration file is `docker/dockertest.yml`, which is declarative rather than a list of instructions.
 

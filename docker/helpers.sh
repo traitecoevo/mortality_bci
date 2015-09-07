@@ -10,10 +10,10 @@ function clone_or_pull {
     fi
 }
 
-function boot2docker_init {
+function docker_machine_init {
     if [ `uname` == "Darwin" ]; then
         if [ -z $DOCKER_HOST ]; then
-            $(boot2docker shellinit 2>/dev/null)
+            eval "$(docker-machine env default)"
         fi
     fi
 }
