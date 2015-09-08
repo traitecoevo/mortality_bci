@@ -10,54 +10,65 @@ Once installed, Docker can be opened either via `Docker Quickstart Terminal` fou
 
 **Note** Multiple docker containers can be made. Details on how to do this are available [here](https://docs.docker.com/installation/mac/).
 
-
 ## Building/retrieving the `traitecoevo/mortality_bci` Docker container
-First install the following Rpackages:
+
+Not all of this is strictly necessary, and it depends how you want to interact with the system.
+
+* To build the docker image you will need the [`dockertest`](https://github.com/traitecoevo/dockertest) package
+* To connect to the image or interact with the queuing system from the host you will need the [`rrqueue`](https://github.com/traitecoevo/rrqueue) packages.
+
+These have a set of dependencies that are not on CRAN, and the simplest way to install is via our [`drat`](https://github.com/traitecoevo/drat) repository (`drat` itself can be installed with `install.packages("drat")`)
+
 ```
-install.packages(c("RcppRedis", "R6", "digest", "docopt"))
-devtools::install_github("traitecoevo/dockertest", ref="18-docker-machine") # Remove ref once changes are merged
-devtools::install_github(c("gaborcsardi/crayon", "ropensci/RedisAPI", "richfitz/storr","traitecoevo/rrqueue"))
+drat:::add("traitecoevo")
+install.packages(c("rrqueue", "dockertest"))
 ```
 
-Building the docker image requires a lot of memory because it must compile and install `rstan`. As such, the container require 6GB for compilation. Using the terminal and the Docker command `docker-machine` we create a new Docker container with 6GB of virtual memory called `mem6GB`
+Note that on Linux, some dependencies of these packages will require headers for curl (e.g., `libcurl4-openssl-dev`) and hiredis (e.g., libhiredis-dev).
+
+Alternatively, to install directly from github:
+
+```
+devtools::install_github(c("traitecoevo/dockertest@18-docker-machine" "ropensci/RedisAPI", "richfitz/storr", "traitecoevo/rrqueue"))
+```
+
+Building the docker image requires a lot of memory because it must compile and install `rstan`.  On Windows/OSX, the default virtual box is not big enough, and you will need to create a virtual machine with more memory
+
+As such, the container require 6GB for compilation. Using the terminal and the Docker command `docker-machine` we create a new Docker container with 6GB of virtual memory called `mem6GB`
 
 ```
 docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
 ```
 
-(`--virtualbox-memory "6000"` sets how much virtual memory is available to the docker container.)
-
-
-Connect to the docker container by entering the following into the terminal:
-```
-eval "$(docker-machine env mem6GB)"
-```
+(`--virtualbox-memory "6000"` sets how much virtual memory is available to the virtual machine.)
 
 We auto generate the Dockerfile using [dockertest](https://github.com/traitecoevo/dockertest); the main configuration file is `docker/dockertest.yml`, which is declarative rather than a list of instructions.
-
 
 To build the `traitecoevo/mortality_bci` docker container from the terminal first move into the folder `mortality_bci/docker` and then run:
 
 ```
-Rscript -e 'dockertest::build(machine="mem6GB")'
+./dockertest build --machine mem6GB
 ```
 
+which will arrange connecting to your new, larger VM and build the image.
+
 The build can take a while, so we have pushed a pre-built image to dockerhub, which you can retrieve via the terminal using:
+
 ```
 docker pull traitecoevo/mortality_bci:latest
 ```
+
 (**Note** To push a docker container run `docker login`, then ` docker push traitecoevo/mortality_bci`.)
 
 Below we setup 'workers' and a 'controller' using this image, but the workers run `rrqueue_worker_tee` rather than an interactive R session.
 
 Building the image will also clone the source into the folder `self`, but if it's out of date, it will refresh it
 
-
 ## Running the mortality analysis in docker containers
 
 Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` container (see previous section).
 
-Then move your working directory from `mortality_bci/docker` to the parent directory `mortality_bci`. And if you're starting in a new terminal, don't forget to set path variables:
+Then move your working directory from `mortality_bci/docker` back to the parent directory `mortality_bci`. And if you're starting in a new terminal, don't forget to set path variables:
 
 ```
 eval "$(docker-machine env mem6GB)"
@@ -71,8 +82,19 @@ First, we start a container running Redis - this will sit in the background and 
 docker run --name mortality_bci_redis -d redis
 ```
 
-**Note** if you have previously started redis, you'll need to do the following:
+The `-d` flag runs Redis in *daemon* mode (i.e., in the background).
+
+We name the container (`--name mortality_bci_redis`) so that we can *link* it to other containers.
+
+**Note** if you have previously started redis, you'll get an error with the previous command that looks like:
+
 ```
+Error response from daemon: Conflict. The name "mortality_bci_redis" is already in use by container 0e246cf9734d. You have to delete (or rename) that container to be able to reuse that name.
+```
+
+and will need to do the following:
+```
+
 docker stop mortality_bci_redis
 docker rm mortality_bci_redis
 docker run --name mortality_bci_redis -d redis
@@ -81,8 +103,17 @@ docker run --name mortality_bci_redis -d redis
 Second, we start a container we'll call 'controller' from which we can create and queue jobs _from_. First laucnh the container and start R:
 
 ```
-docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
 ```
+
+The components of this command are:
+
+* `--rm` - remove the container once we're done
+* `--link mortality_bci_redis:redis` - the `mortality_bci_redis` container (started above) will be available in this container with the name `redis`; i.e., Redis will appear to be running on `redis:6379`
+* `-v ${PWD}:/root/mortality_bci` - this maps the current working directory on the host machine to `/root/mortality_bci` in the container, which is the working directory for this container
+* `-it` launches in interactive mode, which allows Ctrl-C to enable killing the worker process
+* `traitecoevo/mortality_bci:latest` is the image created above
+* `R` run R rather than `bash`, which is the default for this image.
 
 Then in R, add the jobs:
 
@@ -95,15 +126,29 @@ sources <- c("R/model.R",
              "R/utils.R")
 obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 
-tasks <- tasks_growth(iter = 10) # Set to 20 for testing, set to 1000 for actual deployment
+tasks <- tasks_growth(iter = 10) # Set to 10 for testing, set to 1000 for actual deployment
 create_dirs(unique(dirname(tasks$filename)))
-enqueue_bulk(tasks, model_compiler, obj)
+res <- enqueue_bulk(tasks, model_compiler, obj)
 ```
 
-Third, we create workers that ask for, and then undertake, jobs from the controller. We:
+Things to note here:
+
+* `redis_host="redis"` points the queue at Redis running on the machine "redis", which is the name of the linked container
+* The queue name is `rrq` but tou can use whatever you fancy.
+
+Which will display a progress bad with a spinner on the right hand side.
+
+Third, we create workers that ask for, and then undertake, jobs from the controller.  Because the controller is still running (it actually does not ned to be), you'll need to open a new terminal window, also in the project root.
+
 ```
 eval "$(docker-machine env mem6GB)"
-docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
 ```
-If you want to run multiple workers, open up more terminal tabs/windows and run the above code. (Currently we can only run 2 workers because the jobs require a lot of memory, due to compiling C++ code and rstan being a memory hungry monster).
 
+The arguments here are identical to the controller above, except for the command to run within the container:
+
+* `rrqueue_worker --redis-host redis rrq`
+
+The `rrqueue_worker` command is built into `rrqueue` and creates a worker, looking for Redis on the host "redis" (which is the linked container) and reading jobs from the queue "rrq" (which is what the controller added jobs to above).
+
+If you want to run multiple workers, open up more terminal tabs/windows and run the above code. (Currently we can only run 2 workers because the jobs require a lot of memory, due to compiling C++ code and rstan being a memory hungry monster).
