@@ -5,6 +5,8 @@ deps_only: true
 keep_git: true
 # Use non broken versions of apt sources
 apt_unstable: true
+# Don't clone into self; we'll do it live
+inplace: true
 
 apt_packages:
   - gfortran
