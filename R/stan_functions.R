@@ -2,21 +2,28 @@ create_dirs <- function(task_list) {
   tmp <- lapply(task_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
 }
 
-model_compiler <- function(tasks) {
-  data <- readRDS(tasks$fold_data)
+model_compiler <- function(task) {
+  data <- readRDS(task$fold_data)
   
   ## Assemble the stan model:
-  chunks <- get_model_chunks(tasks)
-  model <- make_stan_model(chunks, growth_measure = tasks$growth_measure)
-  
+  chunks <- get_model_chunks(task)
+  model <- make_stan_model(chunks, growth_measure = task$growth_measure)
+
+  ## Bit if a Rube Goldberg machine here as I'm avoiding assuming that
+  ## this will always have been done, but possibly it would be neater
+  ## to require it.
+  filename <- precompile(task)
+  message("Loading precompiled model")
+  model$fit <- readRDS(filename)
+
   ## Actually run the model
   res <- run_single_stan_chain(model, data,
-                               chain_id=tasks$chain,
-                               iter=tasks$iter)
+                               chain_id=task$chain,
+                               iter=task$iter)
   
   ## The model output is large so instead of returning it we'll just
   ## dump into a file.
-  saveRDS(res, tasks$filename)
+  saveRDS(res, task$filename)
 }
 
 combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
@@ -28,6 +35,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
   
   data_for_stan <- prep_data_for_stan(data, model$growth_measure)
   stan(model_code = model$model_code,
+       fit = model$fit,
        data = data_for_stan,
        pars = model$pars,
        iter = iter,
@@ -95,4 +103,28 @@ make_stan_model <- function(chunks, growth_measure) {
         %s
       }", chunks$parameters, chunks$model, chunks$generated_quantities)
   )
+}
+
+precompile <- function(task) {
+  path <- "models"
+  chunks <- get_model_chunks(task)
+  model <- make_stan_model(chunks, growth_measure = task$growth_measure)
+  sig <- digest::digest(model)
+  fmt <- "%s/%s.%s"
+  dir.create(path, FALSE, TRUE)
+  filename_stan <- sprintf(fmt, path, sig, "stan")
+  filename_rds  <- sprintf(fmt, path, sig, "rds")
+  if (!file.exists(filename_rds)) {
+    message("Compiling model: ", sig)
+    writeLines(model$model_code, filename_stan)
+    res <- stan(filename_stan, iter=0L)
+    message("Ignore the previous error, everything is OK")
+    saveRDS(res, filename_rds)
+    message("Finished model: ", sig)
+  }
+  filename_rds
+}
+
+precompile_tasks <- function(tasks) {
+  invisible(vapply(df_to_list(tasks), precompile, character(1)))
 }

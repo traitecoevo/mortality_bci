@@ -128,6 +128,10 @@ obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 
 tasks <- tasks_growth(iter = 10) # Set to 10 for testing, set to 1000 for actual deployment
 create_dirs(unique(dirname(tasks$filename)))
+
+# precompile all the models (takes a little while)
+precompile_tasks(tasks)
+
 res <- enqueue_bulk(tasks, model_compiler, obj)
 ```
 
@@ -137,6 +141,8 @@ Things to note here:
 * The queue name is `rrq` but tou can use whatever you fancy.
 
 Which will display a progress bad with a spinner on the right hand side.
+
+The precompilation is a bit tricky: it will persist to disk, but will only reliably work on when loaded from the docker container.
 
 Third, we create workers that ask for, and then undertake, jobs from the controller.  Because the controller is still running (it actually does not ned to be), you'll need to open a new terminal window, also in the project root.
 
