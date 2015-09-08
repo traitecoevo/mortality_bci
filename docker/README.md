@@ -4,96 +4,76 @@ Goal here is run our mortality analysis in docker containers. Docker containers 
 
 ## Installing and setting up docker
 
-First you'll need to install docker. Docker can be installed on OSX, Windows and Linux. A comprehensive guide can be found [here](http://docs.docker.com/mac/started/).
+First install docker. Docker can be installed on OSX, Windows and Linux. A comprehensive guide can be found [here](http://docs.docker.com/mac/started/).
 
-Once installed, Docker can be opened either via `Docker Quickstart Terminal` found in the docker folder in the applications folder, or accessed directly via the terminal using `docker-machine` followed by Docker commands.
+Once installed, Docker can be opened either via `Docker Quickstart Terminal` found in the docker folder in the applications folder, or accessed directly via the terminal using `docker-machine` followed by Docker commands. The instructions below use `docker-machine` and the terminal.
 
-Multiple docker containers can be made. Details on how to do this are available [here](https://docs.docker.com/installation/mac/).
+**Note** Multiple docker containers can be made. Details on how to do this are available [here](https://docs.docker.com/installation/mac/).
 
 
-## Building / retrieving the `traitecoevo/mortality_bci` docker container
+## Building/retrieving the traitecoevo/mortality_bci docker container
+First install the following Rpackages:
+```
+install.packages(c("RcppRedis", "R6", "digest", "docopt"))
+devtools::install_github("traitecoevo/dockertest", ref="18-docker-machine") # Remove ref once changes are merged
+devtools::install_github(c("gaborcsardi/crayon", "ropensci/RedisAPI", "richfitz/storr","traitecoevo/rrqueue"))
+```
 
-Building this docker image takes a lot of memory, primarily because it must install `rstan`. As such, we allow 3GB for compilation.  Using terminal and the Docker command `docker-machine` we can create a new Docker container called `mem3GB`
+Building the docker image requires a lot of memory because it must compile and install `rstan`. As such, the container require 6GB for compilation. Using the terminal and the Docker command `docker-machine` we create a new Docker container with 6GB of virtual memory called `mem6GB`
 
 ```
-docker-machine create --virtualbox-memory "3000" --driver virtualbox mem3GB
+docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
 ```
-The ` --virtualbox-memory "3000"` just tells Docker to allow 3GB of memory for compilation.
+`--virtualbox-memory "6000"` sets how much virtual memory is available to the docker container.
 
 
-To connect to this then run
-
+Connect to the docker container by entering the following into the terminal:
 ```
-eval "$(docker-machine env mem3GB)"
+eval "$(docker-machine env mem6GB)"
 ```
 
 We auto generate the Dockerfile using [dockertest](https://github.com/traitecoevo/dockertest); the main configuration file is `docker/dockertest.yml`, which is declarative rather than a list of instructions. The file `rstan.yml` contains some additional instructions specifying a new rstan module for dockertest.
 
-To build the image, open up a terminal window in the `docker` folder, make sure docker is running, and then run
 
+To build the `traitecoevo/mortality_bci` docker container from the terminal first move into the folder `mortality_bci/docker` and then run:
 ```
-Rscript -e 'dockertest::build()' *DOES NOT WORK AS RELIES ON BOOT2DOCKER which is now superceded by docker-machine*
+Rscript -e 'dockertest::build(machine="mem6GB")'
 ```
-
-This builds the image `traitecoevo/mortality_bci`. The build can take a while, so we have pushed a pre-built image to dockerhub, which you can retrieve  using
-
+The build can take a while, so we have pushed a pre-built image to dockerhub, which you can retrieve via the terminal using:
 ```
 docker pull traitecoevo/mortality_bci:latest
 ```
-(To push docker container run `docker login`, then ` docker push traitecoevo/mortality_bci`).
+**Note** To push a docker container run `docker login`, then ` docker push traitecoevo/mortality_bci`.
 
-Both the worker and the controller use this image, but the workers run `rrqueue_worker_tee` rather than an interactive R session.
+Both the worker and the controller [NEED TO DEFINE WHAT THESE ARE] use this image, but the workers run `rrqueue_worker_tee` rather than an interactive R session.
 
-Building the image will clone the source into the folder `self`, but if it's out of date, this will refresh it
-
-```sh
-. ./helpers.sh  # Load helper functions
-clone_or_pull ../ self
-```
+Building the image will clone the source into the folder `self`, but if it's out of date, it will refresh it
 
 
-## Running the analysis in docker containers
+## Running the mortality analysis in docker containers
 
-Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` image (see previous section).
+Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` container (see previous section).
 
-Then move to parent directory `mortality_bci`:
+Then move from `mortality_bci/docker` to the parent directory `mortality_bci`.
 
-```
-cd ../
-```
-
-and start a container running Redis:
+Now start a Docker container running Redis:
 
 ```
 docker run --name mortality_bci_redis -d redis
 ```
-(if you have previously started need to either delete container first using
-`docker rm mortality_bci_redis`)
 
-or ?????????
-
-Open up a new terminal tab or window and navigate to `mortality_bci`
-
-install rrqueue
+**Note** if you have previously started redis do the following:
 ```
-install.packages(c("RcppRedis", "R6", "digest", "docopt"))
-devtools::install_github(c("gaborcsardi/crayon", "ropensci/RedisAPI", "richfitz/RedisHeartbeat", "richfitz/storr")) # note I had an error with installing RedisHeartbeat
-devtools::install_git("https://github.com/traitecoevo/rrqueue")
+docker stop mortality_bci_redis
+docker rm mortality_bci_redis
+docker run --name mortality_bci_redis -d redis
 ```
 
-Then start some worker containers listening on queue `rrq` (for now not running in daemon mode, though not actually interactive either; we'll do this with compose or something else later)
-
-```
-docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
-```
-
-Start a container to queue jobs _from_:
-
+Now we can start a controller container to que jobs _from_:
 ```
 docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
 ```
-
-Then within that session, start working, in R, create the queue controller:
+This will open an R session where you can run prepare and queue jobs:
 
 ```r
 library(rrqueue)
@@ -103,15 +83,18 @@ sources <- c("R/model.R",
              "R/stan_functions.R",
              "R/utils.R")
 obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
-```
 
-And then start some jobs:
-
-```r
 tasks <- tasks_growth(iter = 10) # Set to 20 for testing, set to 1000 for actual deployment
 create_dirs(unique(dirname(tasks$filename)))
-enqueue_bulk(tasks, model_compiler, obj) # This will compile each model but won't go any further due to exhausting virtual memory issues.
+enqueue_bulk(tasks, model_compiler, obj)
 ```
+
+Now we create workers to that listen for, and undertake, jobs set by the controller container by openining up a new terminal tab or window in `mortality_bci` and running:
+```
+eval "$(docker-machine env mem6GB)" 
+docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
+```
+If you want to run multiple workers, open up more terminal tabs/windows and run the above code. (Currently we can only run 1 worker because of memory issues when compiling the models.)
 
 ## Running the analysis in multiple containers via docker-compose
 
