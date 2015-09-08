@@ -29,7 +29,7 @@ Note that on Linux, some dependencies of these packages will require headers for
 Alternatively, to install directly from github:
 
 ```
-devtools::install_github(c("traitecoevo/dockertest@18-docker-machine" "ropensci/RedisAPI", "richfitz/storr", "traitecoevo/rrqueue"))
+devtools::install_github(c("traitecoevo/dockertest" "ropensci/RedisAPI", "richfitz/storr", "traitecoevo/rrqueue"))
 ```
 
 Building the docker image requires a lot of memory because it must compile and install `rstan`.  On Windows/OSX, the default virtual box is not big enough, and you will need to create a virtual machine with more memory
