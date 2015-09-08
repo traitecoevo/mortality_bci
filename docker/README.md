@@ -145,6 +145,14 @@ eval "$(docker-machine env mem6GB)"
 docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
 ```
 
+Alternatively, this can be launched via dockertest:
+
+```
+dockertest launch --machine mem6GB --link mortality_bci_redis:redis -- rrqueue_worker --redis-host redis rrq
+```
+
+* The `--` separates options to dockertest from the program to run and its options.
+
 The arguments here are identical to the controller above, except for the command to run within the container:
 
 * `rrqueue_worker --redis-host redis rrq`
