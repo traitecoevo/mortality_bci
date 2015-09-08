@@ -11,7 +11,7 @@ Once installed, Docker can be opened either via `Docker Quickstart Terminal` fou
 **Note** Multiple docker containers can be made. Details on how to do this are available [here](https://docs.docker.com/installation/mac/).
 
 
-## Building/retrieving the traitecoevo/mortality_bci docker container
+## Building/retrieving the `traitecoevo/mortality_bci` Docker container
 First install the following Rpackages:
 ```
 install.packages(c("RcppRedis", "R6", "digest", "docopt"))
@@ -24,7 +24,8 @@ Building the docker image requires a lot of memory because it must compile and i
 ```
 docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
 ```
-`--virtualbox-memory "6000"` sets how much virtual memory is available to the docker container.
+
+(`--virtualbox-memory "6000"` sets how much virtual memory is available to the docker container.)
 
 
 Connect to the docker container by entering the following into the terminal:
@@ -32,48 +33,58 @@ Connect to the docker container by entering the following into the terminal:
 eval "$(docker-machine env mem6GB)"
 ```
 
-We auto generate the Dockerfile using [dockertest](https://github.com/traitecoevo/dockertest); the main configuration file is `docker/dockertest.yml`, which is declarative rather than a list of instructions. The file `rstan.yml` contains some additional instructions specifying a new rstan module for dockertest.
+We auto generate the Dockerfile using [dockertest](https://github.com/traitecoevo/dockertest); the main configuration file is `docker/dockertest.yml`, which is declarative rather than a list of instructions.
 
 
 To build the `traitecoevo/mortality_bci` docker container from the terminal first move into the folder `mortality_bci/docker` and then run:
+
 ```
 Rscript -e 'dockertest::build(machine="mem6GB")'
 ```
+
 The build can take a while, so we have pushed a pre-built image to dockerhub, which you can retrieve via the terminal using:
 ```
 docker pull traitecoevo/mortality_bci:latest
 ```
-**Note** To push a docker container run `docker login`, then ` docker push traitecoevo/mortality_bci`.
+(**Note** To push a docker container run `docker login`, then ` docker push traitecoevo/mortality_bci`.)
 
-Both the worker and the controller [NEED TO DEFINE WHAT THESE ARE] use this image, but the workers run `rrqueue_worker_tee` rather than an interactive R session.
+Below we setup 'workers' and a 'controller' using this image, but the workers run `rrqueue_worker_tee` rather than an interactive R session.
 
-Building the image will clone the source into the folder `self`, but if it's out of date, it will refresh it
+Building the image will also clone the source into the folder `self`, but if it's out of date, it will refresh it
 
 
 ## Running the mortality analysis in docker containers
 
 Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` container (see previous section).
 
-Then move from `mortality_bci/docker` to the parent directory `mortality_bci`.
+Then move your working directory from `mortality_bci/docker` to the parent directory `mortality_bci`. And if you're starting in a new terminal, don't forget to set path variables:
 
-Now start a Docker container running Redis:
+```
+eval "$(docker-machine env mem6GB)"
+```
+
+We're now going to setup three different Docker containers.
+
+First, we start a container running Redis - this will sit in the background and act as a database catching results:
 
 ```
 docker run --name mortality_bci_redis -d redis
 ```
 
-**Note** if you have previously started redis do the following:
+**Note** if you have previously started redis, you'll need to do the following:
 ```
 docker stop mortality_bci_redis
 docker rm mortality_bci_redis
 docker run --name mortality_bci_redis -d redis
 ```
 
-Now we can start a controller container to que jobs _from_:
+Second, we start a container we'll call 'controller' from which we can create and queue jobs _from_. First laucnh the container and start R:
+
 ```
 docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
 ```
-This will open an R session where you can run prepare and queue jobs:
+
+Then in R, add the jobs:
 
 ```r
 library(rrqueue)
@@ -89,66 +100,10 @@ create_dirs(unique(dirname(tasks$filename)))
 enqueue_bulk(tasks, model_compiler, obj)
 ```
 
-Now we create workers to that listen for, and undertake, jobs set by the controller container by openining up a new terminal tab or window in `mortality_bci` and running:
+Third, we create workers that ask for, and then undertake, jobs from the controller. We:
 ```
-eval "$(docker-machine env mem6GB)" 
+eval "$(docker-machine env mem6GB)"
 docker run --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
 ```
-If you want to run multiple workers, open up more terminal tabs/windows and run the above code. (Currently we can only run 1 worker because of memory issues when compiling the models.)
+If you want to run multiple workers, open up more terminal tabs/windows and run the above code. (Currently we can only run 2 workers because the jobs require a lot of memory, due to compiling C++ code and rstan being a memory hungry monster).
 
-## Running the analysis in multiple containers via docker-compose
-
-In the previous section we fired up multiple containers in order to run our analysis. For that purpose we can also use [docker-compose](https://docs.docker.com/compose/). The file
-`docker-compose.yml` contains a standard script specifying the types of containers we want
-(`redis` and `worker`).  We can then start both the Redis and worker containers by
-running:
-
-```sh
-docker-compose scale redis=1 worker=4
-docker-compose up
-```
-
-Now, in another terminal, launch the controller (this part is the biggest pain)
-```
-eval "$(docker-machine env default)"
-docker run --link docker_redis_1:redis -v ${PWD}/self:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
-```
-
-Then, in this container (which is running `R`) test the system
-
-First, can we reach Redis?
-
-```r
-RedisAPI::hiredis("redis")$PING() # should print "PONG"
-```
-
-Second, set up a simple queue:
-
-```r
-obj <- rrqueue::queue("rrq", redis_host="redis")
-```
-
-Run a trivial job:
-
-```r
-obj$enqueue(sin(1))
-obj$task_result("1")
-```
-
-Run a mclapply like parallel map:
-
-```r
-res <- rrqueue::rrqlapply(1:30, sin, obj)
-```
-
-Cleanup.  Quit R (`q()`), then ctrl-C in the compose window.  The images can be removed with
-
-```
-docker-compose rm
-```
-
-Or, to stop just the workers without confirmation:
-
-```
-docker-compose rm --force worker
-```
