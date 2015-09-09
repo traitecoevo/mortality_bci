@@ -158,7 +158,5 @@ precompile_docker <- function(docker_image) {
   cmd <- '"remake::dump_environment(verbose=FALSE); precompile_all()"'
   dockertest::launch(name=docker_image$name,
                      filename="docker/dockertest.yml",
-                     args=c("r", "-e", cmd),
-                     ## TODO: see comments above about machines.
-                     machine="mem3GB")
+                     args=c("r", "-e", cmd))
 }
