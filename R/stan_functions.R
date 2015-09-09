@@ -13,7 +13,7 @@ model_compiler <- function(task) {
   ## this will always have been done, but possibly it would be neater
   ## to require it.
   filename <- precompile(task)
-  message("Loading precompiled model")
+  message("Loading precompiled model from ", filename)
   model$fit <- readRDS(filename)
 
   ## Actually run the model
@@ -32,7 +32,6 @@ combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
 
 run_single_stan_chain <- function(model, data, chain_id, iter=1000,
                                   sample_file=NA, diagnostic_file=NA) {
-  
   data_for_stan <- prep_data_for_stan(data, model$growth_measure)
   stan(model_code = model$model_code,
        fit = model$fit,
@@ -106,7 +105,7 @@ make_stan_model <- function(chunks, growth_measure) {
 }
 
 precompile <- function(task) {
-  path <- "models"
+  path <- precompile_model_path()
   chunks <- get_model_chunks(task)
   model <- make_stan_model(chunks, growth_measure = task$growth_measure)
   sig <- digest::digest(model)
@@ -125,6 +124,41 @@ precompile <- function(task) {
   filename_rds
 }
 
-precompile_tasks <- function(tasks) {
-  invisible(vapply(df_to_list(tasks), precompile, character(1)))
+precompile_all <- function() {
+  tasks <- tasks_growth(iter=10)
+  vapply(df_to_list(tasks), precompile, character(1))
+}
+
+## Wrapper around platform information that will try to determine if
+## we're in a container or not.  This means that multiple compiled
+## copies of the model can peacefully coexist.
+platform <- function() {
+  name <- tolower(Sys.info()[["sysname"]])
+  if (name == "linux") {
+    tmp <- strsplit(readLines("/proc/self/cgroup"), ":", fixed=TRUE)
+    if (any(grepl("^/docker", vapply(tmp, "[[", character(1), 3L)))) {
+      name <- "docker"
+    }
+  }
+  name
+}
+
+precompile_model_path <- function(name=platform()) {
+  file.path("models", name)
+}
+
+precompile_docker <- function(docker_image) {
+  if (FALSE) {
+    ## Little trick to depend on the appropriate functions (this will
+    ## be picked up by remake's dependency detection, but never run).
+    precompile_all()
+  }
+  unlink(precompile_model_path("docker"), recursive=TRUE)
+
+  cmd <- '"remake::dump_environment(verbose=FALSE); precompile_all()"'
+  dockertest::launch(name=docker_image$name,
+                     filename="docker/dockertest.yml",
+                     args=c("r", "-e", cmd),
+                     ## TODO: see comments above about machines.
+                     machine="mem3GB")
 }

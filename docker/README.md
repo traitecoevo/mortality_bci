@@ -64,6 +64,36 @@ Below we setup 'workers' and a 'controller' using this image, but the workers ru
 
 Building the image will also clone the source into the folder `self`, but if it's out of date, it will refresh it
 
+## Building the prerequsites
+
+### Pre-processed data
+
+Runing
+
+```
+remake::make()
+```
+
+will build all the data that is required.  This will take a long time, and cloning might be better:
+
+```
+git clone git@github.com:traitecoevo/mortality_data.git data
+```
+
+### Pre-compiled models
+
+```
+remake::make("models_precompiled_docker")
+```
+
+This requires building the docker image, so might not be a good idea.  Alternatively, clone:
+
+```
+git clone git@github.com:traitecoevo/mortality_models.git models
+```
+
+time will tell if that is a sensible thing to do (note it will not work well if you've already run the native precompiled models, gah.)
+
 ## Running the mortality analysis in docker containers
 
 Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` container (see previous section).
@@ -128,9 +158,6 @@ obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 
 tasks <- tasks_growth(iter = 10) # Set to 10 for testing, set to 1000 for actual deployment
 create_dirs(unique(dirname(tasks$filename)))
-
-# precompile all the models (takes a little while)
-precompile_tasks(tasks)
 
 res <- enqueue_bulk(tasks, model_compiler, obj)
 ```

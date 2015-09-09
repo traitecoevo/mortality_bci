@@ -1,0 +1,6 @@
+callr:
+  source: github
+  repo: traitecoeco/callr
+dockertest:
+  source: github
+  repo: traitecoevo/dockertest

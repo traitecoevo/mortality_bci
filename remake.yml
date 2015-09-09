@@ -1,9 +1,13 @@
 packages:
   - RCurl
   - downloader
-  - rmarkdown
-  - dplyr
+  # Sorry; these are commented out until I can fix an issue in remake, or
+  # else rebuild the container.
+  # - rmarkdown
+  # - dplyr
   - rstan
+  - callr
+  - dockertest
 
 sources:
   - R
@@ -38,7 +42,7 @@ targets:
   BCI_model_dataset_folds:
     command: split_into_kfolds(BCI_model_dataset_true_unique)
     cleanup_level: purge
-    
+
   figure/plot_obs_v_pred:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
     cleanup_level: purge
@@ -95,6 +99,14 @@ targets:
     command: BCI_download_species_table(target_name)
     cleanup_level: never
     check: exists
+
+  docker_image:
+    command: build_container("docker/dockertest.yml")
+
+  models_precompiled:
+    command: precompile_all()
+  models_precompiled_docker:
+    command: precompile_docker(docker_image)
 
   # paper
   downloads/style.csl:
