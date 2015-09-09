@@ -4,7 +4,13 @@ create_dirs <- function(task_list) {
 
 model_compiler <- function(task) {
   data <- readRDS(task$fold_data)
-  
+
+  ## Make sure the output directory exists
+  path <- dirname(task$filename)
+  if(!file.exists(path)){
+    dir.create(path, TRUE, TRUE)
+  }
+
   ## Assemble the stan model:
   chunks <- get_model_chunks(task)
   model <- make_stan_model(chunks, growth_measure = task$growth_measure)
@@ -12,7 +18,7 @@ model_compiler <- function(task) {
   ## Bit if a Rube Goldberg machine here as I'm avoiding assuming that
   ## this will always have been done, but possibly it would be neater
   ## to require it.
-  filename <- precompile(task)
+  filename <- precompile(task, path)
   message("Loading precompiled model")
   model$fit <- readRDS(filename)
 
@@ -20,9 +26,10 @@ model_compiler <- function(task) {
   res <- run_single_stan_chain(model, data,
                                chain_id=task$chain,
                                iter=task$iter)
-  
+
   ## The model output is large so instead of returning it we'll just
   ## dump into a file.
+
   saveRDS(res, task$filename)
 }
 
@@ -32,14 +39,14 @@ combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
 
 run_single_stan_chain <- function(model, data, chain_id, iter=1000,
                                   sample_file=NA, diagnostic_file=NA) {
-  
+
   data_for_stan <- prep_data_for_stan(data, model$growth_measure)
   stan(model_code = model$model_code,
        fit = model$fit,
        data = data_for_stan,
        pars = model$pars,
        iter = iter,
-       chains=1, 
+       chains=1,
        chain_id=chain_id,
        control =list(stepsize=0.01, max_treedepth=15),
        refresh=1,
@@ -80,7 +87,7 @@ make_stan_model <- function(chunks, growth_measure) {
         vector[n_obs] census_length;
         vector[n_obs] growth_dt;
         vector[n_spp] rho_c;
-        
+
         // Held out data
         int<lower=1> n_obs_heldout;
         int<lower=1> n_spp_heldout;
@@ -90,23 +97,22 @@ make_stan_model <- function(chunks, growth_measure) {
         vector[n_obs_heldout] growth_dt_heldout;
         vector[n_spp_heldout] rho_c_heldout;
       }
-      
-      parameters { 
+
+      parameters {
         %s
       }
-  
+
       model {
         %s
       }
-      
+
       generated quantities {
         %s
       }", chunks$parameters, chunks$model, chunks$generated_quantities)
   )
 }
 
-precompile <- function(task) {
-  path <- "models"
+precompile <- function(task, path="models") {
   chunks <- get_model_chunks(task)
   model <- make_stan_model(chunks, growth_measure = task$growth_measure)
   sig <- digest::digest(model)

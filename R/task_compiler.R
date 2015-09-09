@@ -2,7 +2,7 @@
 tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_run, path=-".") {
   n_kfolds <- 10
   n_chains <- 3
-  
+
   ret <- expand.grid(experiment=name,
                      iter=iter,
                      chain=seq_len(n_chains),
@@ -14,7 +14,7 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
   ret$jobid <- seq_len(nrow(ret))
   ret$filename <- sprintf("%s/results/%s/%d.rds", path, name, ret$jobid)
   ret$fold_data <- sprintf("%s/export/bci_data_%s.rds", path, ret$kfold)
-  create_dirs(unique(dirname(ret$filename)))
+  # create_dirs(unique(dirname(ret$filename)))
   if(isTRUE(tasks_run)) {
     tasks <- tasks_growth()
     i <- match(do.call(paste, ret[, c('chain', 'growth_measure', 'rho_combo', 'kfold')]),
@@ -31,8 +31,8 @@ tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_r
 
 # Growth comparison tasks
 tasks_growth <- function(iter=1000, name = 'growth_comparison',...) {
-  tasks_2_run(iter, 
-    name=name, 
+  tasks_2_run(iter,
+    name=name,
     growth_measure =  c("true_dbh_dt","true_basal_area_dt"),
     rho_combo="",
     tasks_run=FALSE, ...)
@@ -42,8 +42,8 @@ tasks_growth <- function(iter=1000, name = 'growth_comparison',...) {
 tasks_rho_combos <- function(iter=1000, growth_measure, name="rho_combinations", tasks_run) {
   rho_combo <- expand.grid(a=c('','a'), b=c('','b'), c=c('','c'), stringsAsFactors = FALSE)
   rho_combo <- sapply(split(rho_combo, seq_len(nrow(rho_combo))), function(x) paste0(x, collapse=''))
-  tasks_2_run(iter, 
-       name=name, 
+  tasks_2_run(iter,
+       name=name,
        growth_measure =  growth_measure,
        rho_combo=rho_combo,
        tasks_run=tasks_run)

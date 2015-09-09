@@ -22,7 +22,7 @@ environment:  # This is the main section where you describe the environment
       ports: "31379:6379"        # map port 6379 (default for redis) to 31379 (must be in range 31000-31999)
     worker:   # Component named "engine". These are the "worker" processes
       machine: worker       # Run on machine(s) named "worker"
-      depends: master       # Run only after "master" component has been run
+      depends: redis       # Run only after "master" component has been run
       cpu: 1              # 0.5 CPU per running instance of this component
       count: auto           # Automatically run as much as possible on all machines of this type
       image: traitecoevo/mortality_bci     # Name of the Docker image to run (same as master in this example)
