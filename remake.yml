@@ -1,10 +1,8 @@
 packages:
   - RCurl
   - downloader
-  # Sorry; these are commented out until I can fix an issue in remake, or
-  # else rebuild the container.
-  # - rmarkdown
-  # - dplyr
+  - rmarkdown
+  - dplyr
   - rstan
   - callr
   - dockertest

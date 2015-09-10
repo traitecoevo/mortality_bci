@@ -155,7 +155,7 @@ precompile_docker <- function(docker_image) {
   }
   unlink(precompile_model_path("docker"), recursive=TRUE)
 
-  cmd <- '"remake::dump_environment(verbose=FALSE); precompile_all()"'
+  cmd <- '"remake::dump_environment(verbose=FALSE, allow_missing_packages=TRUE); precompile_all()"'
   dockertest::launch(name=docker_image$name,
                      filename="docker/dockertest.yml",
                      args=c("r", "-e", cmd))
