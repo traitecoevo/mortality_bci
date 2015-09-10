@@ -1,5 +1,5 @@
 # Task builder function for growth and rho comparisons
-tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_run, path=-".") {
+tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_run, path=".") {
   n_kfolds <- 10
   n_chains <- 3
 
