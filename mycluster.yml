@@ -1,0 +1,4 @@
+- Default:
+    cluster_name: mortality_cluster
+    num_instances: 3
+    instance_type: t2.micro

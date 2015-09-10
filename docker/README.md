@@ -29,7 +29,7 @@ Note that on Linux, some dependencies of these packages will require headers for
 Alternatively, to install directly from github:
 
 ```
-devtools::install_github(c("traitecoevo/dockertest" "ropensci/RedisAPI", "richfitz/storr", "traitecoevo/rrqueue"))
+devtools::install_github(c("traitecoevo/dockertest", "ropensci/RedisAPI", "richfitz/storr", "traitecoevo/rrqueue"))
 ```
 
 Building the docker image requires a lot of memory because it must compile and install `rstan`.  On Windows/OSX, the default virtual box is not big enough, and you will need to create a virtual machine with more memory
@@ -130,7 +130,7 @@ docker rm mortality_bci_redis
 docker run --name mortality_bci_redis -d redis
 ```
 
-Second, we start a container we'll call 'controller' from which we can create and queue jobs _from_. First laucnh the container and start R:
+Second, we start a container called 'controller' from which we can create and queue jobs _from_. First launch the container and start R:
 
 ```
 docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
@@ -145,7 +145,7 @@ The components of this command are:
 * `traitecoevo/mortality_bci:latest` is the image created above
 * `R` run R rather than `bash`, which is the default for this image.
 
-Then in R, add the jobs:
+Then in R, add the jobs and compile the stan models:
 
 ```r
 library(rrqueue)
