@@ -133,14 +133,14 @@ docker run --name mortality_bci_redis -d redis
 Second, we start a container called 'controller' from which we can create and queue jobs _from_. First launch the container and start R:
 
 ```
-docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -it traitecoevo/mortality_bci:latest R
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -it traitecoevo/mortality_bci:latest R
 ```
 
 The components of this command are:
 
 * `--rm` - remove the container once we're done
 * `--link mortality_bci_redis:redis` - the `mortality_bci_redis` container (started above) will be available in this container with the name `redis`; i.e., Redis will appear to be running on `redis:6379`
-* `-v ${PWD}:/root/mortality_bci` - this maps the current working directory on the host machine to `/root/mortality_bci` in the container, which is the working directory for this container
+* `-v ${PWD}:/home/data` - this maps the current working directory on the host machine to `/home/data` in the container, which is the working directory for this container
 * `-it` launches in interactive mode, which allows Ctrl-C to enable killing the worker process
 * `traitecoevo/mortality_bci:latest` is the image created above
 * `R` run R rather than `bash`, which is the default for this image.
@@ -173,7 +173,7 @@ Third, we create workers that ask for, and then undertake, jobs from the control
 
 ```
 eval "$(docker-machine env mem6GB)"
-docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/root/mortality_bci -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
 ```
 
 Alternatively, this can be launched via dockertest:
