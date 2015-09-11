@@ -191,3 +191,40 @@ The arguments here are identical to the controller above, except for the command
 The `rrqueue_worker` command is built into `rrqueue` and creates a worker, looking for Redis on the host "redis" (which is the linked container) and reading jobs from the queue "rrq" (which is what the controller added jobs to above).
 
 If you want to run multiple workers, open up more terminal tabs/windows and run the above code. (Currently we can only run 2 workers because the jobs require a lot of memory, due to compiling C++ code and rstan being a memory hungry monster).
+
+## Preparing for use with clusterous
+
+Very closely related to the above, but designed to test use with clusterous.
+
+Within the `docker/` directory, in the shell run the command
+
+```
+docker_clusterous.R
+```
+
+which will build a little container `traitecoevo/mortality_bci_clusterous`; this will include _only_ the files that will be copied to the host.  It might be tidier to do this with a data-only container, so this might change soon (a data-only container might simplify things).
+
+```
+docker run --name mortality_bci_redis -d redis
+docker run --rm --link mortality_bci_redis:redis -t traitecoevo/mortality_bci_clusterous
+```
+
+and
+
+```
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -it traitecoevo/mortality_bci:latest R
+```
+
+then
+
+```
+library(rrqueue)
+packages <- c("rstan")
+sources <- c("R/model.R",
+             "R/task_compiler.R",
+             "R/stan_functions.R",
+             "R/utils.R")
+obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
+tasks <- tasks_growth(iter = 10)
+res <- enqueue_bulk(tasks, model_compiler, obj)
+```
