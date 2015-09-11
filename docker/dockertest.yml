@@ -1,12 +1,12 @@
 # Don't worry about getting the sources into the image; we'll do that
 # at runtime:
 deps_only: true
-# Keep the .git directory in the work clone
-keep_git: true
 # Use non broken versions of apt sources
 apt_unstable: true
 # Don't clone into self; we'll do it live
 inplace: true
+# More related to the above
+workdir: /home/data
 
 apt_packages:
   - gfortran

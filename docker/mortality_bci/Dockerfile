@@ -37,11 +37,11 @@ RUN r -e 'remake:::install_remake("/usr/local/bin")'
 
 RUN r -e 'rrqueue:::install_scripts("/usr/local/bin")'
 
-RUN mkdir /root/mortality_bci \
-  && echo "clone.sh /root/mortality_bci" >> /root/.bashrc \
-  && echo "system('clone.sh /root/mortality_bci')" > /root/.Rprofile \
-  && echo "system('clone.sh /root/mortality_bci')" > /root/.littler.r
+RUN mkdir /home/data \
+  && echo "clone.sh /home/data" >> /root/.bashrc \
+  && echo "system('clone.sh /home/data')" > /root/.Rprofile \
+  && echo "system('clone.sh /home/data')" > /root/.littler.r
 
-WORKDIR /root/mortality_bci
+WORKDIR /home/data
 
 CMD ["bash"]

@@ -33,6 +33,6 @@ environment:  # This is the main section where you describe the environment
   expose_tunnel:
     # The component to connect to and the ports. In the format:
     # local_port:component_name:source_port
-    service: 6379:redis:31379
+    service: 31379:redis:31379
     # An optional message to display to the user once the port is exposed
     message: "To submit jobs to redis use this URL:"
