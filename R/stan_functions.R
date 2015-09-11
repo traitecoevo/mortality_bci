@@ -1,15 +1,10 @@
-create_dirs <- function(task_list) {
-  tmp <- lapply(task_list, function(x) dir.create(dirname(x$filename), FALSE, TRUE))
-}
-
 model_compiler <- function(task) {
   data <- readRDS(task$fold_data)
 
-  ## Make sure the output directory exists
-  path <- dirname(task$filename)
-  if(!file.exists(path)){
-    dir.create(path, TRUE, TRUE)
-  }
+  ## Make sure the output directory exists; this is important on
+  ## clusterous-created clusters because the output directory will not
+  ## exist on startup.
+  dir.create(dirname(task$filename), FALSE, TRUE)
 
   ## Assemble the stan model:
   chunks <- get_model_chunks(task)
@@ -29,7 +24,6 @@ model_compiler <- function(task) {
 
   ## The model output is large so instead of returning it we'll just
   ## dump into a file.
-
   saveRDS(res, task$filename)
 }
 

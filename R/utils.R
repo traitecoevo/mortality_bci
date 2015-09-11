@@ -1,4 +1,3 @@
-
 create_dirs <- function(dirs) {
   for (d in dirs) {
     dir.create(d, FALSE, TRUE)

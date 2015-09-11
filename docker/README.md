@@ -157,8 +157,6 @@ sources <- c("R/model.R",
 obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 
 tasks <- tasks_growth(iter = 10) # Set to 10 for testing, set to 1000 for actual deployment
-create_dirs(unique(dirname(tasks$filename)))
-
 res <- enqueue_bulk(tasks, model_compiler, obj)
 ```
 
