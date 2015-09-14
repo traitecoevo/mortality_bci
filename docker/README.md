@@ -228,3 +228,119 @@ obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 tasks <- tasks_growth(iter = 10)
 res <- enqueue_bulk(tasks, model_compiler, obj)
 ```
+
+## Using with clusterous
+
+Spin up the cluster with:
+
+```
+clusterous start mycluster.yml
+clusterous launch clusterous_env.yaml
+```
+
+You should see:
+
+```
+Checking for Docker images...
+Copying files...
+Starting 2 instance of worker
+Starting 1 instance of redis
+Launched 2 components: redis, worker
+
+Message for user:
+To submit jobs to redis use this URL:http://localhost:31379
+```
+
+Test that things are working by running
+
+
+```
+redis-cli -p 31379 PING
+```
+
+which should return `PONG` (and not "Connection refused").
+
+From within the mortality_bci directory, run `R`
+
+```
+library(rrqueue)
+packages <- c("rstan")
+sources <- c("R/model.R",
+             "R/task_compiler.R",
+             "R/stan_functions.R",
+             "R/utils.R")
+obj <- queue("rrq", redis_port="31379", packages=packages, sources=sources)
+```
+
+Ideally this will print something like:
+
+```
+creating new queue
+X workers available
+
+Attaching package: ‘inline’
+
+The following object is masked from ‘package:Rcpp’:
+
+    registerPlugin
+
+rstan (Version 2.7.0-1, packaged: 2015-07-17 18:12:01 UTC, GitRev: 05c3d0058b6a)
+For execution on a local, multicore CPU with excess RAM we recommend calling
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+`X workers available` is the number of workers that identified themselves; that should really match the number in "Starting X instance of worker" (this should be 2 with our current configuration).
+
+Try queing a realaly stupid job:
+```
+t <- obj$enqueue(sin(1))
+```
+
+wait a second and check its status:
+
+```
+t$status()
+```
+
+Hopefully this will report `COMPLETE` and not an error.  If there are issues getting the local and remote copies of the application to agree on files then you'll see `ENVIR_ERROR` here, and the remote worker will actually exit.
+
+```
+t$result() # 0.841471
+```
+
+Then for something more challenging:
+
+```
+tasks <- tasks_growth(iter = 10)[1:10, ]
+res <- enqueue_bulk(tasks, model_compiler, obj)
+```
+
+This will run with a spinner and a progress bar.  You don't have to leave it open, especially as we don't do anything useful with it.
+
+```
+obj$workers_log_tail(n=Inf)
+```
+
+Then we can run the whole lot:
+
+```
+tasks <- tasks_growth(iter = 1000)
+res <- enqueue_bulk(tasks, model_compiler, obj)
+```
+
+You can hit `Ctrl-C` here once the progress bar appears and stop the progress bar
+
+Once the tasks are running you can run:
+
+```
+obj$tasks_overview()
+```
+
+to see how many tasks have run / will run, and
+
+```
+obj$tasks_times()
+```
+
+to get information on waiting, running, times (`options(width=120)` might be needed if you resize your terminal window; will be automatic in Rstudio).
