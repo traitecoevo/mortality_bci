@@ -6,6 +6,7 @@ environment:  # This is the main section where you describe the environment
     - "export"
     - "R"
     - "AWS_launch"
+    - "models"
   # Build one or more Docker images. If an image of the same name already exists
   # in your private Docker registry, it won't be built.
   # The folder is relative to the location of this environment file.
