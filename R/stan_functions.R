@@ -25,6 +25,7 @@ model_compiler <- function(task) {
   ## The model output is large so instead of returning it we'll just
   ## dump into a file.
   saveRDS(res, task$filename)
+  task$filename
 }
 
 combine_stan_chains <- function(..., d=list(...), tmp=NULL) {
