@@ -137,7 +137,7 @@ platform <- function() {
   name <- tolower(Sys.info()[["sysname"]])
   if (name == "linux") {
     tmp <- strsplit(readLines("/proc/self/cgroup"), ":", fixed=TRUE)
-    if (any(grepl("^/docker", vapply(tmp, "[[", character(1), 3L)))) {
+    if (any(grepl("docker", vapply(tmp, "[[", character(1), 3L)))) {
       name <- "docker"
     }
   }
