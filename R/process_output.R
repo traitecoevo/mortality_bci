@@ -1,8 +1,23 @@
 
+packages <- c("rstan")
+sources <- c("R/model.R",
+             "R/task_compiler.R",
+             "R/stan_functions.R",
+             "R/utils.R")
+
+for (p in packages) {
+  library(p, character.only=TRUE, quietly=TRUE)
+}
+for (s in sources) {
+  source(s)
+}
+
+
+
 #Compile chains for each growth measure either for each model or across kfolds
 compile_growth_model_fits <- function(subset_growth=NULL, pool_kfolds = FALSE) {
-  if(any(!subset_growth %in% c('dbh_dt','dbh_dt_rel','basal_area_dt', 'basal_area_dt_rel'))) {
-    stop("subset_growth can either be NULL or contain one or multiple of the following: 'dbh_dt', 'dbh_dt_rel', 'basal_area_dt', 'basal_area_dt_rel'")
+  if(any(!subset_growth %in% c('true_dbh_dt','true_basal_area_dt'))) {
+    stop("subset_growth can either be NULL which will compile both growth measure models or can subset to either: 'true_dbh_dt', 'true_basal_area_dt'")
   }
   growth_tasks <- tasks_growth() 
 
@@ -10,7 +25,7 @@ compile_growth_model_fits <- function(subset_growth=NULL, pool_kfolds = FALSE) {
     growth_tasks <- growth_tasks[growth_tasks$growth_measure %in% subset_growth,]
   }
   if(pool_kfolds==FALSE) {
-    sets <- split(growth_tasks, growth_tasks$modelid)
+    sets <- split(growth_tasks, list(growth_tasks$growth_measure,growth_tasks$modelid), sep='_', drop=TRUE)
   } else {
     sets <- split(growth_tasks, growth_tasks$growth_measure)
   }
@@ -55,7 +70,7 @@ model_diagnostics <- function(model_comparison = "growth", pool_kfolds = FALSE) 
   }
   out <- do.call(rbind, lapply(models, function(x) {
     summary_model <- summary(x)$summary
-    sampler_params <- get_sampler_params(x)
+    sampler_params <- get_sampler_params(x, inc_warmup=FALSE)
     data.frame(
       n_eff_min = min(summary_model[, 'n_eff']),
       rhat_max = max(summary_model[, 'Rhat']),
@@ -100,7 +115,7 @@ rho_summaries <- function(subset_params=NULL, subset_growth=NULL, pool_kfolds = 
 
 # Model average coefficient plot
 
-coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), param_names = NULL, subset_growth ='dbh_dt', xlab = NA, ylab = NA, x_tick_labs = TRUE) {
+coeff_plot_growth <- function(subset_params =c('a2','b2','c2'), param_names = NULL, subset_growth ='true_dbh_dt', xlab = NA, ylab = NA, x_tick_labs = TRUE) {
   models <- growth_summaries(subset_params, subset_growth,pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))[[subset_growth]]
   plot(models[,'mean'], rev(seq_len(nrow(models))), xlab=xlab, ylab=NA, yaxt='n', xaxt='n', pch=21, bg='black',
        xlim=range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
@@ -133,14 +148,14 @@ growth_comparison_plot <- function() {
 
 
 
-log_likelihood_plot <- function(model_comparison = 'growth', log_likelihood = 'log_lik_tilde_total', xlab='log likelihood', ylab='Growth model') {
+log_likelihood_plot <- function(model_comparison = 'growth', log_likelihood = 'sum_log_lik_heldout', xlab='log likelihood', ylab='Growth model') {
   if(model_comparison =='growth') {
     par(mar=c(6,10,1,1))
     summaries <- growth_summaries(log_likelihood, pool_kfolds = TRUE, quantiles = c(0.025,0.975,0.1,0.9))
     models <- do.call(rbind, summaries)
     row.names(models) <- names(summaries)
-    models <- models[c('basal_area_dt_rel', 'basal_area_dt', 'dbh_dt_rel', 'dbh_dt'),]
-    y_tick_labels <- c('rel basal area dt', 'basal area dt', 'rel dbh dt', 'dbh dt')
+    models <- models[c('true_basal_area_dt', 'true_dbh_dt'),]
+    y_tick_labels <- c('basal area dt','dbh dt')
     
     plot(models[,'mean'], seq_len(nrow(models)), xlab=xlab, ylab=NA, yaxt='n', pch=21, bg='black',
          xlim = range(pretty(c(models[, '2.5%'], models[, '97.5%']))))
