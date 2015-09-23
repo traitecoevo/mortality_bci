@@ -1,23 +1,18 @@
 library(rrqueue)
 packages <- c("rstan")
 sources <- c("R/model.R",
-             "R/task_compiler.R",
              "R/stan_functions.R",
              "R/utils.R")
 
+# FIRST RUN GROWTH COMPARISON ANALYSIS ON CLUSTER
 obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources)
 # on cluster redis queue is called redis.marathon.mesos, but from local machine called localhost -- via exposed tunnel
-
-tasks <- tasks_growth(iter = 10, path="/home/data") # Set to 10 for testing, set to 1000 for actual deployment
-
-# We can't actually do this here. Have moved functionality
-# into `model_compiler`
-# create_dirs(unique(dirname(tasks$filename)))
-
-# precompile all the models (takes a little while)
-# precompile_tasks(tasks)
-# We can't actually do this here. It will be done anyway
-# within `model_compiler`
-
+tasks <- tasks_growth(iter = 1000, path="/home/data")
 # queue the jobs
+res <- enqueue_bulk(tasks, model_compiler, obj, progress_bar = FALSE)
+
+
+# true_dbh_dt has a higher log likelihood and thus is used for subseqent analysis.
+# Can we just add these jobs or do we need to create another redis queue? 
+tasks <- tasks_rho_combos(iter = 1000, growth_measure = 'true_dbh_dt')
 res <- enqueue_bulk(tasks, model_compiler, obj, progress_bar = FALSE)
