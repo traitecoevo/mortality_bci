@@ -1,61 +1,62 @@
 # Generic task builder function for clusterous
-tasks_2_run <- function(iter, name, growth_measure, rho_combo, tasks_run=tasks_run, path=".") {
+tasks_2_run <- function(analysis,iter, growth_measure, rho_combo="", path=".") {
+  if(!analysis %in% c("null_model","null_model_random_effects",
+                      "no_gamma_model", "no_gamma_model_random_effects",
+                      "growth_comparison","rho_combinations")) {
+    stop("analysis can only be one of the following: 
+                      'null_model,'null_model_random_effects',
+                      'no_gamma_model', 'no_gamma_model_random_effects',
+                      'growth_comparison','rho_combinations'")
+  }
+  
+  if(analysis =="rho_combinations") {
+  rho_combo <- expand.grid(a=c('','a'), b=c('','b'), c=c('','c'), stringsAsFactors = FALSE)
+  rho_combo <- sapply(split(rho_combo, seq_len(nrow(rho_combo))), function(x) paste0(x, collapse=''))
+  }
+  
   n_kfolds <- 10
   n_chains <- 3
   
-  ret <- expand.grid(experiment=name,
+  ret <- expand.grid(analysis=analysis,
                      iter=iter,
                      chain=seq_len(n_chains),
                      growth_measure=growth_measure,
                      rho_combo=rho_combo,
                      kfold=seq_len(n_kfolds),
                      stringsAsFactors=FALSE)
-  ret$modelid <- rep(1:nrow(unique(ret[,c('experiment','growth_measure','rho_combo','kfold')])),each = n_chains)
+  ret$modelid <- rep(1:nrow(unique(ret[,c('analysis','growth_measure','rho_combo','kfold')])),each = n_chains)
   ret$jobid <- seq_len(nrow(ret))
-  ret$filename <- sprintf("%s/results/%s/%d.rds", path, name, ret$jobid)
+  ret$filename <- sprintf("%s/results/%s/%d.rds", path, analysis, ret$jobid)
   ret$fold_data <- sprintf("%s/export/bci_data_%s.rds", path, ret$kfold)
-  if(isTRUE(tasks_run)) {
-    tasks <- tasks_growth()
-    i <- match(do.call(paste, ret[, c('chain', 'growth_measure', 'rho_combo', 'kfold')]),
-               do.call(paste, tasks[, c('chain', 'growth_measure', 'rho_combo', 'kfold')]))
-    ff <- file.copy(tasks$filename[na.omit(i)], ret$filename[which(!is.na(i))])
-    if(!all(ff)) {
-      warning(sprintf('Some previously run growth comparison models outputs failed to copy:\n%s',
-                      paste(tasks$filename[na.omit(i)][!ff], collapse='\n')))
-    }
-    return(ret[is.na(i), ]  )
-  }
   return(ret)
-}
-
-# Function that builds list of growth comparison jobs for clusterous
-tasks_growth <- function(iter=1000, name = 'growth_comparison',...) {
-  tasks_2_run(iter,
-              name=name,
-              growth_measure =  c("true_dbh_dt","true_basal_area_dt"),
-              rho_combo="",
-              tasks_run=FALSE, ...)
-}
-
-# Function that builds list of rho combination jobs for clusterous
-tasks_rho_combos <- function(iter=1000, growth_measure, name="rho_combinations", tasks_run) {
-  rho_combo <- expand.grid(a=c('','a'), b=c('','b'), c=c('','c'), stringsAsFactors = FALSE)
-  rho_combo <- sapply(split(rho_combo, seq_len(nrow(rho_combo))), function(x) paste0(x, collapse=''))
-  tasks_2_run(iter,
-              name=name,
-              growth_measure =  growth_measure,
-              rho_combo=rho_combo,
-              tasks_run=tasks_run)
 }
 
 # Compiles models for clusterous
 model_compiler <- function(task) {
   data <- readRDS(task$fold_data)
   dir.create(dirname(task$filename), FALSE, TRUE)
-  
+  analysis <- task$analysis
   ## Assemble the stan model:
-  chunks <- get_model_chunks(task)
+  if(analysis == "null_model") {
+    chunks <- get_model_chunks_null(task)
+  }
+  if(analysis == "null_model_random_effects") {
+    chunks <- get_model_chunks_null_re(task)
+  }
+  if(analysis == "no_gamma_model") {
+    chunks <- get_model_chunks_no_gamma(task)
+  }
+  if(analysis == "no_gamma_model_random_effects") {
+    chunks <- get_model_chunks_no_gamma_re(task)
+  }
+  if(analysis == "growth_comparison") {
+    chunks <- get_model_chunks_growth_comparison(task)
+  }
+  if(analysis == "rho_combinations") {
+    chunks <- get_model_chunks_rho_combinations(task)
+  }
   model <- make_stan_model(chunks)
+  
   filename <- precompile(task)
   message("Loading precompiled model from ", filename)
   model$fit <- readRDS(filename)
@@ -144,7 +145,25 @@ make_stan_model <- function(chunks) {
 # Precompiles model for clustereous
 precompile <- function(task) {
   path <- precompile_model_path()
-  chunks <- get_model_chunks(task)
+  analysis <- task$analysis
+  if(analysis == "null_model") {
+    chunks <- get_model_chunks_null(task)
+  }
+  if(analysis == "null_model_random_effects") {
+    chunks <- get_model_chunks_null_re(task)
+  }
+  if(analysis == "no_gamma_model") {
+    chunks <- get_model_chunks_no_gamma(task)
+  }
+  if(analysis == "no_gamma_model_random_effects") {
+    chunks <- get_model_chunks_no_gamma_re(task)
+  }
+  if(analysis == "growth_comparison") {
+    chunks <- get_model_chunks_growth_comparison(task)
+  }
+  if(analysis == "rho_combinations") {
+    chunks <- get_model_chunks_rho_combinations(task)
+  }
   model <- make_stan_model(chunks)
   sig <- digest::digest(model)
   fmt <- "%s/%s.%s"
@@ -199,21 +218,3 @@ precompile_docker <- function(docker_image) {
                      args=c("r", "-e", cmd))
 }
 
-run_full_data_model <- function(iter, growth_measure, rho_combo, data) {
-  chunks <- get_model_chunks_full_fit(rho_combo)
-  model <- make_stan_model(chunks)
-  stan_data <- prep_full_data_for_stan(data, growth_measure)
-  
-  rstan_options(auto_write = TRUE)
-  options(mc.cores = parallel::detectCores())
-  
-  fit <- stan(model_code = model$model_code, 
-              data= stan_data,
-              pars = model$pars, 
-              chains = 3,
-              iter = iter, 
-              control=list(adapt_delta=0.9,stepsize=0.05),
-              refresh=1,
-              thin=5)
-  return(fit)
-}
