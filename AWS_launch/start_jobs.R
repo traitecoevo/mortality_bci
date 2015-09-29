@@ -5,9 +5,9 @@ sources <- c("R/model.R",
              "R/utils.R")
 
 # FIRST RUN GROWTH COMPARISON ANALYSIS ON CLUSTER
-obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources)
+obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 # on cluster redis queue is called redis.marathon.mesos, but from local machine called localhost -- via exposed tunnel
-growth_tasks <- tasks_2_run(analysis = 'no_gamma_model',iter = 1000, 
+growth_tasks <- tasks_2_run(analysis = 'growth_comparison',iter = 1000, 
                      growth_measure = c('true_dbh_dt','true_basal_area_dt'),
                      path="/home/data")
 # queue the jobs
