@@ -181,9 +181,37 @@ precompile <- function(task) {
   filename_rds
 }
 
+#THIS ISN'T ELEGANT BUT IT WORKS
 precompile_all <- function() {
-  tasks <- tasks_growth(iter=10)
-  vapply(df_to_list(tasks), precompile, character(1))
+  #Growth comparison models
+  growth_tasks <- tasks_2_run(analysis = 'growth_comparison',iter = 10, 
+                              growth_measure = c('true_dbh_dt','true_basal_area_dt'))
+  vapply(df_to_list(growth_tasks), precompile, character(1))
+  
+  #Rho combination models
+  rho_tasks <- tasks_2_run(analysis = 'rho_combinations',iter = 10, 
+                           growth_measure = 'true_dbh_dt')
+  vapply(df_to_list(rho_tasks), precompile, character(1))
+  
+  #Null model
+  null_tasks <- tasks_2_run(analysis = 'null_model',iter = 10, 
+                            growth_measure = 'true_dbh_dt')
+  vapply(df_to_list(null_tasks), precompile, character(1))
+  
+  #Null model with random effects
+  null_re_tasks <- tasks_2_run(analysis = 'null_model_random_effects',iter = 10, 
+                               growth_measure = 'true_dbh_dt')
+  vapply(df_to_list(null_re_tasks), precompile, character(1))
+
+  #No gamma model
+  no_gamma_tasks <- tasks_2_run(analysis = 'no_gamma_model',iter = 10, 
+                                growth_measure = 'true_dbh_dt')
+  vapply(df_to_list(no_gamma_tasks), precompile, character(1))
+  
+  #No gamma model random effect
+  no_gamma_re_tasks <- tasks_2_run(analysis = 'no_gamma_model_random_effects',iter = 10, 
+                                   growth_measure = 'true_dbh_dt')
+  vapply(df_to_list(no_gamma_re_tasks), precompile, character(1))
 }
 
 ## Wrapper around platform information that will try to determine if
