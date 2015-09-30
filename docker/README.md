@@ -17,24 +17,63 @@ Not all of this is strictly necessary, and it depends how you want to interact w
 * To build the docker image you will need the [`dockertest`](https://github.com/traitecoevo/dockertest) package
 * To connect to the image or interact with the queuing system from the host you will need the [`rrqueue`](https://github.com/traitecoevo/rrqueue) packages.
 
-These have a set of dependencies that are not on CRAN, and the simplest way to install is via our [`drat`](https://github.com/traitecoevo/drat) repository (`drat` itself can be installed with `install.packages("drat")`)
+These packages depend on several non CRAN packages. These include [`redis`](http://redis.io),
+[`hiredis`](https://github.com/redis/hiredis),
+[`RedisAPI`](https://github.com/ropensci/RedisAPI),
+[`RedisHeartBeat`](https://github.com/richfitz/RedisHeartbeat),
+[`storr`](https://github.com/richfitz/storr),
+[`ids`](https://github.com/richfitz/ids),
+[`callr`](https://github.com/traitecoevo/callr/tree/master)
+
+## Installing redis
+Currently `redis` does not officially support Windows. However, Microsoft Open Tech group have developed and maintaineds a Windows port that can be downloaded [here](https://github.com/MSOpenTech/redis).
+On a Mac The easiest way to install `redis` is to open up a terminal and run the following:
 
 ```
-drat:::add("traitecoevo")
-install.packages(c("rrqueue", "dockertest"))
+wget http://download.redis.io/redis-stable.tar.gz
+tar xvzf redis-stable.tar.gz
+cd redis-stable
+make
+sudo make install
+```
+*Note* If you haven't installed `wget` a binary can be downloaded [here](http://rudix.org/packages/wget.html).
+
+
+## Installing hiredis
+
+Once `redis` is installed start `redis-server` by typing in a terminal window:
+```
+redis-server
+```
+Now download the latest tar.gz release of [`hiredis`](https://github.com/redis/hiredis/releases).
+Open a new terminal window and move to the path `hiredis` was downloaded. Now run the following (replacing: `hiredis-0.XX.Y.tar.gz` and later `cd hiredis-0.XX.Y`  with the actual filenames
+
+```
+tar -zxvf hiredis-0.XX.Y.tar.gz
+cd hiredis-0.XX.Y 
+make
+sudo make install
+```
+*NOTE* After installing the above, and if you are using OSX and `bash`, you will need to add `export DYLD_LIBRARY_PATH=/usr/local/lib` anywhere in your `~/.profile`. Create this file if it does not exist.
+If you are using `zshell` add the above to your `~/.zshrc`.
+
+## Installing remaining non-CRAN packages
+Now we can install the remaining packages by opening R and running:
+
+```
+install.packages(c("RcppRedis", "R6", "digest", "docopt"))
+devtools::install_github(c("ropensci/RedisAPI", "richfitz/RedisHeartbeat", "richfitz/storr", "richfitz/ids", "richfitz/remake"))
+devtools::install_github("traitecoevo/rrqueue","traitecoevo/callr")
+devtools::install_github("traitecoevo/dockertest")
+remake::install_remake("/usr/local/bin") # this allows us to access remake via the terminal
 ```
 
-Note that on Linux, some dependencies of these packages will require headers for curl (e.g., `libcurl4-openssl-dev`) and hiredis (e.g., libhiredis-dev).
+*NOTE* that on Linux, some dependencies of these packages will require headers for curl (e.g., `libcurl4-openssl-dev`) and hiredis (e.g., libhiredis-dev).
 
-Alternatively, to install directly from github:
 
-```
-devtools::install_github(c("traitecoevo/dockertest", "ropensci/RedisAPI", "richfitz/storr", "traitecoevo/rrqueue"))
-```
+Building the docker image requires a lot of memory because it must compile and install `rstan`.  On Windows/OSX, the default virtual box is not big enough, and you will need to create a virtual machine with more memory.
 
-Building the docker image requires a lot of memory because it must compile and install `rstan`.  On Windows/OSX, the default virtual box is not big enough, and you will need to create a virtual machine with more memory
-
-As such, the container require 6GB for compilation. Using the terminal and the Docker command `docker-machine` we create a new Docker container with 6GB of virtual memory called `mem6GB`
+As such, the container requires 6GB for compilation. Using the terminal and the Docker command `docker-machine` we create a new Docker container with 6GB of virtual memory called `mem6GB`
 
 ```
 docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
@@ -68,10 +107,11 @@ Building the image will also clone the source into the folder `self`, but if it'
 
 ### Pre-processed data
 
-Runing
+First move to the parent directory `mortality_bci`
 
+Running:
 ```
-remake::make()
+remake
 ```
 
 will build all the data that is required.  This will take a long time, and cloning might be better:
@@ -81,9 +121,9 @@ git clone git@github.com:traitecoevo/mortality_data.git data
 ```
 
 ### Pre-compiled models
-
+Because compiling the models uses alot of RAM we first precompile them for subsequent use by running:
 ```
-remake::make("models_precompiled_docker")
+remake models_precompiled_docker
 ```
 
 This requires building the docker image, so might not be a good idea.  Alternatively, clone:
@@ -98,13 +138,9 @@ time will tell if that is a sensible thing to do (note it will not work well if 
 
 Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` container (see previous section).
 
-Then move your working directory from `mortality_bci/docker` back to the parent directory `mortality_bci`. And if you're starting in a new terminal, don't forget to set path variables:
+In the parent parent directory `mortality_bci`. We're now going to setup three different Docker containers.
+*NOTE* If you're using a new terminal, don't forget to set path variables by rerunning: `eval "$(docker-machine env mem6GB)"`
 
-```
-eval "$(docker-machine env mem6GB)"
-```
-
-We're now going to setup three different Docker containers.
 
 First, we start a container running Redis - this will sit in the background and act as a database catching results:
 
@@ -145,38 +181,72 @@ The components of this command are:
 * `traitecoevo/mortality_bci:latest` is the image created above
 * `R` run R rather than `bash`, which is the default for this image.
 
-Then in R, add the jobs and compile the stan models:
+Then in R, add the jobs listed in `AWS_launch/start_jobs.R` and compile the stan models:
 
 ```r
 library(rrqueue)
 packages <- c("rstan")
 sources <- c("R/model.R",
-             "R/task_compiler.R",
              "R/stan_functions.R",
              "R/utils.R")
-obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 
-tasks <- tasks_growth(iter = 10) # Set to 10 for testing, set to 1000 for actual deployment
-res <- enqueue_bulk(tasks, model_compiler, obj)
+# FIRST RUN GROWTH COMPARISON ANALYSIS ON CLUSTER
+obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources)
+# On the cluster redis queue is called redis.marathon.mesos, but from local machine called localhost -- via exposed tunnel
+growth_tasks <- tasks_2_run(analysis = 'growth_comparison',iter = 1000, 
+                     growth_measure = c('true_dbh_dt','true_basal_area_dt'),
+                     path="/home/data")
+# queue the jobs
+res <- enqueue_bulk(growth_tasks, model_compiler, obj, progress_bar = FALSE)
+
+# NEXT FIND THE MOST PARIMONIOUS COMBINATION OF wood densities
+# true_dbh_dt has a higher log likelihood and thus is used for subseqent analysis.
+rho_tasks <- tasks_2_run(analysis = 'rho_combinations',iter = 1000, 
+                     growth_measure = 'true_dbh_dt',
+                     path="/home/data")
+res <- enqueue_bulk(rho_tasks, model_compiler, obj, progress_bar = FALSE)
+
+# NULL MODEL
+# What about a model with just a constant hazard?
+null_tasks <- tasks_2_run(analysis = 'null_model',iter = 1000, 
+                     growth_measure = 'true_dbh_dt',
+                     path="/home/data")
+res <- enqueue_bulk(null_tasks, model_compiler, obj, progress_bar = FALSE)
+
+# NULL MODEL VARIES BY SPECIES ID
+null_re_tasks <- tasks_2_run(analysis = 'null_model_random_effects',iter = 1000, 
+                     growth_measure = 'true_dbh_dt',
+                     path="/home/data")
+res <- enqueue_bulk(null_re_tasks, model_compiler, obj, progress_bar = FALSE)
+
+# TRADITIONAL NEGATIVE EXPONENTIAL WITHOUT GAMMA
+
+no_gamma_tasks <- tasks_2_run(analysis = 'no_gamma_model',iter = 1000, 
+                     growth_measure = 'true_dbh_dt',
+                     path="/home/data")
+res <- enqueue_bulk(no_gamma_tasks, model_compiler, obj, progress_bar = FALSE)
+
+# TRADITIONAL NEGATIVE EXPONENTIAL WITHOUT GAMMA BUT WITH RANDOM EFFECTS
+
+no_gamma_re_tasks <- tasks_2_run(analysis = 'no_gamma_model_random_effects',iter = 1000, 
+                     growth_measure = 'true_dbh_dt',
+                     path="/home/data")
+res <- enqueue_bulk(no_gamma_re_tasks, model_compiler, obj, progress_bar = FALSE)
 ```
 
 Things to note here:
 
-* `redis_host="redis"` points the queue at Redis running on the machine "redis", which is the name of the linked container
-* The queue name is `rrq` but tou can use whatever you fancy.
+* If you wish to run models locally as opposed to on a cluster change `redis_host="localhost"` to `redis_host="redis"`. This points the queue at Redis running on the machine "redis", which is the name of the linked container
+* The queue name is `rrq` but you can use whatever you fancy.
 
 Which will display a progress bad with a spinner on the right hand side.
 
 The precompilation is a bit tricky: it will persist to disk, but will only reliably work on when loaded from the docker container.
 
-Third, we create workers that ask for, and then undertake, jobs from the controller.  Because the controller is still running (it actually does not ned to be), you'll need to open a new terminal window, also in the project root.
 
-```
-eval "$(docker-machine env mem6GB)"
-docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
-```
+Third, we create workers that ask for, and then undertake, jobs from the controller.  Because the controller is still running (it actually does not ned to be), you'll need to open a new terminal window in the directory `mortality_bci/docker`.
 
-Alternatively, this can be launched via dockertest:
+Now workers can be launched via dockertest by running:
 
 ```
 dockertest launch --machine mem6GB --link mortality_bci_redis:redis -- rrqueue_worker --redis-host redis rrq
@@ -191,6 +261,12 @@ The arguments here are identical to the controller above, except for the command
 The `rrqueue_worker` command is built into `rrqueue` and creates a worker, looking for Redis on the host "redis" (which is the linked container) and reading jobs from the queue "rrq" (which is what the controller added jobs to above).
 
 If you want to run multiple workers, open up more terminal tabs/windows and run the above code. (Currently we can only run 2 workers because the jobs require a lot of memory, due to compiling C++ code and rstan being a memory hungry monster).
+
+Alternatively workers may be launched without dockertest by running the following within the parent directory `mortality_bci`:
+```
+eval "$(docker-machine env mem6GB)"
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
+```
 
 ## Preparing for use with clusterous
 
