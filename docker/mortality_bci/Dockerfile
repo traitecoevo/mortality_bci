@@ -26,6 +26,7 @@ RUN installGithub.r  \
     traitecoevo/dockertest \
     richfitz/storr \
     richfitz/remake \
+    richfitz/ids \
     ropensci/RedisAPI \
     richfitz/RedisHeartbeat \
     gaborcsardi/progress \

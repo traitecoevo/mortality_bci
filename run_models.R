@@ -4,7 +4,6 @@
 
 packages <- c("rstan")
 sources <- c("R/model.R",
-             "R/task_compiler.R",
              "R/stan_functions.R",
              "R/utils.R")
 
@@ -17,5 +16,7 @@ for (s in sources) {
 
 
 # Launching growth comparison analysis - need to replace mclapply
-tasks <- tasks_growth(iter = 1000, name="growth_comparison")
+tasks <- tasks_2_run(analysis = 'no_gamma_model',iter = 10,growth_measure = 'true_dbh_dt')
+tasks <- tasks[1,]
 ret <- parallel::mclapply(df_to_list(tasks), model_compiler, mc.cores = getOption("mc.cores", 2L))
+

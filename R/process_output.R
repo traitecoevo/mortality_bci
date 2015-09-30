@@ -1,16 +1,16 @@
 
-packages <- c("rstan")
-sources <- c("R/model.R",
-             "R/task_compiler.R",
-             "R/stan_functions.R",
-             "R/utils.R")
+# packages <- c("rstan")
+# sources <- c("R/model.R",
+#              "R/task_compiler.R",
+#              "R/stan_functions.R",
+#              "R/utils.R")
 
-for (p in packages) {
-  library(p, character.only=TRUE, quietly=TRUE)
-}
-for (s in sources) {
-  source(s)
-}
+# for (p in packages) {
+#   library(p, character.only=TRUE, quietly=TRUE)
+# }
+# for (s in sources) {
+#   source(s)
+# }
 
 
 
