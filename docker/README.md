@@ -193,8 +193,8 @@ sources <- c("R/model.R",
              "R/stan_functions.R",
              "R/utils.R")
 
-# FIRST RUN GROWTH COMPARISON ANALYSIS ON CLUSTER
-obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources)
+# FIRST RUN GROWTH COMPARISON ANALYSIS
+obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 # On the cluster redis queue is called redis.marathon.mesos, but from local machine called localhost -- via exposed tunnel
 growth_tasks <- tasks_2_run(analysis = 'growth_comparison',iter = 1000, 
                      growth_measure = c('true_dbh_dt','true_basal_area_dt'),
@@ -239,7 +239,7 @@ res <- enqueue_bulk(no_gamma_re_tasks, model_compiler, obj, progress_bar = FALSE
 
 Things to note here:
 
-* If you wish to run models locally as opposed to on a cluster change `redis_host="localhost"` to `redis_host="redis"`. This points the queue at Redis running on the machine "redis", which is the name of the linked container
+* `redis_host="redis"` points the queue at Redis running on the machine "redis", which is the name of the linked container
 * The queue name is `rrq` but you can use whatever you fancy.
 
 Which will display a progress bad with a spinner on the right hand side.
