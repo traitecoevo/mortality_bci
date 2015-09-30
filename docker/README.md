@@ -65,7 +65,6 @@ install.packages(c("RcppRedis", "R6", "digest", "docopt"))
 devtools::install_github(c("ropensci/RedisAPI", "richfitz/RedisHeartbeat", "richfitz/storr", "richfitz/ids", "richfitz/remake"))
 devtools::install_github("traitecoevo/rrqueue","traitecoevo/callr")
 devtools::install_github("traitecoevo/dockertest")
-remake::install_remake("/usr/local/bin") # this allows us to access remake via the terminal
 ```
 
 *NOTE* that on Linux, some dependencies of these packages will require headers for curl (e.g., `libcurl4-openssl-dev`) and hiredis (e.g., libhiredis-dev).
@@ -107,9 +106,13 @@ Building the image will also clone the source into the folder `self`, but if it'
 
 ### Pre-processed data
 
-First move to the parent directory `mortality_bci`
+First move to the parent directory `mortality_bci`.
+So we can access remake outside of R we first run:
 
-Running:
+```
+sudo Rscript -e 'remake::install_remake("/usr/local/bin")'
+```
+Then running:
 ```
 remake
 ```
@@ -249,7 +252,7 @@ Third, we create workers that ask for, and then undertake, jobs from the control
 Now workers can be launched via dockertest by running:
 
 ```
-dockertest launch --machine mem6GB --link mortality_bci_redis:redis -- rrqueue_worker --redis-host redis rrq
+./dockertest launch --machine mem6GB --link mortality_bci_redis:redis -- rrqueue_worker --redis-host redis rrq
 ```
 
 * The `--` separates options to dockertest from the program to run and its options.
