@@ -26,7 +26,7 @@ These packages depend on several non CRAN packages. These include [`redis`](http
 [`callr`](https://github.com/traitecoevo/callr/tree/master)
 
 ## Installing redis
-Currently `redis` does not officially support Windows. However, Microsoft Open Tech group have developed and maintaineds a Windows port that can be downloaded [here](https://github.com/MSOpenTech/redis).
+Currently `redis` does not officially support Windows. However, Microsoft Open Tech group have developed and maintain a Windows port that can be downloaded [here](https://github.com/MSOpenTech/redis).
 On a Mac The easiest way to install `redis` is to open up a terminal and run the following:
 
 ```
@@ -38,14 +38,14 @@ sudo make install
 ```
 *Note* If you haven't installed `wget` a binary can be downloaded [here](http://rudix.org/packages/wget.html).
 
-
-## Installing hiredis
-
 Once `redis` is installed start `redis-server` by typing in a terminal window:
 ```
 redis-server
 ```
-Now download the latest tar.gz release of [`hiredis`](https://github.com/redis/hiredis/releases).
+
+## Installing hiredis
+
+Download the latest tar.gz release of [`hiredis`](https://github.com/redis/hiredis/releases).
 Open a new terminal window and move to the path `hiredis` was downloaded. Now run the following (replacing: `hiredis-0.XX.Y.tar.gz` and later `cd hiredis-0.XX.Y`  with the actual filenames
 
 ```
@@ -69,6 +69,8 @@ devtools::install_github("traitecoevo/dockertest")
 
 *NOTE* that on Linux, some dependencies of these packages will require headers for curl (e.g., `libcurl4-openssl-dev`) and hiredis (e.g., libhiredis-dev).
 
+
+## Building the docker image
 
 Building the docker image requires a lot of memory because it must compile and install `rstan`.  On Windows/OSX, the default virtual box is not big enough, and you will need to create a virtual machine with more memory.
 
@@ -100,7 +102,6 @@ docker pull traitecoevo/mortality_bci:latest
 
 Below we setup 'workers' and a 'controller' using this image, but the workers run `rrqueue_worker_tee` rather than an interactive R session.
 
-Building the image will also clone the source into the folder `self`, but if it's out of date, it will refresh it
 
 ## Building the prerequsites
 
@@ -112,6 +113,7 @@ So we can access remake outside of R we first run:
 ```
 sudo Rscript -e 'remake::install_remake("/usr/local/bin")'
 ```
+
 Then running:
 ```
 remake
@@ -124,18 +126,20 @@ git clone git@github.com:traitecoevo/mortality_data.git data
 ```
 
 ### Pre-compiled models
-Because compiling the models uses alot of RAM we first precompile them for subsequent use by running:
+
+Because compiling the models uses a lot of RAM we first pre-compile them for subsequent use by running:
+
 ```
 remake models_precompiled_docker
 ```
 
-This requires building the docker image, so might not be a good idea.  Alternatively, clone:
+Alternatively, clone:
 
 ```
 git clone git@github.com:traitecoevo/mortality_models.git models
 ```
 
-time will tell if that is a sensible thing to do (note it will not work well if you've already run the native precompiled models, gah.)
+(time will tell if that is a sensible thing to do  -- will not work well if you've already run the native precompiled models, gah.)
 
 ## Running the mortality analysis in docker containers
 
@@ -143,7 +147,6 @@ Pull (or build) the most recent copy of the `traitecoevo/mortality_bci` containe
 
 In the parent parent directory `mortality_bci`. We're now going to setup three different Docker containers.
 *NOTE* If you're using a new terminal, don't forget to set path variables by rerunning: `eval "$(docker-machine env mem6GB)"`
-
 
 First, we start a container running Redis - this will sit in the background and act as a database catching results:
 
@@ -162,8 +165,8 @@ Error response from daemon: Conflict. The name "mortality_bci_redis" is already 
 ```
 
 and will need to do the following:
-```
 
+```
 docker stop mortality_bci_redis
 docker rm mortality_bci_redis
 docker run --name mortality_bci_redis -d redis
@@ -244,7 +247,7 @@ Things to note here:
 
 Which will display a progress bad with a spinner on the right hand side.
 
-The precompilation is a bit tricky: it will persist to disk, but will only reliably work on when loaded from the docker container.
+The pre-compilation is a bit tricky: it will persist to disk, but will only reliably work on when loaded from the docker container.
 
 
 Third, we create workers that ask for, and then undertake, jobs from the controller.  Because the controller is still running (it actually does not ned to be), you'll need to open a new terminal window in the directory `mortality_bci/docker`.
@@ -252,7 +255,7 @@ Third, we create workers that ask for, and then undertake, jobs from the control
 Now workers can be launched via dockertest by running:
 
 ```
-./dockertest launch --machine mem6GB --link mortality_bci_redis:redis -- rrqueue_worker --redis-host redis rrq
+./dockertest launch --link mortality_bci_redis:redis -- rrqueue_worker --redis-host redis rrq
 ```
 
 * The `--` separates options to dockertest from the program to run and its options.
