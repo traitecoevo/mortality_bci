@@ -92,6 +92,8 @@ To build the `traitecoevo/mortality_bci` docker container from the terminal firs
 
 which will arrange connecting to your new, larger VM and build the image.
 
+(**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added).
+
 The build can take a while, so we have pushed a pre-built image to dockerhub, which you can retrieve via the terminal using:
 
 ```
