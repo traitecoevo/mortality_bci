@@ -1,7 +1,8 @@
-packages <- c("rstan")
+packages <- c("rstan", "dplyr")
 sources <- c("R/model.R",
              "R/stan_functions.R",
-             "R/utils.R")
+             "R/utils.R",
+             "R/process_output.R")
 
 for (p in packages) {
   library(p, character.only=TRUE, quietly=TRUE)

@@ -32,7 +32,7 @@ compile_models <- function(analysis) {
   else {
     growth_measure <- 'true_dbh_dt'
   }
-  tasks <- tasks_2_run(analysis, growth_measure = growth_measure)
+  tasks <- tasks_2_run(analysis, growth_measure = growth_measure, iter = 1000)
   sets <- split(tasks,  list(tasks$analysis,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
   
   fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
