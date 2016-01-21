@@ -1,47 +1,23 @@
 ---
-title: "Wood density and the growth-dependent & independent mortality"
-author: "J S Camac"
-date: "17 August 2015"
+title: "Modelling plant mortality: integrating intra and interspecific approaches"
+author: James S Camac, Richard G FitzJohn, Mark Westoby, Daniel S Falster
+date: "21 January 2016"
+csl: data/style.csl
+bibliography: data/refs.bib
 output: pdf_document
-#csl: downloads/style.csl
-#bibliography: data/refs.bib
 ---
+# Abstract
 
 # Introduction
+Plant mortality is often modelled as a function of recent growth because it is thought to reflect the summed effects of many biotic and abiotic factors on a plants overall carbon budget [Kobe:1995tw; @Hawkes:2000ib; @Keane:2001db; @Wyckoff:2002ul]. As such, growth rates are considered a highly integrated individual-based predictor of plant mortality [@Hawkes:2000ib]. Within a species, the assumption of the growth-mortality relationship is that fast growing individuals (i.e. those that have larger carbon budgets) are more able to buffer stress and thus have higher survivorship relative to slow growing (i.e. low carbon budget) individuals [@Hawkes:2000ib; @Keane:2001db]. Empirical studies examining this growth-mortality relationship have broadly supported this assumption, with many highlighting non-linear declines in mortality with increased growth [e.g. @Kobe:1997vy; @Wyckoff:2002ul; @Vieilledent:2010fv]. Consequently, most dynamic vegetation models, including tree gap models [@Keane:2001db], individual-based forest simulators [e.g. SORTIE; @Pacala:1996vm] and Dynamic Global Vegetation Models [DGVMs; @Woodward:2004ft] use some measure of growth coupled with a stochastic constant (i.e. baseline hazard or minimum chance of death) as the fundamental determinants of plant mortality [@Hawkes:2000ib; @McDowell:2011dr]. 
 
-Understanding who lives or dies, and why, is critical to predicting population, community and ecosystem dynamics [@Hawkes:2000ib; @McDowell:2011dr]. In plants, the carbon budget is considered a fundamental determinant of mortality, such that if rates of carbon assimilation are low or become insufficient for growth, an individual has a higher probability of dying [@Peet:1987va; @Hawkes:2000ib; @Keane:2001db; @McDowell:2011dr]. Empirical studies examining intraspecific mortality have broadly supported this assumption, with many finding that probability of death declines exponentially with increasing growth rates [@Buchman:1983vx; @Kobe:1997vy; @Wyckoff:2002ul; @Mantgem:2003dw]. Consequently, most dynamic vegetation models, including tree gap models [@Botkin:1972ii; @Keane:2001db], individual-based forest simulators (e.g. SORTIE; REF) and Dynamic Global Vegetation Models (DGVM's; @Woodward:2004ft) use this growth-mortality relationship as the predominant, and in some cases, only mechanism describing plant mortality [@Hawkes:2000ib; @McDowell:2011dr]. 
+However, due to a paucity of data on plant mortality, most dynamic vegetation models have implemented mortality algorithms using overly simplistic assumptions [@Hawkes:2000ib; Wyckoff:2000un; @McDowell:2011dr]. One of the strongest assumptions these models make is that both baseline hazard and the growth-mortality relationship are constant across species [@Pacala:1996vm, @Hawkes:2000ib; Wyckoff:2000un]. That is, all species have the same random chance of death and exhibit the same tolerance to low growth. This is despite growing empirical evidence highlighting that mortality rates vary considerably between species, even within the same community (@Kobe:1997vy; @Wyckoff:2002ul; @Kunstler:2005bn; @Vieilledent:2010fv). More recently, however, attempts have been made to examine this inter-specific variation by correlating species intrinsic growth and mortality rates [e.g. @Poorter:2008iu; @Wright:2010fl]. In contrast to intraspecific studies, these studies have shown that species with intrinsically faster growth rates exhibit higher mortality rates relative to slower growing species [Loehle:1996vw; @Poorter:2008iu; @Wright:2010fl]. As such, species appear to exhibit a trade off between greater growth versus greater survival. Ecologists have attempted to explain this interspecific variation by using functional traits - attributes of species that are thought to influence vital rates (i.e. survival, growth and reproduction) and ultimately fitness [@Westoby:2002tb; @Ackerly:2003eb; @Falster:2015un]. 
 
+Wood density, the biomass invested per unit wood volume, is one functional trait that has been consistently shown to be negatively correlated with tropical tree mortality [@Chave:2009iy; @Poorter:2008iu; @Kraft:2010kq; @Wright:2010fl]. The underlying mechanism of this relationship is thought to be due to denser wood conveying enhanced physical resistance to random events such as stem breakage [@Putz:1983wu; @vanGelder:2006exa; @Chave:2009iy], embolism [@Hacke:2001kj, @Jacobsen:2005fx] and fungal and pathogen attack [@Augspurger:1984wx]. As such, it is hypothesized that species with higher wood density are likely to exhibit lower baseline hazards. However, research has also shown that wood density may increase tolerance to low growth rates, and thus alter the growth-mortality relationship. For example, species with high wood density are more tolerant shade [@vanGelder:2006exa] and competition [@Kunstler:2016km]. Studies have also shown that wood density may reduce drought induced carbon starvation [@McDowell:2011dr] and the susceptibility of ‘stressed’ individuals to opportunistic invertebrate, pathogen or fungal attack [@Augspurger:1984wx; @McDowell:2011dr].
 
-However, many dynamic vegetation models assume the growth-mortality relationship is constant across species. This is despite empirical evidence highlighting that mortality rates vary considerably between species. In contrast to intraspecific studies, multispecies studies have shown that species with intrinsically faster growth rates exhibit higher mortality rates relative to slower growing species [@Poorter:2008iu; @Wright:2010fl]. Ecologists have attempted to explain this interspecific variation by using functional traits - attributes of species that are thought to influence vital rates (i.e. survival, growth and reproduction) and ultimately fitness [@Ackerly:2003eb; @Poorter:2008iu]. Wood density, the biomass invested per unit wood volume, is one such functional trait that has been consistently shown to be negatively correlated with tropical tree mortality [@Chave:2009iy; @Nascimento:2005wx; @King:2006he; @AlvarezClare:2007gv; @Chao:2008hg; @Poorter:2008iu; @Kraft:2010kq; @Wright:2010fl]. The underlying mechanism of this relationship is thought to be due to denser wood conveying enhanced physical resistance to stem breakage [@Putz:1983wu; @vanGelder:2006ex; @Chave:2009iy], wood herbivory (NEED REF), embolism [@Hacke:2001kj, @Jacobsen:2005fx, @Preston:2006jn] and fungal and pathogen attack [@Augspurger:1984wx]. However, research has also shown that wood density may increase survival associated with growth-dependent mortality. For example, species with high wood density are often more shade tolerant, [ADD something about competitition from Kunstler et al Nature paper] and thus exhibit a lower probability of dying at low growth rates [e.g. @vanGelder:2006ex]. Studies have also shown that wood density may reduce drought induced carbon starvation [@McDowell:2011dr] and the susceptibility of ‘stressed’ individuals to opportunistic invertebrate, pathogen or fungal attack [@Augspurger:1984wx; @McDowell:2011dr].
+What both intraspecific and interspecific studies have highlighted is that both individual (e.g. growth rates) and species (e.g. function traits) characteristics are required in order to develop generalizable models of plant mortality. However, to date, there has been little crossover of ideas between intraspecific and interspecific studies of plant mortality. For example, we are aware of only one study that uses individual based plant mortality empirical models to examine trait effects on baseline hazards [@AubryKientz:2013dg], and none that examine how traits mediate the growth-mortality relationship.
 
-
-To date, researchers have examined plant mortality by: 1) using individual based covariates (e.g. growth, size) within species [e.g. @Kobe:1997vy]; or 2) examining correlations between population level estimates of plant mortality (e.g. Wright et al 2010, Chave et al 2004). However, there has been little crossover of ideas between these two research focuses. For example, as far as we are aware, no study has examined how functional traits mediate the negative exponential relationship between growth and mortality. Furthermore, some fundamental questions have yet to be answered such as whether an area or diameter based growth rate better predicts plant mortality. Lastly, we are unaware of any attempt to partition plant mortality into growth
-
-Lastly, we are unaware of a model that attempts to simultaneously estimat 
-
-Lastly, we are unaware of a model that attempts because most plant mortality data is binary (i.e. alive/dead), 
-
-
-there has been there have been few attempts to partition mortality into growth related and stochastic
-
-
-
- little consideration has been given to whether an area or diameter based growth rate better predicts plant mortality. This is despite both individual (e.g. growth rates) and species (e.g. function traits) characteristics likely to be required in order to develop an accurate and general model of how the growth effects plant mortality. Furthermore, both research focuses have used
-
-In this study, we reconcile both research focuses by using 15-years of growth and mortality data from 203 tropical rainforest species encompassing more than 180,000 individuals in a Bayesian hierarchical model that explicitly accounts for variability observed both within and between species. Specifically, our model uses the negative exponential growth-mortalty relationship commonly observed and fitted in intraspecific studies and extends this by both adding a growth-independent baseline hazard, and by allowing each parameter to vary as a function of species level traits (in this case wood density).
-
-## BASELINE HAZARDS
-## GROWTH MEASURE
-
-
-In this study, we reconcile both research focuses by fitting 15-years of growth and mortality data from 203 tropical rainforest species encompassing more than 180,000 individuals in a Bayesian hierarchical model that explicitly accounts for variability observed both within and between species. Specifically, our model uses the negative exponential growth-mortalty relationship commonly observed and fitted in intraspecific studies and extends this by both adding a growth-independent baseline hazard, and by allowing each parameter to vary as a function of species level traits (in this case wood density).
-
-We then use this model, coupled with k-fold cross validation to address four questions:
-
-1. Which growth measure is most predictive of plant mortality?
-2. Does wood density influence both the growth-mortality trade-off and growth independent mortality?
-3. Does the effects of wood density vary with growth measure? and
-4. What is the most parsimonious mortality model in terms of wood density effects?
+In this study, we reconcile both intraspecific and interspecific theory by developing an individual based plant mortality model that incorporates individual based measurements of growth as well as the species trait wood density. Furthermore, we extend existing individual-based approaches [e.g. @Kobe:1995tw] by simultaneously estimating both baseline hazards and the growth-mortality relationship (hereon in referred to as growth-dependent hazard). We parameterise this model using 15-years of individual dbh growth and mortality data from 203 tropical rainforest species encompassing more than 180,000 individuals. Using this model,coupled with cross validation, we ask several questions: 1) Does simultaneously estimating baseline and growth-dependent hazards improve predictive capacity relative to the null model or growth-dependent only model (e.g. Kobe et al 1996) 2) Does allowing both hazards to vary by species improve predictive capacity? 3) Does wood density predominately affect baseline hazards, or does it affect growth-dependent hazards or both? 4) What better predicts plant mortality, absolute dbh growth or basal area growth? 
 
 \pagebreak
 
@@ -51,7 +27,7 @@ We then use this model, coupled with k-fold cross validation to address four que
 
 We fit our model using growth and survival data collected from a 50-ha tropical rainforest plot on Barro Colorado Island (BCI), Panama (9.15&deg;N, 79.85&deg;W). The plot is predominately undisturbed old-growth rainforest (48-ha), but 2 ha is of 100 year old secondary rainforest (REF). The climate at Barro Colorado Island is warm throughout the year with a mean annual temperature of 26.1&deg;. Rainfall is seasonal with most of the 2500 mm falling between April and November (REF). The island is managed exclusively for field research by the Smithsonian Tropical Research Institute (STRI), which was granted long-term custodianship over the island by Panama's Environmental Authority. STRI have permission to establish the 50-ha plot as a permanent census in 1980. Detailed descriptions on the flora, fauna, geology and climate of BCI can be found in (REFS).
 
-Within the 50-ha BCI plot the diameter at breast height and survival status of all free-standing woody plants with a diameter greater or equal to 1 cm were recorded in 1981-1983, 1985, and every 5 years thereafter [@BarroColoradofores:2012up]. For the purpose of this study, we discarded data collected in 1982 and 1985 censuses because diameter measurements were rounded to the nearest 5 mm whereas later censuses were rounded to the nearest millimetre. We excluded individual trees that did not survive at least two censuses (two being required to estimate growth rates), were not consistently measured at 1.3 m, were multi-stemmed, or had re-sprouted or 'returned from the dead'. We also discarded species that do not exhibit secondary growth (e.g. palms and ferns), contained fewer than 10 individuals or did not contain a wood density estimate were also discarded. Extreme outliers: stems which grew more than 5 cm/yr or shrunk more than 25\% of their initial dbh were also removed. Lastly, in order to reduce computational requirements we randomly selected one observation per individual. In total, 180,500 individuals of 203 species were included in our analysis.
+Within the 50-ha BCI plot the diameter at breast height and survival status of all free-standing woody plants with a diameter greater or equal to 1 cm were recorded in 1981-1983, 1985, and every 5 years thereafter [@Condit:2012nz]. For the purpose of this study, we discarded data collected in 1982 and 1985 censuses because diameter measurements were rounded to the nearest 5 mm whereas later censuses were rounded to the nearest millimetre. We excluded individual trees that did not survive at least two censuses (two being required to estimate growth rates), were not consistently measured at 1.3 m, were multi-stemmed, or had re-sprouted or 'returned from the dead'. We also discarded species that do not exhibit secondary growth (e.g. palms and ferns), contained fewer than 10 individuals or did not contain a wood density estimate were also discarded. Extreme outliers: stems which grew more than 5 cm/yr or shrunk more than 25\% of their initial dbh were also removed. Lastly, in order to reduce computational requirements we randomly selected one observation per individual. In total, 180,500 individuals of 203 species were included in our analysis.
 
 Wood density for each species was estimated by coring trees located within 15 km of the BCI plot because increment borers are prohibited within the plot [@Wright:2010fl]. Cores were broken into pieces, each 5 cm long and specific gravity of each piece was determined by oven drying (100&deg;C) and dividing by the fresh volume (as measured by water displacement). Wood density was then calculated as an area-weighted average (g cm$^-3$), where area refers to the annulus represented by each piece, assuming a circular trunk.
 
@@ -100,7 +76,7 @@ These estimates of individual post growth were then used in the subsequent morta
 
 ## Mortality model description
 
-We extend a common functional form used to model the growth-mortality relationship [e.g. @Kobe:1995] to include a growth-independent baseline hazard, such that the functional form becomes
+We extend a common functional form used to model the growth-mortality relationship [e.g. @Kobe:1995tw] to include a growth-independent baseline hazard, such that the functional form becomes
 \begin{equation} \label{eq:lambda}
 \lambda = \overbrace{\alpha \, \exp\left(-\beta \, G \right)}^{\text{Growth dependent}} + \overbrace{\gamma}^{\text{Growth independent}}
 \end{equation}
@@ -150,37 +126,6 @@ We estimated $\mu_{\log \alpha_0}$, the average log species effect at zero growt
 
 This distribution was derived from data published by Kobe et al 1995, who estimated the probability of dying at zero growth/2.5 years for juveniles of 10 hardwood species across north-eastern America. Note that these data are also used to define the growth-mortality relationship in SORTIE-ND a spatially explicit forest dynamic model (REF). We converted these probabilities/2.5 years to instantaneous hazard rates by using $\lambda = -\log(1 - Pr(Death))/2.5$, and then log transforming these values and calculating the mean (i.e. -0.61) and standard error (i.e. 0.57). Based on this prior, we assumed that the average probability of death was between 16 and 81% with the central tendency being 42%/yr.
 
-```{r}
-# white ash
-median(c(0.999,0.55,0.998))
-# sugar maple
-median(c(0.998, 0.148, 0.999))
-# American beech
-median(c(0.014,0.12))
-# Yellow Birch
-median(c(0.555,0.995))
-# Red Maple
-0.99
-# Eastern hemlock
-0.077
-# Black cherry
-0.998
-# White oak
-0.82
-# Red oak
-0.985
-#White pine
-0.268
-
-# mean species instantaneous hazard rate (used medians for species with multiple measurements)
-M <- c(0.998,0.998,0.067,0.775,0.99,0.077,0.998,0.82,0.985, 0.268)
-k = - log(1-M)/2.5
-mean(log(k))
-
-# standard error
-sd(log(k))/sqrt(10)
-```
-
 Similarly, we used prior information from Korning and Balslev et al (1994) to estimate, $\mu_{\log \gamma_0}$, the average log species effect on $\gamma$, such that:
 
 \begin{equation} \label{eq:gamma0}
@@ -189,16 +134,7 @@ Similarly, we used prior information from Korning and Balslev et al (1994) to es
 
 This distribution was estimated the same way as in $\mu_{\log \alpha_0}$. That is we converted annual mortality probabilities of 17 tropical lowland tree species in Amazonian Ecuador that encompass the range of forest structure (i.e. understory species, small stemmed midcanopy species, large stemmed midcanopy species and canopy species) to instantaneous hazard rate, and then log transformed these and calculated the mean (i.e. -3.86) and standard error (i.e. 0.2) These annual mortality estimates were averaged over size and growth rates, and as such are likely to be an overestimate of the true value of $\gamma$. However, based on this prior, we assume that the average growth-independent species mortality will be 2.1%/yr with 95% of species growth-independent probabilities of occuring between 1.4% and 3.1%.
 
-EXAMPLE:
-```{r}
-M <- c(8.6,1.8,0.6,3.8,0.9,0.7,4.3,4.7,1.8,6.4,0.8,1,2,1.8,3.7,2.2,2.2)/100 # From Korning Baslev 1994
-k = - log(1-M)/1
-mean(log(k))
 
-# standard error
-sd(log(k))/sqrt(length(M))
-
-```
 As we fitted our model to two growth measures (i.e. dbh growth and basal area growth), we used weak normal priors on $\mu_{\log \beta_0}$, the average log species decay rate where:
 
 
@@ -249,178 +185,6 @@ We fitted these models using package rstan version 2.7 [@StanDevelopmentTeam:201
 
 
 
-\pagebreak
-
-## STAN MODEL
-```{r, eval=FALSE}
-data {
-  int<lower=1> n_obs;
-  int<lower=1> n_spp;
-  int<lower=1> spp[n_obs];
-  int<lower=0, upper=1> y[n_obs];
-  vector[n_obs] census_length;
-  vector[n_obs] growth_dt;
-  vector[n_spp] rho_c;
-  
-  // Held out data
-  int<lower=1> n_obs_heldout;
-  int<lower=1> n_spp_heldout;
-  int<lower=1> spp_heldout[n_obs_heldout];
-  int<lower=0, upper=1> y_heldout[n_obs_heldout];
-  vector[n_obs_heldout] census_length_heldout;
-  vector[n_obs_heldout] growth_dt_heldout;
-  vector[n_spp_heldout] rho_c_heldout;
-}
-
-parameters { 
-  
-  // Mortality model parameters
-  real raw_log_a0[n_spp];
-  real mu_log_a0;
-  real<lower=0> sigma_log_a0;
-  
-  real raw_log_b0[n_spp];
-  real mu_log_b0;
-  real<lower=0> sigma_log_b0;
-  
-  real raw_log_c0[n_spp];
-  real mu_log_c0;
-  real<lower=0> sigma_log_c0;
-  
-  
-  
-  
-}
-
-model {
-  
-  // Declaring mortality parameters
-  real alpha;
-  real a0[n_spp];
-  
-  real beta;
-  real b0[n_spp];
-  
-  real gamma;
-  real c0[n_spp];
-  
-  real cumulative_hazard;
-  
-  // Calculating species random effects
-  for (s in 1:n_spp) {
-    a0[s] <- exp(raw_log_a0[s] * sigma_log_a0 + mu_log_a0); // e.g. implies lognormal(mu_log_a0, sigma_log_a0)
-    b0[s] <- exp(raw_log_b0[s] * sigma_log_b0 + mu_log_b0);
-    c0[s] <- exp(raw_log_c0[s] * sigma_log_c0 + mu_log_c0);
-  }
-  
-  for (i in 1:n_obs) {
-    // Calculating mortality parameters
-    alpha <- a0[spp[i]]; 
-    beta <- b0[spp[i]]; 
-    gamma <- c0[spp[i]];
-    
-    // Likelihood for hazard model
-    cumulative_hazard <- -census_length[i] * (alpha * exp(-beta * growth_dt[i]) + gamma);
-    
-    if (y[i] == 0) {
-      increment_log_prob(cumulative_hazard);
-    } else {
-      increment_log_prob(log1m_exp(cumulative_hazard));
-    }
-  }
-  
-  // Priors
-  
-  //Mortality model priors
-  raw_log_a0 ~ normal(0,1);
-  mu_log_a0 ~ normal(-0.61, 0.57);
-  sigma_log_a0 ~ cauchy(0, 2.5);
-  
-  raw_log_b0 ~ normal(0, 1);
-  mu_log_b0 ~ normal(0, 5);
-  sigma_log_b0 ~ cauchy(0, 2.5);
-  
-  raw_log_c0 ~ normal(0, 1);
-  mu_log_c0 ~ normal(-3.86, 0.2);
-  sigma_log_c0 ~ cauchy(0, 2.5);
-  
-  
-  
-  
-}
-
-generated quantities {
-  
-  // Declaring fitted parameters
-  real a0[n_spp];
-  real b0[n_spp];
-  real c0[n_spp];
-  
-  real alpha_fit;
-  real beta_fit;
-  real gamma_fit;
-  
-  real cumulative_hazard_fit;
-  real log_lik_fit;
-  real sum_log_lik_fit;
-  
-  // Declaring heldout parameters
-  real alpha_heldout;
-  real beta_heldout;
-  real gamma_heldout;
-  
-  real cumulative_hazard_heldout;
-  real log_lik_heldout[n_obs_heldout];
-  real sum_log_lik_heldout;
-  
-  // Initialization of summed log likelihoods
-  sum_log_lik_fit <- 0;
-  sum_log_lik_heldout <- 0;
-  
-  // recalulate species random effects
-  for (s in 1:n_spp) {
-    a0[s] <- exp(raw_log_a0[s] * sigma_log_a0 + mu_log_a0);
-    b0[s] <- exp(raw_log_b0[s] * sigma_log_b0 + mu_log_b0);
-    c0[s] <- exp(raw_log_c0[s] * sigma_log_c0 + mu_log_c0);
-  }
-  
-  
-  // log likelihood for fitted model
-  for (i in 1:n_obs) {
-    alpha_fit <- a0[spp[i]]; 
-    beta_fit <- b0[spp[i]]; 
-    gamma_fit <- c0[spp[i]];
-    
-    cumulative_hazard_fit <- -census_length[i] * (alpha_fit * exp(-beta_fit * growth_dt[i]) + gamma_fit);
-    
-    if (y[i] == 0) {
-      log_lik_fit <- cumulative_hazard_fit;
-    }
-    else {
-      log_lik_fit <- log1m_exp(cumulative_hazard_fit);
-    }
-    sum_log_lik_fit <- sum_log_lik_fit + log_lik_fit;
-  }
-  
-  // log likelihood for held out data
-  for (j in 1:n_obs_heldout) {
-    alpha_heldout <- a0[spp_heldout[j]]; 
-    beta_heldout <- b0[spp_heldout[j]]; 
-    gamma_heldout <- c0[spp_heldout[j]];
-    
-    cumulative_hazard_heldout <- -census_length_heldout[j] * (alpha_heldout * exp(-beta_heldout * growth_dt_heldout[j]) + gamma_heldout);
-    
-    if (y_heldout[j] == 0) {
-      log_lik_heldout[j] <- cumulative_hazard_heldout;
-    }
-    else {
-      log_lik_heldout[j] <- log1m_exp(cumulative_hazard_heldout);
-    }
-    sum_log_lik_heldout <- sum_log_lik_heldout + log_lik_heldout[j];
-  }
-} 
-```
-
 
 \pagebreak
 
@@ -437,72 +201,6 @@ $$\Lambda = -T \, \left(\alpha_0\, \alpha_1 , \rho_s^{\alpha_2} \exp(\beta_0\, \
   - If $y=0$ we have $$\Pr(y=0) = 1 - \Pr(y=1) = 1 - (1- \exp(-\Lambda) = \exp(-\Lambda),$$ so the log probability density is $$\log \Pr(y=0) = \log(\exp(-\Lambda)) = -\Lambda$$.
  - If $y=1$ we have $\Pr(y=1) = 1 - \exp(-\Lambda)$, so the log probability density is $$\log \Pr(y=1) = \log(1-\exp(-\Lambda)) = \textrm{log1m\_exp}(-\Lambda)$$.
 
-## Analysis plan
-
-Step 1 - define a general structure of model we think will capture data, on basis of prior knowledge [DONE]
-Step 2 - assuming species effects on all pars, ask which growth meausre best predicts data, compare 2 growth rates using cross validation
-Step 3 - fit full model with trait effects, look at effect sizes of WD on a, b and c
-Step 4 - based on 3, choose some subsets of models, compare these using both bayes factor (most parsimonious) and predictive capacity
-
-
 \pagebreak
-
-
-
-
-\pagebreak
-
-
-## Results
-**Prelim results:**
-
-**DBH_DT**
-Wood density effects on alpha, beta and gamma:
-*alpha* - no significant effect
-*beta* - positive effect (increases decay rate)
-*gamma* - negative effect (decreases hazard rate)
-
-**BASAL_DT**
-Wood density effects on alpha, beta and gamma:
-*alpha* - no significant effect
-*beta* - positive effect (increases decay rate)
-*gamma* - marginal negative effect (not significant @ p <0.05)
-
-**Best growth measure**
-Preliminary it appears to be dbh_dt as it has a higher log likelihood.
-
-\pagebreak
-
-
-
-# Figures
-
-```{r model description, fig.height=6,fig.width=6, echo=FALSE}
-par(mfrow=c(2,1), mar=c(3,4,1,1), xaxs='i')
-       curve(exp(1 -exp(-0.3) * x) + exp(-4), xlim=c(0,12), ylim=c(0,5),
-             xlab=NA, ylab='Hazard rate',xaxt='n', col='red')
-       arrows(x0 = 2, y0 = 2.7, x1 = 0 ,y1 = 2.7)
-       text(3.1,2.7, 'alpha')
-       arrows(x0 = 4, y0 = 1.5, x1 = 1.5 ,y1 = 1)
-       text(4.5,1.7, 'beta')
-       arrows(x0 = 11, y0 = 0.8, x1 = 11 ,y1 = 0.018)
-       text(11,1, 'gamma')
-       axis(1, at=0, labels= 0)
-
-       curve((1-exp(-(exp(1 - exp(-0.3) * x) + exp(-4))))*100, xlim=c(0,12), ylim=c(0,100),
-             xlab=NA, ylab='Pr(Mortality)/yr', xaxt='n', col='red')
-       text(3.1,93, 'alpha')
-       arrows(x0 = 2, y0 = 93, x1 = 0 ,y1 = 93)
-       text(6,30, 'beta')
-       arrows(x0 = 5, y0 = 30, x1 = 3 ,y1 = 30)
-       text(11,15, 'gamma')
-       arrows(x0 = 11, y0 = 10, x1 = 11 ,y1 = exp(-4)*100)
-       axis(1, at=0, labels= 0)
-       mtext(side=1, 'Growth rate',line = 2)
-```
-
-**Fig 6:** Interpreting model parameters. Top = Hazard curves (i.e. instantaneous mortality rates); Bottom = Mortality probability/year based on estimated hazard rates. The intercept at zero growth is defined by $alpha$. The slope is defined by $beta$. The asymptote is defined by $\gamma$ and represents the growth-independent hazard.
-
-
 
 ## References
