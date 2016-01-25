@@ -1,21 +1,9 @@
-# packages <- c("rstan")
-# sources <- c("R/model.R",
-#              "R/stan_functions.R",
-#              "R/utils.R")
-# 
-# for (p in packages) {
-#   library(p, character.only=TRUE, quietly=TRUE)
-# }
-# for (s in sources) {
-#   source(s)
-# }
-
 # Merge chains related to a given model/kfold combination
 combine_stan_chains <- function(files) {
-   sflist2stanfit(lapply(files, readRDS))
+  sflist2stanfit(lapply(files, readRDS))
 }
 
-# compile all models related to a given analyses
+# Compile all models related to a given analyses
 compile_models <- function(analysis) {
   if(!analysis %in% c("null_model","null_model_random_effects",
                       "no_gamma_model", "no_gamma_model_random_effects",
@@ -37,7 +25,7 @@ compile_models <- function(analysis) {
   
   fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
   pars <- lapply(sets,  function(s) s[1, c("analysis","growth_measure","rho_combo","kfold")])
-
+  
   list(model_info=pars, fits=fits)
 }
 
@@ -47,10 +35,10 @@ compile_multiple_analyses <- function(analysis) {
 }
 
 # Examine model diagnostics for single analysis
-kfold_model_diagnostics <- function(models) {
-  fits <- models$fits
-  info <- models$model_info
-  out1 <- do.call(rbind, lapply(fits, function(x) {
+kfold_diagnostics <- function(analysis) {
+  fits <- analysis$fits
+  info <- analysis$model_info
+  out1 <- bind_rows(lapply(fits, function(x) {
     summary_model <- summary(x)$summary
     sampler_params <- get_sampler_params(x, inc_warmup=FALSE)
     data.frame(
@@ -61,14 +49,14 @@ kfold_model_diagnostics <- function(models) {
       max_treedepth = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
   }))
   
-  out2 <- do.call(rbind, lapply(info, function(x) {
+  out2 <- suppressWarnings(bind_rows(lapply(info, function(x) {
     data.frame(
       analysis = x$analysis,
       growth_measure = x$growth_measure,
       rho_combo = x$rho_combo,
-      kfold = as.integer(x$kfold)
-    )
-    }))
+      kfold = as.integer(x$kfold))
+  })))
+  
   res <- cbind(out2,out1) %>%
     arrange(analysis, growth_measure, rho_combo, kfold)
   
@@ -78,41 +66,40 @@ kfold_model_diagnostics <- function(models) {
 
 # Examine model diagnostics for multiple analysis
 multi_analysis_kfold_diagnostics <- function(list_of_analyses) {
-  out <- do.call(rbind, lapply(list_of_analyses, function(x) {
-    kfold_model_diagnostics(x)}))
+  out <- suppressWarnings(bind_rows(lapply(list_of_analyses, function(x) {
+    kfold_model_diagnostics(x)})))
   row.names(out) <- NULL
   return(out)
 }
 
-extract_samples <- function(models,subset_pars=NULL) {
-  fits <- models$fits
-  info <- models$model_info
-  samples <- lapply(fits, function(x) {
-    if(is.null(subset_pars)) {
-      extract(x)
-    } else {
-      extract(x, pars = subset_pars)
-    }
-  })
-  list(model_info = info, model_samples = samples)
-}
-
-multi_analysis_extract <- function(list_of_analyses, subset_pars=NULL) {
-  lapply(list_of_analyses, extract_samples)
-}
-
-summarise_samples <- function(samples, quant = c(0.025,0.5,0.975)) {
+# Extract log likelihood samples for single analysis
+extract_loglik_samples <- function(analysis) {
+  fits <- analysis$fits
+  info <- plyr::ldply(analysis$model_info, .id='modelid')
+  samples <- lapply(fits, function(x) 
+    rstan::extract(x, pars = c('sum_log_lik_fit','sum_log_lik_heldout')))
   
-  lapply(samples$model_samples, function(x) {
-    cbind.data.frame(
-      mn = sapply(x, mean),
-      std = sapply(x, sd),
-      t(sapply(x, quantile, quant)))
-  })
+  res <- plyr::ldply(lapply(samples, function(x) {
+    gather(data.frame(x),'likelihood','estimate')}), .id='modelid')
+  
+  left_join(info, res, 'modelid') %>%
+    select(-modelid)
 }
 
-multi_analysis_summarise_samples <- function(multi_analysis_samples, quant = c(0.025,0.5,0.975)) {
-  lapply(multi_analysis_samples, summarise_samples)
+# Extract
+extract_multi_analysis_loglik_samples <- function(list_of_analyses){
+  samples <- lapply(list_of_analyses, extract_loglik_samples)
+  plyr::ldply(samples, .id='model') %>%
+    select(-model)
 }
 
-# Merge kfolds based on unique analysis, growth and rho combination.
+summarise_loglik_samples <- function(samples) {
+  samples %>%
+    group_by(analysis,growth_measure,rho_combo, likelihood) %>%
+    summarise(mean = mean(estimate),
+              `2.5%` = quantile(estimate, 0.025),
+              `10%` = quantile(estimate, 0.1),
+              `50%` = quantile(estimate, 0.5),
+              `90%` = quantile(estimate, 0.9),
+              `97.5%` = quantile(estimate, 0.975))
+}
