@@ -71,7 +71,7 @@ model_compiler <- function(task) {
 }
 
 # Runs single chain
-run_single_stan_chain <- function(model, data, chain_id, iter=1000,
+run_single_stan_chain <- function(model, data, chain_id, iter=4000,
                                   sample_file=NA, diagnostic_file=NA) {
   data_for_stan <- prep_data_for_stan(data, model$growth_measure)
   stan(model_code = model$model_code,
@@ -81,7 +81,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=1000,
        iter = iter,
        chains=1,
        chain_id=chain_id,
-       control =list(stepsize=0.01, max_treedepth=15),
+       control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15),
        refresh=1,
        sample_file=sample_file,
        diagnostic_file=diagnostic_file)
@@ -102,7 +102,7 @@ prep_data_for_stan <- function(data, growth_measure) {
     y_heldout = as.integer(data$heldout$dead_next_census),
     census_length_heldout = data$heldout$census_interval,
     growth_dt_heldout = data$heldout[[growth_measure]],
-    rho_c_heldout  = unique(data$heldout$rho/0.6)
+    rho_c_heldout = unique(data$heldout$rho/0.6)
   )
 }
 
