@@ -86,13 +86,13 @@ extract_loglik_samples <- function(analysis) {
     select(-modelid)
 }
 
-# Extract
+# Extract log likelihood samples for multiple analyses.
 extract_multi_analysis_loglik_samples <- function(list_of_analyses){
   samples <- lapply(list_of_analyses, extract_loglik_samples)
   plyr::ldply(samples, .id='model') %>%
     select(-model)
 }
-
+# Summarise log likelihood samples
 summarise_loglik_samples <- function(samples) {
   samples %>%
     group_by(analysis,growth_measure,rho_combo, likelihood) %>%
