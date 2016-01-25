@@ -6,6 +6,7 @@ packages:
   - rstan
   - callr
   - dockertest
+  - knitr
 
 sources:
   - R
@@ -45,7 +46,6 @@ targets:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
     cleanup_level: purge
     check: exists
-
 
   BCI_model_dataset_true_unique:
     command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
@@ -110,11 +110,13 @@ targets:
   downloads/style.csl:
     command: get_amnat_csl(target_name)
 
-  ms.pdf:
-    command: pandoc_build("ms.md")
-
-  ms.md:
-    knitr: true
+  ms/ms.tex:
     depends:
-      - data/refs.bib
-      - downloads/style.csl
+      - BCI_model_dataset_true_unique
+      - BCI_dbh_error_data
+    knitr: TRUE
+
+  ms/ms.pdf:
+    command: latex_build("ms/ms.tex", "ms/refs.bib", clean=TRUE)
+    depends:
+      - ms/ms.sty
