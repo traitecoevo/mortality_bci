@@ -114,6 +114,7 @@ targets:
     depends:
       - BCI_model_dataset_true_unique
       - BCI_dbh_error_data
+      - BCI_training_sets
     knitr: TRUE
 
   ms/ms.pdf:
