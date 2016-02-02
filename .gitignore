@@ -3,7 +3,7 @@ downloads
 output
 ignore
 results*
-figure*
+figure
 .Rproj.user
 *.Rproj
 *.csl
