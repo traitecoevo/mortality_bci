@@ -52,12 +52,7 @@ targets:
     cleanup_level: purge
 
   BCI_true_dbh_model:
-    command: run_true_dbh_model(BCI_model_dataset_unique, BCI_dbh_error_model)
-    cleanup_level: never
-    check: exists
-
-  BCI_dbh_error_model:
-    command: run_dbh_error_model(BCI_dbh_error_data)
+    command: run_true_dbh_model(BCI_model_dataset_unique)
     cleanup_level: never
     check: exists
 
