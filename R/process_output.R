@@ -33,6 +33,18 @@ compile_models <- function(analysis) {
   list(model_info=pars, fits=fits)
 }
 
+# Extracts optimization estimates
+extract_true_dbh_estimates <- function(optimization_results) {
+  fit <- optimization_results$par
+  data.frame(fit, nm=names(fit)) %>%
+    separate(nm, c('variable', 'ind'), sep='\\[', fill='right') %>%
+    mutate(ind=sub('\\]', '', ind)) %>%
+    filter(variable %in% c('true_dbh1','true_dbh2','true_growth_rate')) %>%
+    spread(variable, fit) %>%
+    mutate(ind = as.integer(ind)) %>%
+    arrange(ind)
+}
+
 # Compile multiple analyses at once
 compile_multiple_analyses <- function(analysis) {
   sapply(analysis, function(x) compile_models(x), simplify = FALSE)
