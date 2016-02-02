@@ -1,59 +1,68 @@
 # Generic task builder function for clusterous
-tasks_2_run <- function(analysis,iter, growth_measure, rho_combo="", path=".") {
-  if(!analysis %in% c("null_model","null_model_random_effects",
-                      "no_gamma_model", "no_gamma_model_random_effects",
-                      "growth_comparison","rho_combinations")) {
-    stop("analysis can only be one of the following: 
-                      'null_model,'null_model_random_effects',
-                      'no_gamma_model', 'no_gamma_model_random_effects',
-                      'growth_comparison','rho_combinations'")
+tasks_2_run <- function(comparison,iter) {
+  if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations")) {
+    stop('comparison can only be one of the following: 
+                      "function_growth_comparison","species_random_effects","rho_combinations"')
   }
-  
-  if(analysis =="rho_combinations") {
+  n_kfolds = 10
+  n_chains = 3
+  if(comparison=="function_growth_comparison") {
+    growth_measure <- c("true_dbh_dt",'true_basal_area_dt')
+    rho_combo <- "none"
+    model  <- c("base_hazard","growth_hazard","base_growth_hazard")
+    } 
+  if(comparison=="species_random_effects") {
+    growth_measure <- c("true_basal_area_dt")
+    rho_combo <- "none"
+    model  <- c("base_growth_hazard")
+    }
+  if(comparison =="rho_combinations") {
+  growth_measure <- 'true_dbh_dt'
   rho_combo <- expand.grid(a=c('','a'), b=c('','b'), c=c('','c'), stringsAsFactors = FALSE)
   rho_combo <- sapply(split(rho_combo, seq_len(nrow(rho_combo))), function(x) paste0(x, collapse=''))
+  rho_combo[rho_combo==''] <- "none"
+  model <- "base_growth_hazard"
   }
-  
-  n_kfolds <- 10
-  n_chains <- 3
-  
-  ret <- expand.grid(analysis=analysis,
+  ret <- expand.grid(comparison=comparison,
+                     model = model,
                      iter=iter,
                      chain=seq_len(n_chains),
                      growth_measure=growth_measure,
                      rho_combo=rho_combo,
                      kfold=seq_len(n_kfolds),
-                     stringsAsFactors=FALSE)
-  ret$modelid <- rep(1:nrow(unique(ret[,c('analysis','growth_measure','rho_combo','kfold')])),each = n_chains)
-  ret$jobid <- seq_len(nrow(ret))
-  ret$filename <- sprintf("%s/results/%s/%d.rds", path, analysis, ret$jobid)
-  ret$fold_data <- sprintf("%s/export/bci_data_%s.rds", path, ret$kfold)
+                     stringsAsFactors=FALSE) %>%
+    arrange(model, growth_measure)
+    
+  ret$modelid <- rep(1:nrow(unique(ret[,c('comparison','model','growth_measure','rho_combo','kfold')])),each = n_chains)
+  ret <- ret %>%
+    mutate(jobid = seq_len(n()),
+           filename = sprintf("%s/results/%s/%d.rds", ".", comparison, jobid),
+           fold_data = sprintf("%s/export/bci_data_%s.rds", ".", kfold))
   return(ret)
 }
-
 # Compiles models for clusterous
 model_compiler <- function(task) {
   data <- readRDS(task$fold_data)
   dir.create(dirname(task$filename), FALSE, TRUE)
-  analysis <- task$analysis
+  model <- task$model
   ## Assemble the stan model:
-  if(analysis == "null_model") {
-    chunks <- get_model_chunks_null(task)
+  if(model == "base_hazard") {
+    chunks <- get_model_chunks_base_haz(task)
   }
-  if(analysis == "null_model_random_effects") {
-    chunks <- get_model_chunks_null_re(task)
+  if(model == "base_hazard_re") {
+    chunks <- get_model_chunks_base_haz_re(task)
   }
-  if(analysis == "no_gamma_model") {
-    chunks <- get_model_chunks_no_gamma(task)
+  if(model == "growth_hazard") {
+    chunks <- get_model_chunks_growth_haz(task)
   }
-  if(analysis == "no_gamma_model_random_effects") {
-    chunks <- get_model_chunks_no_gamma_re(task)
+  if(model == "growth_hazard_re") {
+    chunks <- get_model_chunks_growth_haz_re(task)
   }
-  if(analysis == "growth_comparison") {
-    chunks <- get_model_chunks_growth_comparison(task)
+  if(model == "base_growth_hazard") {
+    chunks <- get_model_chunks_base_growth_haz(task)
   }
-  if(analysis == "rho_combinations") {
-    chunks <- get_model_chunks_rho_combinations(task)
+  if(model == "base_growth_hazard_re") {
+    chunks <- get_model_chunks_base_growth_haz_re(task)
   }
   model <- make_stan_model(chunks)
   
@@ -81,10 +90,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=4000,
        iter = iter,
        chains=1,
        chain_id=chain_id,
-       control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15),
-       refresh=1,
-       sample_file=sample_file,
-       diagnostic_file=diagnostic_file)
+       control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15))
 }
 # Prepares data for models clusterous jobs
 prep_data_for_stan <- function(data, growth_measure) {
@@ -145,24 +151,25 @@ make_stan_model <- function(chunks) {
 # Precompiles model for clustereous
 precompile <- function(task) {
   path <- precompile_model_path()
-  analysis <- task$analysis
-  if(analysis == "null_model") {
-    chunks <- get_model_chunks_null(task)
+  model <- task$model
+  ## Assemble the stan model:
+  if(model == "base_hazard") {
+    chunks <- get_model_chunks_base_haz(task)
   }
-  if(analysis == "null_model_random_effects") {
-    chunks <- get_model_chunks_null_re(task)
+  if(model == "base_hazard_re") {
+    chunks <- get_model_chunks_base_haz_re(task)
   }
-  if(analysis == "no_gamma_model") {
-    chunks <- get_model_chunks_no_gamma(task)
+  if(model == "growth_hazard") {
+    chunks <- get_model_chunks_growth_haz(task)
   }
-  if(analysis == "no_gamma_model_random_effects") {
-    chunks <- get_model_chunks_no_gamma_re(task)
+  if(model == "growth_hazard_re") {
+    chunks <- get_model_chunks_growth_haz_re(task)
   }
-  if(analysis == "growth_comparison") {
-    chunks <- get_model_chunks_growth_comparison(task)
+  if(model == "base_growth_hazard") {
+    chunks <- get_model_chunks_base_growth_haz(task)
   }
-  if(analysis == "rho_combinations") {
-    chunks <- get_model_chunks_rho_combinations(task)
+  if(model == "base_growth_hazard_re") {
+    chunks <- get_model_chunks_base_growth_haz_re(task)
   }
   model <- make_stan_model(chunks)
   sig <- digest::digest(model)
@@ -183,35 +190,17 @@ precompile <- function(task) {
 
 #THIS ISN'T ELEGANT BUT IT WORKS
 precompile_all <- function() {
-  #Growth comparison models
-  growth_tasks <- tasks_2_run(analysis = 'growth_comparison',iter = 10, 
-                              growth_measure = c('true_dbh_dt','true_basal_area_dt'))
-  vapply(df_to_list(growth_tasks), precompile, character(1))
+  # Functional form/growth comparison
+  stage1 <- tasks_2_run(comparison = 'function_growth_comparison',iter = 10)
+  vapply(df_to_list(stage1), precompile, character(1))
   
-  #Rho combination models
-  rho_tasks <- tasks_2_run(analysis = 'rho_combinations',iter = 10, 
-                           growth_measure = 'true_dbh_dt')
-  vapply(df_to_list(rho_tasks), precompile, character(1))
+  #Constant vs species random effects
+  stage2 <- tasks_2_run(comparison = 'species_random_effects',iter = 10)
+  vapply(df_to_list(stage2), precompile, character(1))
   
-  #Null model
-  null_tasks <- tasks_2_run(analysis = 'null_model',iter = 10, 
-                            growth_measure = 'true_dbh_dt')
-  vapply(df_to_list(null_tasks), precompile, character(1))
-  
-  #Null model with random effects
-  null_re_tasks <- tasks_2_run(analysis = 'null_model_random_effects',iter = 10, 
-                               growth_measure = 'true_dbh_dt')
-  vapply(df_to_list(null_re_tasks), precompile, character(1))
-
-  #No gamma model
-  no_gamma_tasks <- tasks_2_run(analysis = 'no_gamma_model',iter = 10, 
-                                growth_measure = 'true_dbh_dt')
-  vapply(df_to_list(no_gamma_tasks), precompile, character(1))
-  
-  #No gamma model random effect
-  no_gamma_re_tasks <- tasks_2_run(analysis = 'no_gamma_model_random_effects',iter = 10, 
-                                   growth_measure = 'true_dbh_dt')
-  vapply(df_to_list(no_gamma_re_tasks), precompile, character(1))
+  #Rho combinations
+  stage3 <- tasks_2_run(comparison = 'rho_combinations',iter = 10)
+  vapply(df_to_list(stage3), precompile, character(1))
 }
 
 ## Wrapper around platform information that will try to determine if
