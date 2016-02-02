@@ -162,7 +162,7 @@ Standard deviations associated with species random effects (i.e. $\sigma_{a0}$, 
 \begin{equation}
 \sigma_{a0},\sigma_{b0},\sigma_{c0} \sim \textrm{Cauchy+}\left(0, 2.5\right).\\
 \end{equation}
-For models that did not contain species random effects, the above sigma's were not calculated and only the hyperparameter means (i.e. $\mu_{\log \alpha_0}$,$\mu_{\log \beta}$,$\mu_{\log \gamma_0}$) were estimated.
+For models that did not contain species random effects, the above sigma's were not calculated and only the exponentiated means (i.e. $\mu_{\log \alpha_0}$,$\mu_{\log \beta}$,$\mu_{\log \gamma_0}$) were used.
 
 Wood density effects (i.e. $\alpha_1$, $\beta_1$ and $\gamma_1$) were estimated using normal priors centered on zero and a standard deviation of 5:
 \begin{equation} \label{eq:rho_effects}
