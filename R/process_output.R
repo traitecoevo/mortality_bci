@@ -2,6 +2,10 @@
 combine_stan_chains <- function(files) {
   sflist2stanfit(lapply(files, readRDS))
 }
+# Prevents under and overflow when calculating mean log likelihoods.
+log_sum_exp <- function(x) {
+  max(x) + log(sum(exp(x - max(x))))
+}
 
 # Compile all models related to a given analyses
 compile_models <- function(analysis) {
@@ -114,8 +118,6 @@ coefficent_plot_theme <- function() {
                           title = element_text(face = "bold"),
                           panel.margin = unit(4,"mm"))
 }
-
-test2 <-subset(test, model %in% c('rho_combinations','no_gamma_model', 'null_model') & likelihood =='sum_log_lik_heldout' & rho_combo=='' & growth_measure=='true_dbh_dt')
 
 plot_functional_form_comparison <- function(log_likelihood_summary) {
   dat <- filter(log_likelihood_summary, model %in% c('null_model','no_gamma_model', 
