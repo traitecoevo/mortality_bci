@@ -2,6 +2,10 @@
 combine_stan_chains <- function(files) {
   sflist2stanfit(lapply(files, readRDS))
 }
+# Prevents over and underflow when estimating mean log likelihoods
+log_sum_exp <- function(x) {
+  max(x) + log(sum(exp(x - max(x))))
+}
 
 # Compile all models related to a given analyses
 compile_models <- function(analysis) {
@@ -115,8 +119,6 @@ coefficent_plot_theme <- function() {
                           panel.margin = unit(4,"mm"))
 }
 
-test2 <-subset(test, model %in% c('rho_combinations','no_gamma_model', 'null_model') & likelihood =='sum_log_lik_heldout' & rho_combo=='' & growth_measure=='true_dbh_dt')
-
 plot_functional_form_comparison <- function(log_likelihood_summary) {
   dat <- filter(log_likelihood_summary, model %in% c('null_model','no_gamma_model', 
                                                      'rho_combinations', 'null_model_random_effects', 
@@ -145,7 +147,7 @@ plot_growth_comparison <- function(log_likelihood_summary) {
                   likelihood =='sum_log_lik_heldout' & 
                   rho_combo=='') %>%
     mutate(growth_measure = factor(growth_measure, levels=c("true_basal_area_dt","true_dbh_dt"))) %>%
-    mutate(growth_measure = factor(growth_measure, labels = c("Area growth","Increment growth"))) %>%
+    mutate(growth_measure = factor(growth_measure, labels = c("Area growth","dbh increment growth"))) %>%
     arrange(growth_measure)
   
   ggplot(dat, aes(x = elpd,y = growth_measure)) + 
