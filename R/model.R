@@ -84,14 +84,14 @@ get_model_chunks_base_haz <- function(tasks) {
         int<lower=0, upper=1> y_heldout[n_obs_heldout];",
     parameters ="
       real<lower=0> gamma;
-      real raw_log_census_err[n_census],
-      real<lower=0> sigma_log_census",
+      real raw_log_census_err[n_census];
+      real<lower=0> sigma_log_census_err;",
     model ="
       real cumulative_hazard;
       real census_err[n_census];
 
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err); //implies lognormal(0, sigma_log_alpha)
+      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err); //implies lognormal(0, sigma_log_alpha);
       }
 
       for (i in 1:n_obs) {
@@ -106,7 +106,7 @@ get_model_chunks_base_haz <- function(tasks) {
       // Priors
       gamma ~ lognormal(0, 1);
       raw_log_census_err ~ normal(0,1);
-      sigma_log_census ~ cauchy(0,2.5);",
+      sigma_log_census_err ~ cauchy(0,2.5);",
     generated_quantities ="
       real census_err[n_census];
 
@@ -184,7 +184,7 @@ get_model_chunks_growth_haz <- function(tasks) {
       real<lower=0> alpha;
       real<lower=0> beta;
       real raw_log_census_err[n_census];
-      real<lower=0> sigma_log_census_err",
+      real<lower=0> sigma_log_census_err;",
     model ="
       real census_err[n_census];
       real cumulative_hazard;
@@ -210,7 +210,7 @@ get_model_chunks_growth_haz <- function(tasks) {
       alpha ~ lognormal(0,1);
       beta ~ lognormal(0,2);
       raw_log_census_err ~ normal(0,1);
-      sigma_log_census_err ~ cauchy(0,2.5)",
+      sigma_log_census_err ~ cauchy(0,2.5);",
     generated_quantities ="
       real census_err[n_census];
 
