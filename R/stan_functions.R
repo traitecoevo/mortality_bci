@@ -100,8 +100,8 @@ prep_data_for_stan <- function(data, growth_measure) {
   }
   
   if (growth_measure == 'true_basal_area_dt') {
-    growth_dt <- data$train$true_basal_area_dt - (0.25 * pi * pow(as.vector(quantile(data$train$true_basal_area_dt, c(0.05))),2))
-    growth_dt_heldout = data$heldout$true_basal_area_dt - (0.25 * pi * pow(as.vector(quantile(data$heldout$true_basal_area_dt, c(0.05))),2))
+    growth_dt <- data$train$true_basal_area_dt - (0.25 * pi * (as.vector(quantile(data$train$true_basal_area_dt, c(0.05)))^2))
+    growth_dt_heldout = data$heldout$true_basal_area_dt - (0.25 * pi * (as.vector(quantile(data$heldout$true_basal_area_dt, c(0.05)))^2))
   }
   list(
     n_obs = nrow(data$train),
