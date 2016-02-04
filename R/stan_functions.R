@@ -94,34 +94,49 @@ run_single_stan_chain <- function(model, data, chain_id, iter=4000,
 }
 # Prepares data for models clusterous jobs
 prep_data_for_stan <- function(data, growth_measure) {
+  if (growth_measure == 'true_dbh_dt') {
+    growth_dt <- data$train$true_dbh_dt - as.vector(quantile(data$train$true_dbh_dt, c(0.05)))
+    growth_dt_heldout = data$heldout[[growth_measure]] - as.vector(quantile(data$heldout$true_dbh_dt, c(0.05)))
+  }
+  
+  if (growth_measure == 'true_basal_area_dt') {
+    growth_dt <- data$train$true_basal_area_dt - (0.25 * pi * pow(as.vector(quantile(data$train$true_basal_area_dt, c(0.05))),2))
+    growth_dt_heldout = data$heldout$true_basal_area_dt - (0.25 * pi * pow(as.vector(quantile(data$heldout$true_basal_area_dt, c(0.05))),2))
+  }
   list(
     n_obs = nrow(data$train),
-    n_spp = length(unique(data$train$sp)),
-    spp = as.numeric(factor(data$train$sp)),
-    y = as.integer(data$train$dead_next_census),
+    n_census = max(data$train$censusid),
+    n_spp = max(data$train$sp_id),
+    census = data$train$censusid,
+    spp = data$train$sp_id,
     census_length = data$train$census_interval,
-    growth_dt = data$train[[growth_measure]],
+    growth_dt = growth_dt,
     rho_c  = unique(data$train$rho)/0.6,
+    y = as.integer(data$train$dead_next_census),
     n_obs_heldout = nrow(data$heldout),
-    n_spp_heldout = length(unique(data$heldout$sp)),
-    spp_heldout = as.numeric(factor(data$heldout$sp)),
-    y_heldout = as.integer(data$heldout$dead_next_census),
+    n_census_heldout = max(data$heldout$censusid),
+    n_spp_heldout = max(data$heldout$sp_id),
+    census_heldout = data$heldout$censusid,
+    spp_heldout = data$heldout$sp_id,
     census_length_heldout = data$heldout$census_interval,
-    growth_dt_heldout = data$heldout[[growth_measure]],
-    rho_c_heldout = unique(data$heldout$rho/0.6)
-  )
+    growth_dt_heldout = growth_dt_heldout,
+    rho_c_heldout = unique(data$heldout$rho/0.6),
+    y_heldout = as.integer(data$heldout$dead_next_census)
+    )
 }
 
 # Prepares data for 'best' model fitted to full dataset
-prep_full_data_for_stan <- function(data, growth_measure) {
+prep_full_data_for_stan <- function(data) {
   list(
     n_obs = nrow(data$train),
-    n_spp = length(unique(data$train$sp)),
-    spp = as.numeric(factor(data$train$sp)),
-    y = as.integer(data$train$dead_next_census),
+    n_census = max(data$train$censusid),
+    n_spp = max(data$train$sp_id),
+    census = data$train$censusid,
+    spp = data$train$sp_id,
     census_length = data$train$census_interval,
-    growth_dt = data$train[[growth_measure]],
-    rho_c  = unique(data$train$rho)/0.6
+    growth_dt = data$train$true_dbh_dt - 0.1,
+    rho_c  = unique(data$train$rho)/0.6,
+    y = as.integer(data$train$dead_next_census)
   )
 }
 # Builds the model code
