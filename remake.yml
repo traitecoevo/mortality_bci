@@ -7,6 +7,9 @@ packages:
   - callr
   - dockertest
   - knitr
+  - ggplot2
+  - grid
+  - gridExtra
 
 sources:
   - R
@@ -116,7 +119,7 @@ targets:
   
   BCI_true_dbh_model:
     command: run_true_dbh_model(BCI_model_dataset_unique)
-    cleanup_level: never
+    cleanup_level: purge
     check: exists
 
   models_precompiled:
