@@ -20,6 +20,8 @@ modules:
 
 r_packages:
   - rstan
+  - dplyr
+  - tidyr
 
 r_github_packages:
-  - traitecoevo/rrqueue
+
