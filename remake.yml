@@ -3,6 +3,7 @@ packages:
   - downloader
   - rmarkdown
   - dplyr
+  - tidyr
   - rstan
   - callr
   - dockertest
@@ -124,6 +125,7 @@ targets:
 
   models_precompiled:
     command: precompile_all()
+    
   models_precompiled_docker:
     command: precompile_docker(docker_image)
     
