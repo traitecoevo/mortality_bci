@@ -1,5 +1,5 @@
 # Generic task builder function for clusterous
-tasks_2_run <- function(comparison,iter) {
+tasks_2_run <- function(comparison,iter,path='.') {
   if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations")) {
     stop('comparison can only be one of the following: 
                       "function_growth_comparison","species_random_effects","rho_combinations"')
@@ -36,8 +36,8 @@ tasks_2_run <- function(comparison,iter) {
   ret$modelid <- rep(1:nrow(unique(ret[,c('comparison','model','growth_measure','rho_combo','kfold')])),each = n_chains)
   ret <- ret %>%
     mutate(jobid = seq_len(n()),
-           filename = sprintf("%s/results/%s/%d.rds", ".", comparison, jobid),
-           fold_data = sprintf("%s/export/bci_data_%s.rds", ".", kfold))
+           filename = sprintf("%s/results/%s/%d.rds", path, comparison, jobid),
+           fold_data = sprintf("%s/export/bci_data_%s.rds", path, kfold))
   return(ret)
 }
 # Compiles models for clusterous
@@ -90,7 +90,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=4000,
        iter = iter,
        chains=1,
        chain_id=chain_id,
-       control =list(stepsize=0.01, adapt_delta=0.9, max_treedepth=15))
+       control =list(stepsize=0.01, adapt_delta=0.99, max_treedepth=15))
 }
 # Prepares data for models clusterous jobs
 prep_data_for_stan <- function(data, growth_measure) {
