@@ -14,7 +14,7 @@ tasks_2_run <- function(comparison,iter,path='.') {
   if(comparison=="species_random_effects") {
     growth_measure <- c("true_basal_area_dt")
     rho_combo <- "none"
-    model  <- c("base_growth_hazard")
+    model  <- "base_growth_hazard_re"
     }
   if(comparison =="rho_combinations") {
   growth_measure <- 'true_dbh_dt'
