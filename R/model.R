@@ -597,6 +597,11 @@ get_model_chunks_base_growth_haz_re <- function(tasks) {
       raw_log_census_err ~ normal(0, 1);
       sigma_log_census_err ~ cauchy(0, 2.5);",
     generated_quantities ="
+      real alpha[n_spp];
+      real beta[n_spp];
+      real gamma[n_spp];
+      real census_err[n_census];
+
       // Declaring fitted
       real cumulative_hazard_fit;
       real loglik_fit;
@@ -630,7 +635,7 @@ get_model_chunks_base_growth_haz_re <- function(tasks) {
 
       // Recalculate census errors      
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err)
+      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       
       // Calculate log likelihood and log loss for fitted data
@@ -650,7 +655,7 @@ get_model_chunks_base_growth_haz_re <- function(tasks) {
       
       // Calculate log likelihood and log loss for heldout data
       for (j in 1:n_obs_heldout) {
-        cumulative_hazard_heldout <- -census_length_heldout[j] * ((alpha[spp_heldout[j]] * exp(-beta[spp_heldout[j]] * growth_dt_heldout[j]) + gamma[spp_heldout[j]]) * census_err[n_census_heldout[j]]);
+        cumulative_hazard_heldout <- -census_length_heldout[j] * ((alpha[spp_heldout[j]] * exp(-beta[spp_heldout[j]] * growth_dt_heldout[j]) + gamma[spp_heldout[j]]) * census_err[census_heldout[j]]);
         
         if (y_heldout[j] == 0) {
           loglik_heldout <- cumulative_hazard_heldout;
