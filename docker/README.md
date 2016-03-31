@@ -64,12 +64,11 @@ remake is a package that allows us to use a make-like workflow in R by specifyin
 devtools::install_github("richfitz/remake", dependencies=TRUE)
 ```
 
-Once this is installed we now can then install all other software dependencies, process the data and compile the models ready for analysis by running:
+Once this is installed we now can then install all other software dependencies, process the data ready for analysis by running:
 
 ```
 remake::install_missing_packages()
 remake::make()
-remake:: make('models_precompiled_docker')
 ```
 
 ## Preparing docker container
@@ -100,6 +99,12 @@ However, if required, the following code will allow you to rebuild the docker im
 The above will connect to the `mem6GB` container and use dockertest to build the docker image.
 (**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added). Also if changes have been made to the mortality image (e.g. it requires new packages or software) a new docker image can be uploaded to dockerhub by using `docker login` then ` docker push traitecoevo/mortality_bci`
 
+Now that we have a docker container with an image of the mortality working directory we now precompile our stan models so that workers don't need to recompile a model each and everytime it gets a new job.
+This can be done in R using the following:
+
+```
+remake::make('models_precompiled_docker')
+```
 
 Assuming your terminal is still in the parent directory `mortality_bci`. We now setup three different Docker containers: 
 1) A container with Redis that acts as a database catching results as they complete 
@@ -140,7 +145,7 @@ Then within this terminal we load `rrqueue` and state what packages and source c
 
 ```
 library(rrqueue)
-packages <- c("rstan")
+packages <- c("rstan","dplyr")
 sources <- c("R/model.R",
              "R/stan_functions.R",
              "R/utils.R")
