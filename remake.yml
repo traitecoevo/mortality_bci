@@ -11,6 +11,14 @@ packages:
   - ggplot2
   - grid
   - gridExtra
+  - RcppRedis
+  - R6
+  - digest
+  - docopt
+  - RedisAPI
+  - RedisHeartbeat
+  - rrqueue
+  - dockertest
 
 sources:
   - R
