@@ -71,6 +71,11 @@ remake::install_missing_packages()
 remake::make()
 ```
 
+### Installing Clusterous (only needed if using AWS)
+Clusterous is a easy-to-use command line tool for cluster computing on AWS. It allows you to create and manage a cluster on AWS and deploy your software in the form of Docker containers. It is aimed at scientists and researchers who want the on-demand compute power that AWS offers, but don't have the necessary time or technical expertise.
+
+A simple guide on how to install clusterous can be found [here](https://github.com/sirca/clusterous/blob/master/docs/manual/02_Quick_start.md)
+
 ## Preparing docker container
 
 Our project requires alot a container that contains at least 6GB of memory to compile and install all packages and software. Because the default container that is created upon the installation of docker is not big enough to meet our needs we create a larger docker container called `mem6GB`
