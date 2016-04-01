@@ -92,7 +92,8 @@ Building can the docker image from scratch can take awhile, as such we have uplo
 This can be downloaded from the terminal using:
 
 ```
-docker pull traitecoevo/mortality_bci:latest
+eval "$(docker-machine env mem6GB)"
+docker pull traitecoevo/mortality_bci
 ```
 
 However, if required, the following code will allow you to rebuild the docker image from the terminal assuming you are in `mortality_bci`:
