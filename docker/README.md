@@ -86,24 +86,14 @@ Using the terminal and the Docker command `docker-machine` we create a new Docke
 docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
 ```
 
-Once we have an adequate sized docker container we next add the software to it by either creating a docker image (a snapshot of what software is needed) or downloading an existing one from dockerhub.
-
-Building can the docker image from scratch can take awhile, as such we have uploaded a pre-build image onto dockerhub.
-This can be downloaded from the terminal using:
-
-```
-eval "$(docker-machine env mem6GB)"
-docker pull traitecoevo/mortality_bci
-```
-
-However, if required, the following code will allow you to rebuild the docker image from the terminal assuming you are in `mortality_bci`:
+Once we have an adequate sized docker container we next add the software to it by either creating a docker image (a snapshot of what software is needed).
+Below the following code will allow you to rebuild the docker image from the terminal assuming you are in `mortality_bci`:
 
 ```
 ./docker/dockertest build --machine mem6GB
-
 ```
 The above will connect to the `mem6GB` container and use dockertest to build the docker image.
-(**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added). Also if changes have been made to the mortality image (e.g. it requires new packages or software) a new docker image can be uploaded to dockerhub by using `docker login` then ` docker push traitecoevo/mortality_bci`
+(**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added).
 
 Now that we have a docker container with an image of the mortality working directory we now precompile our stan models so that workers don't need to recompile a model each and everytime it gets a new job.
 This can be done in R using the following:
