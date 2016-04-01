@@ -90,7 +90,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=4000,
        iter = iter,
        chains=1,
        chain_id=chain_id,
-       control =list(stepsize=0.01, adapt_delta=0.99, max_treedepth=15))
+       control =list(stepsize=0.1, adapt_delta=0.99, max_treedepth=15))
 }
 # Prepares data for models clusterous jobs
 prep_data_for_stan <- function(data, growth_measure) {
