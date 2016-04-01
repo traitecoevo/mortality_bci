@@ -2,8 +2,8 @@
 downloads
 output
 ignore
-results*
-figure*
+results
+figures
 .Rproj.user
 *.Rproj
 *.csl

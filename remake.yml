@@ -11,10 +11,18 @@ packages:
   - ggplot2
   - grid
   - gridExtra
+  - RcppRedis
+  - R6
+  - digest
+  - docopt
+  - RedisAPI
+  - RedisHeartbeat
+  - rrqueue
+  - dockertest
 
 sources:
   - R
-
+  
 plot_options:
   A4_landscape:
     width: 11.69
@@ -35,6 +43,11 @@ plot_options:
   large_rectangle:
     width: 8
     height: 6
+
+  portrait_png:
+    width: 750
+    height: 900
+
 targets:
   all:
     depends:
@@ -44,18 +57,15 @@ targets:
     depends:
       - export/bci_data.rds
       - export/bci_data_full.rds
+      - figures/plot_obs_v_pred_growth.png
   
-  figures:
-    depends:
-      - figures/functional_comparison.pdf
-      - figures/growth_comparison.pdf
-      - figures/rho_comparison.pdf
-
+  #------------- data export ---------------------------
   # Watch out; this one is a bit evil; it also creates sub filenames:
   #   export/bci_data_1.rds ... export_bci_data_10.rds
   export/bci_data.rds:
     command: export_data(BCI_training_sets, target_name)
 
+  #------------- data preparation ---------------------------
   BCI_training_sets:
     command: make_trainheldout(BCI_model_dataset_folds)
     cleanup_level: purge
@@ -71,20 +81,9 @@ targets:
     command: split_into_kfolds(BCI_model_dataset_true_unique)
     cleanup_level: purge
 
-
   BCI_model_dataset_true_unique:
     command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
     cleanup_level: purge
-
-  BCI_true_dbh_model:
-    command: run_true_dbh_model(BCI_model_dataset_unique, BCI_dbh_error_model)
-    cleanup_level: never
-    check: exists
-
-  BCI_dbh_error_model:
-    command: run_dbh_error_model(BCI_dbh_error_data)
-    cleanup_level: never
-    check: exists
 
   BCI_dbh_error_data:
     command: BCI_load_dbh_error_data("data/dbh_error_data.rdata")
@@ -126,37 +125,24 @@ targets:
   docker_image:
     command: build_container("docker/dockertest.yml")
 
+  #------------- Models ---------------------------
+  
+  BCI_true_dbh_model:
+    command: run_true_dbh_model(BCI_model_dataset_unique)
+    cleanup_level: purge
+    check: exists
+
   models_precompiled:
     command: precompile_all()
+    
   models_precompiled_docker:
     command: precompile_docker(docker_image)
-
-  compiled_models:
-    command: compile_multiple_analyses(I(c("null_model","null_model_random_effects","no_gamma_model","no_gamma_model_random_effects","growth_comparison","rho_combinations")))
-    cleanup_level: purge
     
-  log_lik_samples:
-    command: extract_multi_analysis_loglik_samples(compiled_models)
-    cleanup_level: purge
-    
-  log_lik_summaries:
-    command: summarise_loglik_samples(log_lik_samples)
-    cleanup_level: purge
-    
-  figures/functional_comparison.pdf:
-    command: plot_functional_form_comparison(log_lik_summaries)
-    plot: A4_portrait
-    
-  figures/growth_comparison.pdf:
-    command: plot_growth_comparison(log_lik_summaries)
-    plot: A4_portrait
-    
-  figures/rho_comparison.pdf:
-    command: plot_rho_comparison(log_lik_summaries)
-    plot: A4_portrait
-  # paper
-  downloads/style.csl:
-    command: get_amnat_csl(target_name)
+  #------------- Figures ---------------------------
+  figures/plot_obs_v_pred_growth.png:
+    command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
+    plot: portrait_png
+  #------------- Manuscript ---------------------------
 
   ms/ms.tex:
     depends:

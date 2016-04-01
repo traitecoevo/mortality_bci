@@ -2,7 +2,7 @@
 combine_stan_chains <- function(files) {
   sflist2stanfit(lapply(files, readRDS))
 }
-# Prevents over and underflow when estimating mean log likelihoods
+# Prevents under and overflow when calculating mean log likelihoods.
 log_sum_exp <- function(x) {
   max(x) + log(sum(exp(x - max(x))))
 }
@@ -31,6 +31,18 @@ compile_models <- function(analysis) {
   pars <- lapply(sets,  function(s) s[1, c("analysis","growth_measure","rho_combo","kfold")])
   
   list(model_info=pars, fits=fits)
+}
+
+# Extracts optimization estimates
+extract_true_dbh_estimates <- function(optimization_results) {
+  fit <- optimization_results$par
+  data.frame(fit, nm=names(fit)) %>%
+    separate(nm, c('variable', 'ind'), sep='\\[', fill='right') %>%
+    mutate(ind=sub('\\]', '', ind)) %>%
+    filter(variable %in% c('true_dbh1','true_dbh2','true_growth_rate')) %>%
+    spread(variable, fit) %>%
+    mutate(ind = as.integer(ind)) %>%
+    arrange(ind)
 }
 
 # Compile multiple analyses at once

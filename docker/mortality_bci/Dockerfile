@@ -11,15 +11,16 @@ RUN apt-get update \
     libicu-dev \
     libssh2-1-dev \
     libssl-dev \
-    libxml2-dev \
     ssh \
     zlib1g-dev \
   && apt-get clean
 
 RUN install2.r --error  \
     devtools \
+    dplyr \
     RcppRedis \
-    rstan
+    rstan \
+    tidyr
 
 RUN installGithub.r  \
     traitecoevo/callr \
@@ -28,6 +29,7 @@ RUN installGithub.r  \
     richfitz/remake \
     richfitz/ids \
     ropensci/RedisAPI \
+    richfitz/redux \
     richfitz/RedisHeartbeat \
     gaborcsardi/progress \
     traitecoevo/rrqueue
