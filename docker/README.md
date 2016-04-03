@@ -67,9 +67,10 @@ devtools::install_github("richfitz/remake", dependencies=TRUE)
 We also need to install other important R packages to aid in running the analysis on the cluster or locally.
 
 ```
-install.packages(c("RcppRedis", "R6", "digest", "docopt"))
+remake::install_missing_packages()
+install.packages(c("RcppRedis","docopt"))
 devtools::install_github(c("ropensci/RedisAPI", "richfitz/RedisHeartbeat", "richfitz/ids"))
-devtools::install_github("traitecoevo/rrqueue","traitecoevo/callr")
+devtools::install_github("traitecoevo/rrqueue")
 devtools::install_github("traitecoevo/dockertest")
 ```
 
