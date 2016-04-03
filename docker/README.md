@@ -64,11 +64,13 @@ remake is a package that allows us to use a make-like workflow in R by specifyin
 devtools::install_github("richfitz/remake", dependencies=TRUE)
 ```
 
-Once this is installed we now can then install all other software dependencies, process the data ready for analysis by running:
+We also need to install other important R packages to aid in running the analysis on the cluster or locally.
 
 ```
-remake::install_missing_packages()
-remake::make()
+install.packages(c("RcppRedis", "R6", "digest", "docopt"))
+devtools::install_github(c("ropensci/RedisAPI", "richfitz/RedisHeartbeat", "richfitz/ids"))
+devtools::install_github("traitecoevo/rrqueue","traitecoevo/callr")
+devtools::install_github("traitecoevo/dockertest")
 ```
 
 ### Installing Clusterous (only needed if using AWS)
