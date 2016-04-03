@@ -1,16 +1,4 @@
 callr:
   source: github
   repo: traitecoeco/callr
-dockertest:
-  source: github
-  repo: traitecoevo/dockertest
-RedisAPI:
-  source: github
-  repo: ropensci/RedisAPI
-RedisHeartBeat:
-  source: github
-  repo: richfitz/RedisHeartbeat
-rrqueue:
-  source: github
-  repo: traitecoevo/rrqueue
 
