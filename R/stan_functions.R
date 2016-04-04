@@ -12,7 +12,7 @@ tasks_2_run <- function(comparison,iter,path='.') {
     model  <- c("base_hazard","growth_hazard","base_growth_hazard")
     } 
   if(comparison=="species_random_effects") {
-    growth_measure <- c("true_basal_area_dt")
+    growth_measure <- c("true_dbh_dt")
     rho_combo <- "none"
     model  <- "base_growth_hazard_re"
     }
@@ -95,13 +95,13 @@ run_single_stan_chain <- function(model, data, chain_id, iter=4000,
 # Prepares data for models clusterous jobs
 prep_data_for_stan <- function(data, growth_measure) {
   if (growth_measure == 'true_dbh_dt') {
-    growth_dt <- data$train$true_dbh_dt - as.vector(quantile(data$train$true_dbh_dt, c(0.05)))
-    growth_dt_heldout = data$heldout[[growth_measure]] - as.vector(quantile(data$heldout$true_dbh_dt, c(0.05)))
+    growth_dt <- data$train$true_dbh_dt - 0.172
+    growth_dt_heldout = data$heldout[[growth_measure]] - 0.172
   }
   
   if (growth_measure == 'true_basal_area_dt') {
-    growth_dt <- data$train$true_basal_area_dt - (0.25 * pi * (as.vector(quantile(data$train$true_basal_area_dt, c(0.05)))^2))
-    growth_dt_heldout = data$heldout$true_basal_area_dt - (0.25 * pi * (as.vector(quantile(data$heldout$true_basal_area_dt, c(0.05)))^2))
+    growth_dt <- data$train$true_basal_area_dt - 0.338
+    growth_dt_heldout = data$heldout$true_basal_area_dt - 0.338
   }
   list(
     n_obs = nrow(data$train),
