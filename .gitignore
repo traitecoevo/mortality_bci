@@ -9,7 +9,10 @@ figures
 *.csl
 *.pdf
 *.html
+*.RData
+scripts
 ms.md
 export
 self
 models
+mortality_bci
