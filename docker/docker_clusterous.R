@@ -5,7 +5,7 @@
 library(dockertest)
 
 run <- function() {
-  cfg <- dockertest:::yaml_read("../clusterous_env.yaml")
+  cfg <- dockertest:::yaml_read("clusterous_env.yaml")
   copy <- cfg$environment$copy
   cmd <- cfg$environment$components$worker$cmd
   image <- dockertest:::dockertest_names()
@@ -16,16 +16,16 @@ run <- function() {
   filename <- "clusterous.dock"
   writeLines(str, filename)
 
-  ign <- "../.dockerignore"
+  ign <- ".dockerignore"
   old <- readLines(ign)
   on.exit(writeLines(old, ign))
   writeLines("results", ign)
 
   dockertest::docker_machine_init()
   args <- c("build", "-t", image_cl, "-f", filename, "..")
+  message("Build container: ", image_cl)
   system2(callr::Sys_which("docker"), args)
   file.remove(filename)
-  message("Build container: ", image_cl)
 }
 
 run()
