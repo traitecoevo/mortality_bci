@@ -99,7 +99,7 @@ Rscript -e "library(methods); dockertest:::main(list('build', '--machine mem6GB'
 The above will connect to the `mem6GB` container and use dockertest to build the docker image which it will then save in `docker/Dockerfile`.
 (**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added).
 
-Now that we have a docker container with an image of the mortality working directory we now preprocess the data. and then precompile the stan models so that workers don't need to recompile a model each and everytime it gets a new job.
+Now that we have a docker container with an image of the mortality working directory we now process the data and then precompile the stan models so that workers don't need to recompile a model each and everytime it gets a new job.
 This can be done by first moving back to the parent directory `mortality_bci` and running the following in R:
 
 ```
@@ -164,13 +164,13 @@ obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 ```
 
 Now submit a list of jobs to be completed. For example below we submit the task function_growth_comparison which will run 3 model forms with k-fold cross validation for two growth measures.
+**NOTE** We run three levels of model comparison sequentially. To run other comparisons use code located in `AWS_launch/start_jobs`.
 
 ```
 func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter = 4000, 
                      path="/home/data")
 res <- enqueue_bulk(func_growth_tasks, model_compiler, obj, progress_bar = TRUE)
 ```
-
 
 Lastly, we create workers that ask for, and then undertake, jobs from the controller.  Because the controller is still running (it actually does not ned to be), you'll need to open a new terminal tab in the directory `mortality_bci`.
 
