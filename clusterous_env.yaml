@@ -18,15 +18,15 @@ environment:  # This is the main section where you describe the environment
     redis:     # A component named "master"
       machine: master       # Run on the machine named "master"
       cpu: auto             # Evenly share CPU with any other components running on this machine
-      image: redis   # Name of the Docker image to run
+      image: redis   # Name of the redis image to run
       cmd: "/usr/local/bin/redis-server"   # The command to be run in the container
-      ports: "31379:6379"        # map port 6379 (default for redis) to 31379 (must be in range 31000-31999)
-    worker:   # Component named "engine". These are the "worker" processes
+      ports: "6379"        # Expose redis port 6379 as 6379 on the host
+    engine:   # Component named "engine". These are the "worker" processes
       machine: worker       # Run on machine(s) named "worker"
       depends: redis       # Run only after "master" component has been run
       cpu: 1              # 0.5 CPU per running instance of this component
       count: auto           # Automatically run as much as possible on all machines of this type
-      image: traitecoevo/mortality_bci     # Name of the Docker image to run (same as master in this example)
+      image: registry:5000/traitecoevo/mortality_bci 
       cmd: "/bin/bash /home/data/AWS_launch/worker.sh"   # Launch command
   # Once the above environment is running, create an SSH tunnel to one of the
   # components. This is typically used to expose a web UI or a queue on the local
@@ -34,6 +34,7 @@ environment:  # This is the main section where you describe the environment
   expose_tunnel:
     # The component to connect to and the ports. In the format:
     # local_port:component_name:source_port
-    service: 31379:redis:31379
+    service: 6379:redis:6379
     # An optional message to display to the user once the port is exposed
-    message: "To submit jobs to redis use this URL:"
+    # The "{url}" field is replaced by an HTTP url to the tunnel
+    message: "To access redis, use this URL: {url}"
