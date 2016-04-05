@@ -90,17 +90,17 @@ docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
 ```
 
 Once we have an adequate sized docker container we next add the software to it by either creating a docker image (a snapshot of what software is needed).
-Below the following code will allow you to rebuild the docker image from the terminal assuming you are in `mortality_bci/docker/`:
+To rebuild the docker image move into `mortality_bci/docker/` and run from the terminal:
 
 ```
 Rscript -e "library(methods); dockertest:::main(list('build', '--machine mem6GB'));"
 ```
 
-The above will connect to the `mem6GB` container and use dockertest to build the docker image.
+The above will connect to the `mem6GB` container and use dockertest to build the docker image which it will then save as in `docker/Dockerfile`.
 (**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added).
 
 Now that we have a docker container with an image of the mortality working directory we now precompile our stan models so that workers don't need to recompile a model each and everytime it gets a new job.
-This can be done in R using the following:
+This can be done by first moving back to the parent directory `mortality_bci` and running the following in R:
 
 ```
 remake::make('models_precompiled_docker')
