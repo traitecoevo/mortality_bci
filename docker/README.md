@@ -90,11 +90,12 @@ docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
 ```
 
 Once we have an adequate sized docker container we next add the software to it by either creating a docker image (a snapshot of what software is needed).
-Below the following code will allow you to rebuild the docker image from the terminal assuming you are in `mortality_bci`:
+Below the following code will allow you to rebuild the docker image from the terminal assuming you are in `mortality_bci/docker/`:
 
 ```
-./docker/dockertest build --machine mem6GB
+Rscript -e "library(methods); dockertest:::main(list('build', '--machine mem6GB'));"
 ```
+
 The above will connect to the `mem6GB` container and use dockertest to build the docker image.
 (**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added).
 
