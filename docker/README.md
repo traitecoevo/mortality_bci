@@ -96,13 +96,14 @@ To rebuild the docker image move into `mortality_bci/docker/` and run from the t
 Rscript -e "library(methods); dockertest:::main(list('build', '--machine mem6GB'));"
 ```
 
-The above will connect to the `mem6GB` container and use dockertest to build the docker image which it will then save as in `docker/Dockerfile`.
+The above will connect to the `mem6GB` container and use dockertest to build the docker image which it will then save in `docker/Dockerfile`.
 (**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added).
 
-Now that we have a docker container with an image of the mortality working directory we now precompile our stan models so that workers don't need to recompile a model each and everytime it gets a new job.
+Now that we have a docker container with an image of the mortality working directory we now preprocess the data. and then precompile the stan models so that workers don't need to recompile a model each and everytime it gets a new job.
 This can be done by first moving back to the parent directory `mortality_bci` and running the following in R:
 
 ```
+remake::make()
 remake::make('models_precompiled_docker')
 ```
 
