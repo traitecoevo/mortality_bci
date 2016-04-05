@@ -243,14 +243,7 @@ The connection file is located at:
 To access IPython notebook, use this URL: http://localhost:8888
 ```
 
-
-Message for user:
-To submit jobs to redis use this URL:http://localhost:31379
-```
-
 Test that things are working by running
-
-
 ```
 redis-cli -p 31379 PING
 ```
@@ -278,9 +271,8 @@ sources <- c("R/model.R",
 and connect the controller to the redis.
 
 ```
-obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources,  redis_port = 31379)
+obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources,  redis_port = 6379)
 ```
-**NOTE** There is a difference is connecting the controller to redis when using redis. Specifically, we need to define the redis_port as 31379 and redis_host as `localhost`.
 
 Now, within the terminal R session, the jobs can be submitted as:
 
