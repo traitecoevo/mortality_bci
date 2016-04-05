@@ -189,34 +189,60 @@ docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -t traitec
 
 ## Run models on AWS using clusterous
 
-This is identical to the running the models locally, except after creating a redis container we creat an additional container called `traitecoevo/mortality_bci_clusterous` which includes the files that will be copied to the host. **Note** It might be tidier to do this with a data-only container, so this might change soon (a data-only container might simplify things).
+Clusterous creates clusters on your own AWS account, so before you start using Clusterous, you need provide your AWS credentials and run the interactive Clusterous setup wizard.
 
-To build this container run the following in a terminal from the parent folder `mortality_bci`
-
-```
-docker/docker_clusterous.R
-```
-
-Then connect the clusterous container to redis by running:
-```
-eval "$(docker-machine env mem6GB)"
-docker run --rm --link mortality_bci_redis:redis -t traitecoevo/mortality_bci_clusterous
-```
-
-Now we connect to the AWS cluster by running:
-```
-clusterous start mycluster.yml
-clusterous launch clusterous_env.yaml
-```
-
-You should see:
+The AWS keys are in the form of an Access Key ID and Secret Access Key, and are provided to you by AWS when you create an IAM user in your AWS account. You may refer to this [manual's guide](https://github.com/sirca/clusterous/blob/master/docs/manual/A02_AWS.md) to preparing your AWS account for use. Your AWS credentials will typically look something like:
 
 ```
-Checking for Docker images...
-Copying files...
-Starting 2 instance of worker
-Starting 1 instance of redis
-Launched 2 components: redis, worker
+Access Key ID: AKIAIOSFODNN7EXAMPLE
+Secret Access Key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+```
+
+Once you have obtained your AWS keys, run the setup command to launch the interactive wizard from the terminal:
+```
+clusterous setup
+```
+The setup wizard will start by asking you to enter your AWS keys (which you can copy/paste into the terminal). Following that, it will guide your through setting up some AWS resources that Clusterous needs for launching and managing clusters. In each case, Clusterous will give you the option of either picking an existing one or creating a new one. In general, if you expect to share your clusters with collaborators, it is recommended that you use the same resources as them. If you are the first to use Clusterous on your account, or will be working alone, feel free to create your own resources using the setup wizard.
+
+Some of the questions the setup wizard will ask for:
+
+- The AWS region you want to use. This corresponds to the location of their data centers, and you would typicaly choose the one geographically nearest to you.
+- The VPC (Virtual Private Cloud) to use, which pertains to AWS networking. If you are the first to use AWS on your account, feel free to create a new one. If a colleague is already using Clusterous on your account, it is best to choose the same one as them
+- A Key Pair, which is an SSH key for establishing a secure connection to your cluster. Clusterous needs a .pem key file to create and manage clusters. Like with VPCs, it is best to use an existing Key Pair if you are collaborating with others on your account. If chosing an existing Key Pair, Clusterous will ask you for the location of your key file.
+- An S3 bucket for storing Docker images. Like with other resources, you are best off sharing the S3 bucket with collaborators. Note that S3 bucket names are global across AWS, so people typically prefix their organisation name.
+- A name for this configuration profile. You need only one profile to begin with. Clusterous lets you have multiple sets of configuration, which is useful if you run on multiple regions or AWS accounts.
+Once you have succesfully run the setup wizard, you are ready to start using Clusterous.
+
+
+Create the cluster by entering
+```
+clusterous create mycluster.yml
+```
+
+Once the create command finishes, run the status command to get an overview of your cluster:
+```
+clusterous status
+```
+
+The status command shows you, amongst other things, the number and types of nodes running on your cluster. Note the special Controller and NAT instances: these are part of each cluster and assist in the networking and management of the cluster, and you can safely ignore them for now.
+
+You now have a working Clusterous cluster running on AWS.
+
+Now we use the run command to launch the environment on the current running cluster:
+```
+clusterous run clusterous_env.yaml
+```
+
+When you run this, it will take a few minutes to copy some files over to your cluster, build a Docker image on the cluster, run clusterous_env parallel across the master and workers, and then create an SSH tunnel so that you can access the web-based notebook from your computer. Once the command finishes running, you should see output similar to this:
+
+```
+Message for user:
+The IPython engines may take up to 30 seconds to become available.
+The connection file is located at:
+/home/data/ipython/profile/security/ipcontroller-client.json
+To access IPython notebook, use this URL: http://localhost:8888
+```
+
 
 Message for user:
 To submit jobs to redis use this URL:http://localhost:31379
