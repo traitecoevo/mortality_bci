@@ -2,7 +2,7 @@
 # PLEASE FOLLOW INSTRUCTIONS IN docker/README.md
 
 # PHASE 1: BEST GROWTH & FUNCTIONAL FORM
-func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter = 10, 
+func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter = 4000, 
                      path="/home/data")
 res <- enqueue_bulk(func_growth_tasks, model_compiler, obj, progress_bar = TRUE)
 
