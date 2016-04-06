@@ -10,6 +10,5 @@ downloads
 results
 figures
 scripts
-export
-models
-docker/mortality_bci
+precompile
+self

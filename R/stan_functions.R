@@ -36,8 +36,8 @@ tasks_2_run <- function(comparison,iter,path='.') {
   ret$modelid <- rep(1:nrow(unique(ret[,c('comparison','model','growth_measure','rho_combo','kfold')])),each = n_chains)
   ret <- ret %>%
     mutate(jobid = seq_len(n()),
-           filename = sprintf("%s/results/%s/%d.rds", path, comparison, jobid),
-           fold_data = sprintf("%s/export/bci_data_%s.rds", path, kfold))
+           filename = sprintf("%s/results/chain_fits/%s/%d.rds", path, comparison, jobid),
+           fold_data = sprintf("%s/precompile/kfold_data/bci_data_%s.rds", path, kfold))
   return(ret)
 }
 # Compiles models for clusterous
@@ -233,7 +233,7 @@ platform <- function() {
 }
 
 precompile_model_path <- function(name=platform()) {
-  file.path("models", name)
+  file.path("precompile/precompiled_models/", name)
 }
 
 precompile_docker <- function(docker_image) {
@@ -242,8 +242,8 @@ precompile_docker <- function(docker_image) {
     ## be picked up by remake's dependency detection, but never run).
     precompile_all()
   }
-  unlink(precompile_model_path("docker"), recursive=TRUE)
-  
+  x<- 3
+  unlink(precompile_model_path(), recursive=TRUE)
   cmd <- '"remake::dump_environment(verbose=FALSE, allow_missing_packages=TRUE); precompile_all()"'
   dockertest::launch(name=docker_image$name,
                      filename="docker/dockertest.yml",

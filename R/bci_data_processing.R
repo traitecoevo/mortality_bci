@@ -215,14 +215,16 @@ extract_trainheldout_set <- function(data, k=NA) {
   i_train <- seq_len(length(data))
   if (is.na(k)) {
     i_heldout <- NA
+    res <- rbind_all(data[i_train])
   } else {
     i_train <- setdiff(i_train, k)
     i_heldout <- k
-  }
 
-  list(
+    res <- list(
     train = rbind_all(data[i_train]),
     heldout  = rbind_all(data[i_heldout]))
+  }
+  return(res)
 }
 
 make_trainheldout <- function(data) {
@@ -233,7 +235,6 @@ make_trainheldout <- function(data) {
 ## Really ugly working around something I've not worked out how to do
 ## in remake (1 function -> n file outputs)
 export_data <- function(data, filename) {
-  saveRDS(data, filename)
   filename_fmt <- sub("\\.rds$", "_%s.rds", filename)
   filename_sub <- sprintf(filename_fmt, seq_along(data))
   for (i in seq_along(data)) {

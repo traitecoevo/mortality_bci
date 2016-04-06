@@ -1,9 +1,6 @@
 # Rerunning mortality analysis
 In this project we use 10 k-fold cross-validation on 15 different models, with each model sampled using three MCMC chains. In total this meant that we fitted 150 models (or 450 chains). To fit these models in a timely manner, we used the [Amazon Web Service Cluster](https://aws.amazon.com/about-aws/) coupled with [docker](https://www.docker.com). 
-Below we outline:
-1) how to set up your machine to submit jobs to the docker container;
-2) how to build the docker container used for running the models; and
-3) how to run models within the docker container on either your local machine (Not recommended) or via the AWS cluster.
+Below we outline how to run these models on the AWS cluster (recommended) and on your local machine.
 
 
 ## Setting up local machine
@@ -74,120 +71,43 @@ devtools::install_github("traitecoevo/rrqueue")
 devtools::install_github("traitecoevo/dockertest")
 ```
 
-### Installing Clusterous (only needed if using AWS)
+Now we need to prepare download and process the data for subsequent use with models. This can be done by ensuring you are in the parent directory `mortality_bci` and running the following in R:
+
+```
+remake::make()
+```
+
+Next we need to precompile our stan models in a linux system using a docker container so that they can be used with clusterous and the AWS cluster. 
+
+We create and connect a docker container with 6GB of memory called `mem6GB` using the terminal and the Docker command `docker-machine`:
+
+```
+docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
+eval "$(docker-machine env mem6GB)"
+```
+Once connected to `mem6GB` we now can precompile the models in R by running:
+
+```
+remake::make('models_precompiled_docker')
+```
+
+If you are planning to run these analyses on the AWS cluster, `mem6GB` is no longer required and can be destroyed via the terminal using terminal:
+```
+docker-machine stop mem6GB
+docker-machine rm mem6GB
+```
+**NOTE** You will want to stop or destroy this container as it will use 6 GB of memory if left running.
+
+The following is broken into two sections. You may either run the analysis using the AWS cluster or locally on your machine. **Please note** due to the number of models/chains we are running, as well as the amount of wall-time they take to complete we do not recommend rerunning these models locally.
+
+# RERUNNING ANALYSIS USING AWS (RECOMMENDED)
+
+### Installing Clusterous
 Clusterous is a easy-to-use command line tool for cluster computing on AWS. It allows you to create and manage a cluster on AWS and deploy your software in the form of Docker containers. It is aimed at scientists and researchers who want the on-demand compute power that AWS offers, but don't have the necessary time or technical expertise.
 
 A simple guide on how to install clusterous can be found [here](https://github.com/sirca/clusterous/blob/master/docs/manual/02_Quick_start.md)
 
-## Preparing docker container
-
-Our project requires alot a container that contains at least 6GB of memory to compile and install all packages and software. Because the default container that is created upon the installation of docker is not big enough to meet our needs we create a larger docker container called `mem6GB`
-
-Using the terminal and the Docker command `docker-machine` we create a new Docker container with 6GB of virtual memory called `mem6GB`
-
-```
-docker-machine create --virtualbox-memory "6000" --driver virtualbox mem6GB
-```
-
-Once we have an adequate sized docker container we next add the software to it by either creating a docker image (a snapshot of what software is needed).
-To rebuild the docker image move into `mortality_bci/docker/` and run from the terminal:
-
-```
-Rscript -e "library(methods); dockertest:::main(list('build', '--machine mem6GB'));"
-```
-
-The above will connect to the `mem6GB` container and use dockertest to build the docker image which it will then save in `docker/Dockerfile`.
-(**Note**: if the installed R packages have changed substantially, this won't be detected by dockertest, so you'll want to rebuild with `--no-cache` flag added).
-
-Now that we have a docker container with an image of the mortality working directory we now process the data and then precompile the stan models so that workers don't need to recompile a model each and everytime it gets a new job.
-This can be done by first moving back to the parent directory `mortality_bci` and running the following in R:
-
-```
-remake::make()
-remake::make('models_precompiled_docker')
-```
-
-Assuming your terminal is still in the parent directory `mortality_bci`. We now setup three different Docker containers: 
-1) A container with Redis that acts as a database catching results as they complete 
-2) A controller from which we can create and queue jobs from.
-3) Worker containers that run the jobs queued by the controller
-
-
-First, we start a container called `mortality_bci_redis`:
-
-```
-eval "$(docker-machine env mem6GB)"
-docker run --name mortality_bci_redis -d redis
-```
-
-**Note** if you have previously started redis, you'll get an error with the previous command that looks like:
-
-```
-Error response from daemon: Conflict. The name "mortality_bci_redis" is already in use by container 0e246cf9734d. You have to delete (or rename) that container to be able to reuse that name.
-```
-
-and will need to do the following:
-
-```
-eval "$(docker-machine env mem6GB)"
-docker stop mortality_bci_redis
-docker rm mortality_bci_redis
-docker run --name mortality_bci_redis -d redis
-```
-
-Next, we start a container called 'controller' and start R:
-
-```
-eval "$(docker-machine env mem6GB)"
-docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -it traitecoevo/mortality_bci:latest R
-```
-
-Then within this terminal we load `rrqueue` and state what packages and source code the jobs will require. 
-
-```
-library(rrqueue)
-packages <- c("rstan","dplyr")
-sources <- c("R/model.R",
-             "R/stan_functions.R",
-             "R/utils.R")
-```
-
-From here we can either run the workers on a local machine or on a cluster
-
-
-###Run models locally using docker
-
-Connect the controller container to the redis container.
-
-```
-obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
-```
-
-Now submit a list of jobs to be completed. For example below we submit the task function_growth_comparison which will run 3 model forms with k-fold cross validation for two growth measures.
-**NOTE** We run three levels of model comparison sequentially. To run other comparisons use code located in `AWS_launch/start_jobs`.
-
-```
-func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter = 4000, 
-                     path="/home/data")
-res <- enqueue_bulk(func_growth_tasks, model_compiler, obj, progress_bar = TRUE)
-```
-
-Lastly, we create workers that ask for, and then undertake, jobs from the controller.  Because the controller is still running (it actually does not ned to be), you'll need to open a new terminal tab in the directory `mortality_bci`.
-
-Now workers can be launched via dockertest by running:
-
-```
-eval "$(docker-machine env mem6GB)"
-./docker/dockertest launch --link mortality_bci_redis:redis -- rrqueue_worker --redis-host redis rrq
-```
-
-Alternatively workers may be launched without dockertest by running the following within the parent directory `mortality_bci`:
-```
-eval "$(docker-machine env mem6GB)"
-docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
-```
-
-## Run models on AWS using clusterous
+## Start up AWS cluster
 
 Clusterous creates clusters on your own AWS account, so before you start using Clusterous, you need provide your AWS credentials and run the interactive Clusterous setup wizard.
 
@@ -216,7 +136,7 @@ Once you have succesfully run the setup wizard, you are ready to start using Clu
 
 Create the cluster by entering
 ```
-clusterous create mycluster.yml
+clusterous create docker/mycluster.yml
 ```
 
 Once the create command finishes, run the status command to get an overview of your cluster:
@@ -230,7 +150,7 @@ You now have a working Clusterous cluster running on AWS.
 
 Now we use the run command to launch the environment on the current running cluster:
 ```
-clusterous run clusterous_env.yaml
+clusterous run docker/clusterous_env.yaml
 ```
 
 When you run this, it will take a few minutes to copy some files over to your cluster, build a Docker image on the cluster, run clusterous_env parallel across the master and workers, and then create an SSH tunnel so that you can access the web-based notebook from your computer. Once the command finishes running, you should see output similar to this:
@@ -250,32 +170,23 @@ redis-cli -p 31379 PING
 
 which should return `PONG` (and not "Connection refused").
 
-
-We are almost there! Now we need to start the controller and start R by running:
-
-```
-eval "$(docker-machine env mem6GB)"
-docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -it traitecoevo/mortality_bci:latest R
-```
-
-Then, like we did locally, we load `rrqueue` and state what packages and source code the jobs will require. 
+Then within this terminal we load `rrqueue` and state what packages and source code the jobs will require. 
 
 ```
 library(rrqueue)
-packages <- c("rstan")
+packages <- c("rstan","dplyr")
 sources <- c("R/model.R",
              "R/stan_functions.R",
              "R/utils.R")
 ```
 
-and connect the controller to the redis.
+Now we connect to `redis` (our master) on AWS.
 
 ```
 obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources,  redis_port = 6379)
 ```
 
-Now, within the terminal R session, the jobs can be submitted as:
-
+Lastly, the jobs can be submitted using the same terminal using:
 
 ```
 func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter = 4000, 
@@ -283,16 +194,74 @@ func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter 
 res <- enqueue_bulk(func_growth_tasks, model_compiler, obj, progress_bar = TRUE)
 ```
 
-Once the tasks are running you can run:
+Once the tasks are running you can check on the progress using:
 
 ```
 obj$tasks_overview()
 ```
 
-to see how many tasks have run / will run, and
+To get information on waiting & running times you can run:
 
 ```
 obj$tasks_times()
 ```
 
-to get information on waiting, running, times (`options(width=120)` might be needed if you resize your terminal window; will be automatic in Rstudio).
+## RERUNNING ANALYSIS LOCALLY (NOT RECOMMENDED)
+We only recommend running the analysis locally for testing purposes.
+
+Assuming `mem6GB` is currently active (following the instructions above) and you are currently in the parent directory `mortality_bci`, we now setup three different Docker containers: 1) A container with Redis that acts as a database catching results as they complete 2) A controller from which we can create and queue jobs from. 3) Worker containers that run the jobs queued by the controller
+
+First, we start a container called mortality_bci_redis:
+```
+eval "$(docker-machine env mem6GB)"
+docker run --name mortality_bci_redis -d redis
+```
+**Note** if you have previously started redis, you'll get an error with the previous command that looks like:
+```
+Error response from daemon: Conflict. The name "mortality_bci_redis" is already in use by container 0e246cf9734d. You have to delete (or rename) that container to be able to reuse that name.
+```
+and will need to do the following:
+```
+eval "$(docker-machine env mem6GB)"
+docker stop mortality_bci_redis
+docker rm mortality_bci_redis
+docker run --name mortality_bci_redis -d redis
+```
+Next, we start a container called 'controller' and start R:
+```
+eval "$(docker-machine env mem6GB)"
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -it traitecoevo/mortality_bci:latest R
+```
+Then within this terminal we load rrqueue and state what packages and source code the jobs will require.
+```
+library(rrqueue)
+packages <- c("rstan","dplyr")
+sources <- c("R/model.R",
+             "R/stan_functions.R",
+             "R/utils.R")
+```
+
+Connect the controller container to the redis container.
+```
+obj <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
+```
+
+Now submit a list of jobs to be completed. For example below we submit the task function_growth_comparison which will run 3 model forms with k-fold cross validation for two growth measures. NOTE We run three levels of model comparison sequentially. To run other comparisons use code located in AWS_launch/start_jobs.
+
+```
+func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter = 4000, path="/home/data")
+```
+```
+res <- enqueue_bulk(func_growth_tasks, model_compiler, obj, progress_bar = TRUE)
+```
+Lastly, we create workers that ask for, and then undertake, jobs from the controller. Because the controller is still running (it actually does not ned to be), you'll need to open new terminal tabs (as many as the number of workers you require) in the directory `mortality_bci`.
+
+Then you run the following for each terminal:
+```
+eval "$(docker-machine env mem6GB)"
+docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
+```
+
+
+
+

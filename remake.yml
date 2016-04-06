@@ -43,27 +43,26 @@ plot_options:
 targets:
   all:
     depends:
-      - export_1
+      - precompile
 
-  export_1:
+  precompile:
     depends:
-      - export/bci_data.rds
-      - export/bci_data_full.rds
+      - precompile/kfold_data/bci_data.rds
+      - precompile/bci_data_full.rds
       - figures/plot_obs_v_pred_growth.png
   
   #------------- data export ---------------------------
-  # Watch out; this one is a bit evil; it also creates sub filenames:
-  #   export/bci_data_1.rds ... export_bci_data_10.rds
-  export/bci_data.rds:
+
+  precompile/kfold_data/bci_data.rds:
     command: export_data(BCI_training_sets, target_name)
+
+  precompile/bci_data_full.rds:
+    command: saveRDS(BCI_training_full, target_name)
 
   #------------- data preparation ---------------------------
   BCI_training_sets:
     command: make_trainheldout(BCI_model_dataset_folds)
     cleanup_level: purge
-
-  export/bci_data_full.rds:
-    command: saveRDS(BCI_training_full, target_name)
 
   BCI_training_full:
     command: extract_trainheldout_set(BCI_model_dataset_folds, NA)
