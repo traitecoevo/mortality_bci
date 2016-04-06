@@ -12,3 +12,4 @@ figures
 scripts
 precompile
 self
+docker/mortality_bci
