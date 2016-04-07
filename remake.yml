@@ -55,9 +55,11 @@ targets:
 
   precompile/kfold_data/bci_data.rds:
     command: export_data(BCI_training_sets, target_name)
+    cleanup_level: purge
 
   precompile/bci_data_full.rds:
     command: saveRDS(BCI_training_full, target_name)
+    cleanup_level: purge
 
   #------------- data preparation ---------------------------
   BCI_training_sets:
@@ -125,9 +127,11 @@ targets:
 
   models_precompiled:
     command: precompile_all()
+    cleanup_level: purge
     
   models_precompiled_docker:
     command: precompile_docker(docker_image)
+    cleanup_level: purge
     
   #------------- Figures ---------------------------
   figures/plot_obs_v_pred_growth.png:
