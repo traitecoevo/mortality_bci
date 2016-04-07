@@ -214,6 +214,13 @@ obj$tasks_overview()
 obj$tasks_times()
 ```
 
+If you want to access the cluster from a different computer ensure the machine is configured to use the same AWS account and region.
+Then you can use `workon` via the terminal to access the cluster from the second machine:
+
+```
+clusterous workon mortality_cluster
+```
+
 Once completed results can be copied back to your local computer using:
 
 ```
