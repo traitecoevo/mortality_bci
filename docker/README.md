@@ -150,7 +150,7 @@ You now have a working Clusterous cluster running on AWS.
 
 Now we use the run command to launch the environment on the current running cluster:
 ```
-clusterous run docker/clusterous_env.yaml
+clusterous run docker/clusterous_env.yml
 ```
 
 When you run this, it will take a few minutes to copy some files over to your cluster, build a Docker image on the cluster, run clusterous_env parallel across the master and workers, and then create an SSH tunnel so that you can access the web-based notebook from your computer. Once the command finishes running, you should see output similar to this:
@@ -197,16 +197,27 @@ func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter 
 res <- enqueue_bulk(func_growth_tasks, model_compiler, obj, progress_bar = TRUE)
 ```
 
-Once the tasks are running you can check on the progress using:
+Once the tasks are running a progress bar will appear. However, if you would like more information about progress you can open a new terminal in `mortality_bci` and run
 
 ```
+library(rrqueue)
+packages <- c("rstan","dplyr")
+sources <- c("R/model.R",
+             "R/stan_functions.R",
+             "R/utils.R")
+obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources,  redis_port = 6379)
+
+# Check number of jobs completed, running or have errored
 obj$tasks_overview()
-```
 
-To get information on waiting & running times you can run:
-
-```
+# Check waiting & running times
 obj$tasks_times()
+```
+
+Once completed results can be copied back to your local computer using:
+
+```
+clusterous get results .
 ```
 
 ## RERUNNING ANALYSIS LOCALLY (NOT RECOMMENDED)
