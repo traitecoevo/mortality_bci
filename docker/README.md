@@ -66,7 +66,7 @@ We also need to install other important R packages to aid in running the analysi
 ```
 remake::install_missing_packages()
 install.packages(c("RcppRedis","docopt"))
-devtools::install_github(c("ropensci/RedisAPI", "richfitz/RedisHeartbeat", "richfitz/ids"))
+devtools::install_github(c("ropensci/RedisAPI", "richfitz/redux", "richfitz/RedisHeartbeat", "richfitz/ids"))
 devtools::install_github("traitecoevo/rrqueue")
 devtools::install_github("traitecoevo/dockertest")
 ```
@@ -74,7 +74,7 @@ devtools::install_github("traitecoevo/dockertest")
 Now we need to prepare download and process the data for subsequent use with models. This can be done by ensuring you are in the parent directory `mortality_bci` and running the following in R:
 
 ```
-remake::make()
+remake::make() # This will take 10 minutes with fast bandwidth
 ```
 
 Next we need to precompile our stan models in a linux system using a docker container so that they can be used with clusterous and the AWS cluster. 
@@ -88,7 +88,7 @@ eval "$(docker-machine env mem6GB)"
 Once connected to `mem6GB` we now can precompile the models in R by running:
 
 ```
-remake::make('models_precompiled_docker')
+remake::make('models_precompiled_docker') # Takes approximately 30 min
 ```
 
 If you are planning to run these analyses on the AWS cluster, `mem6GB` is no longer required and can be destroyed via the terminal using terminal:
@@ -156,16 +156,19 @@ clusterous run docker/clusterous_env.yaml
 When you run this, it will take a few minutes to copy some files over to your cluster, build a Docker image on the cluster, run clusterous_env parallel across the master and workers, and then create an SSH tunnel so that you can access the web-based notebook from your computer. Once the command finishes running, you should see output similar to this:
 
 ```
+Checking for Docker images...
+Copying files...
+Starting 80 instances of engine
+Starting 1 instance of redis
+Launched 2 components: redis, engine
+
 Message for user:
-The IPython engines may take up to 30 seconds to become available.
-The connection file is located at:
-/home/data/ipython/profile/security/ipcontroller-client.json
-To access IPython notebook, use this URL: http://localhost:8888
+To access redis, use this URL: http://localhost:6379
 ```
 
 Test that things are working by running
 ```
-redis-cli -p 31379 PING
+redis-cli -p 6379 PING
 ```
 
 which should return `PONG` (and not "Connection refused").
@@ -186,7 +189,7 @@ Now we connect to `redis` (our master) on AWS.
 obj <- queue("rrq", redis_host="localhost", packages=packages, sources=sources,  redis_port = 6379)
 ```
 
-Lastly, the jobs can be submitted using the same terminal using:
+Lastly, sequentially submit jobs located in `docker/jobs.R`. For example:
 
 ```
 func_growth_tasks <- tasks_2_run(comparison = 'function_growth_comparison',iter = 4000, 
