@@ -3,9 +3,9 @@ environment:  # This is the main section where you describe the environment
   # Copy any necessary folders to the cluster shared storage.
   # The folder name is relative to the location of this environment file
   copy:
-    - "export"
-    - "R"
-    - "docker"
+    - "../precompile"
+    - "../R"
+    - "../docker"
   # Section that describes your application components
   components:
     redis:     # A component named "master"
