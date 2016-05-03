@@ -1,5 +1,5 @@
 # Generic task builder function for clusterous
-tasks_2_run <- function(comparison,iter,path='.') {
+tasks_2_run <- function(comparison,iter=4000,path='.') {
   if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations")) {
     stop('comparison can only be one of the following: 
                       "function_growth_comparison","species_random_effects","rho_combinations"')
