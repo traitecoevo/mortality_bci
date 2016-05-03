@@ -1,38 +1,3 @@
-# Merge chains related to a given model/kfold combination
-combine_stan_chains <- function(files) {
-  sflist2stanfit(lapply(files, readRDS))
-}
-# Prevents under and overflow when calculating mean log likelihoods.
-log_sum_exp <- function(x) {
-  max(x) + log(sum(exp(x - max(x))))
-}
-
-# Compile all models related to a given analyses
-compile_models <- function(analysis) {
-  if(!analysis %in% c("null_model","null_model_random_effects",
-                      "no_gamma_model", "no_gamma_model_random_effects",
-                      "growth_comparison","rho_combinations")) {
-    stop("analysis can only be one of the following: 
-                      'null_model,'null_model_random_effects',
-                      'no_gamma_model', 'no_gamma_model_random_effects',
-                      'growth_comparison','rho_combinations'")
-  }
-  
-  if(analysis=='growth_comparison') {
-    growth_measure <- c('true_dbh_dt','true_basal_area_dt')
-  }
-  else {
-    growth_measure <- 'true_dbh_dt'
-  }
-  tasks <- tasks_2_run(analysis, growth_measure = growth_measure, iter = 1000)
-  sets <- split(tasks,  list(tasks$analysis,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
-  
-  fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
-  pars <- lapply(sets,  function(s) s[1, c("analysis","growth_measure","rho_combo","kfold")])
-  
-  list(model_info=pars, fits=fits)
-}
-
 # Extracts optimization estimates
 extract_true_dbh_estimates <- function(optimization_results) {
   fit <- optimization_results$par
@@ -45,15 +10,41 @@ extract_true_dbh_estimates <- function(optimization_results) {
     arrange(ind)
 }
 
-# Compile multiple analyses at once
-compile_multiple_analyses <- function(analysis) {
-  sapply(analysis, function(x) compile_models(x), simplify = FALSE)
+# stan's chain merger
+combine_stan_chains <- function(files) {
+  rstan::sflist2stanfit(lapply(files, readRDS))
 }
 
-# Examine model diagnostics for single analysis
-kfold_diagnostics <- function(analysis) {
-  fits <- analysis$fits
-  info <- analysis$model_info
+# sub function to compile chains for our workflow
+compile_chains <- function(comparison) {
+  if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations")) {
+    stop('comparison can only be one of the following: 
+                      "function_growth_comparison","species_random_effects","rho_combinations"')
+  }
+  tasks <- tasks_2_run(comparison)
+  sets <- split(tasks,  list(tasks$comparison,tasks$model,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
+  
+  fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
+  pars <- lapply(sets,  function(s) s[1, c("comparison","model","growth_measure","rho_combo","kfold")])
+  
+  list(model_info=pars, fits=fits)
+}
+
+# Compile chains for all models
+compile_models <- function(comparison = c("without_random_effects","with_random_effects")) {
+  if(length(comparison) == 1) {
+    compile_chains(comparison)
+  }
+  else {
+    sapply(comparison, function(x) compile_chains(x), simplify = FALSE)
+  }
+}
+
+
+# Diagnostic function
+diagnostics <- function(model) {
+  fits <- model$fits
+  info <- model$model_info
   out1 <- bind_rows(lapply(fits, function(x) {
     summary_model <- summary(x)$summary
     sampler_params <- get_sampler_params(x, inc_warmup=FALSE)
@@ -67,122 +58,100 @@ kfold_diagnostics <- function(analysis) {
   
   out2 <- suppressWarnings(bind_rows(lapply(info, function(x) {
     data.frame(
-      analysis = x$analysis,
-      growth_measure = x$growth_measure,
-      rho_combo = x$rho_combo,
+      comparison = x$comparison,
       kfold = as.integer(x$kfold))
   })))
   
   res <- cbind(out2,out1) %>%
-    arrange(analysis, growth_measure, rho_combo, kfold)
+    arrange(comparison, kfold)
   
   row.names(res) <- NULL
   return(res)
 }
 
-# Examine model diagnostics for multiple analysis
-multi_analysis_kfold_diagnostics <- function(list_of_analyses) {
-  out <- suppressWarnings(bind_rows(lapply(list_of_analyses, function(x) {
-    kfold_model_diagnostics(x)})))
-  row.names(out) <- NULL
+kfold_diagnostics_load <- function(comparison) {
+  data <- compile_models(comparison)
+  kfold_diagnostics(data)
+}
+
+# Examine model diagnostics for all analysis
+kfold_diagnostics <- function(comparison) {
+  model <- compile_models(comparison)
+  if(is.null(model$fits)) { #Check to see if object is multi model 
+    out <- suppressWarnings(bind_rows(lapply(model, function(x) {
+      diagnostics(x)})))
+    row.names(out) <- NULL
+  }
+  else {
+    out <- diagnostics(model)
+  }
   return(out)
 }
 
-# Extract log likelihood samples for single analysis
-extract_loglik_samples <- function(analysis) {
-  fits <- analysis$fits
-  info <- plyr::ldply(analysis$model_info, .id='modelid')
+# sub function to extract log likelihood samples
+logloss_samples <- function(model) {
+  fits <- model$fits
+  info <- plyr::ldply(model$model_info, .id='modelid')
   samples <- lapply(fits, function(x) 
-    rstan::extract(x, pars = c('sum_log_lik_fit','sum_log_lik_heldout')))
+    rstan::extract(x, pars = c('logloss_heldout')))
   
   res <- plyr::ldply(lapply(samples, function(x) {
-    gather(data.frame(x),'likelihood','estimate')}), .id='modelid')
+    tidyr::gather(data.frame(x),'logloss','estimate')}), .id='modelid')
   
-  left_join(info, res, 'modelid')
+  left_join(info, res, 'modelid') %>%
+    select(-modelid)
 }
 
-# Extract log likelihood samples for multiple analyses.
-extract_multi_analysis_loglik_samples <- function(list_of_analyses){
-  samples <- lapply(list_of_analyses, extract_loglik_samples)
-  plyr::ldply(samples, .id='model')
+# Extract log likelihood samples for all models.
+extract_logloss_samples <- function(model) {
+  if(is.null(model$fits)) { #Check to see if object is multi model 
+  samples <- lapply(model, logloss_samples)
+  plyr::ldply(samples, .id='modelid') %>%
+    select(-modelid)
+  }
+  else { 
+    logloss_samples(model)
+  }
 }
+
 # Summarise log likelihood samples
-summarise_loglik_samples <- function(samples) {
+summarise_logloss <- function(comparison) {
+  models <- compile_models(comparison)
+  # We don't make an explict target of compiled models because of
+  # a lack of support for long vectors in digest (remake issue #76)
+  samples <- extract_logloss_samples(models)
   samples %>%
-    group_by(modelid, model, analysis,growth_measure,rho_combo,kfold, likelihood) %>%
-    summarise(klpd = mean(log_sum_exp(estimate))) %>%
+    group_by(comparison, model, growth_measure, rho_combo, kfold, logloss) %>%
+    summarise(kfold_logloss = mean(estimate)) %>%
     ungroup() %>%
-    group_by(model, analysis, growth_measure, rho_combo, likelihood) %>%
-    summarise(elpd = mean(klpd),
-              st_err = sd(klpd)/sqrt(n())) %>%
+     group_by(comparison, model, growth_measure, rho_combo, logloss) %>%
+    summarise(mean = mean(kfold_logloss),
+              st_err = sd(kfold_logloss)/sqrt(n())) %>%
     mutate(ci = 1.96 * st_err,
-           upper_ci = elpd + ci,
-           lower_ci = elpd - ci) %>%
+           `2.5%` = mean - ci,
+           `97.5%` = mean + ci) %>%
     ungroup()
 }
 
-coefficent_plot_theme <- function() {
-  theme_classic() + theme(axis.title.x = element_text(face = "bold", size = 12),
-                          axis.title.y = element_blank(),
-                          axis.text.x = element_text(size = 10),
-                          axis.text.y = element_text(size = 12),
-                          plot.title = element_text(size = 18),
-                          title = element_text(face = "bold"),
-                          panel.margin = unit(4,"mm"))
-}
-
-plot_functional_form_comparison <- function(log_likelihood_summary) {
-  dat <- filter(log_likelihood_summary, model %in% c('null_model','no_gamma_model', 
-                                                     'rho_combinations', 'null_model_random_effects', 
-                                                     'no_gamma_model_random_effects', 'growth_comparison') & 
-                  likelihood =='sum_log_lik_heldout' & 
-                  rho_combo=='' & 
-                  growth_measure=='true_dbh_dt') %>%
-    mutate(model = factor(model, levels=c('null_model','no_gamma_model', 
-                                          'rho_combinations', 'null_model_random_effects', 
-                                          'no_gamma_model_random_effects', 'growth_comparison'))) %>%
-    mutate(model = factor(model, labels = c( "Baseline hazard","Growth hazard","Baseline & growth hazard",
-                                             "Baseline hazard (spp)","Growth hazard (spp)",
-                                             "Baseline & growth hazard (spp)"))) %>%
-    arrange(model)
+#
+get_times <- function(comparison) {
+   fits <- comparison$fits
+  info <- plyr::ldply(comparison$model_info, .id='modelid')
+  times <- lapply(fits, function(x) 
+    rstan::get_elapsed_time(x))
   
-  ggplot(dat, aes(x = elpd,y = model)) + 
-    geom_segment(aes(x=lower_ci,y=model, xend=upper_ci, yend=model), size=0.5)+
-    geom_point(aes(x=elpd, y=model), size =3) +
-    xlab('Log likelihood') +
-    scale_x_continuous(breaks= scales::pretty_breaks(6)) +
-    coefficent_plot_theme()
-}
-
-plot_growth_comparison <- function(log_likelihood_summary) {
-  dat <- filter(log_likelihood_summary, model =='growth_comparison' & 
-                  likelihood =='sum_log_lik_heldout' & 
-                  rho_combo=='') %>%
-    mutate(growth_measure = factor(growth_measure, levels=c("true_basal_area_dt","true_dbh_dt"))) %>%
-    mutate(growth_measure = factor(growth_measure, labels = c("Area growth","dbh increment growth"))) %>%
-    arrange(growth_measure)
+  res <- plyr::ldply(lapply(times, function(x) {
+    tidyr::gather(data.frame(x),'warmup','sample')}), .id='modelid')
   
-  ggplot(dat, aes(x = elpd,y = growth_measure)) + 
-    geom_segment(aes(x=lower_ci,y=growth_measure, xend=upper_ci, yend=growth_measure), size=0.5)+
-    geom_point(aes(x=elpd, y=growth_measure), size =3) +
-    xlab('Log likelihood') +
-    scale_x_continuous(breaks= scales::pretty_breaks(6)) +
-    coefficent_plot_theme()
+  left_join(info, res, 'modelid') %>%
+    select(-modelid) %>%
+    mutate(total_hours = ((warmup + sample)/3600))
 }
 
 
-plot_rho_comparison <- function(log_likelihood_summary) {
-  dat <- filter(log_likelihood_summary, model =='rho_combinations' & 
-                  likelihood =='sum_log_lik_heldout') %>%
-    mutate(rho_combo = factor(rho_combo, levels=c("abc","bc","ac","ab","c","b","a",""))) %>%
-    mutate(rho_combo = factor(rho_combo, labels = c("all parameters","beta & gamma","alpha & gamma",'alpha & beta', "gamma", "beta","alpha","none"))) %>%
-    arrange(rho_combo)
-  
-  ggplot(dat, aes(x = elpd,y = rho_combo)) + 
-    geom_segment(aes(x=lower_ci,y=rho_combo, xend=upper_ci, yend=rho_combo), size=0.5)+
-    geom_point(aes(x=elpd, y=rho_combo), size =3) +
-    xlab('Log likelihood') +
-    scale_x_continuous(breaks= scales::pretty_breaks(6)) +
-    coefficent_plot_theme()
+summarise_times <- function(times) {
+  res <- times %>%
+    group_by(comparison, model, growth_measure, rho_combo) %>%
+    summarise(mn = median(total_hours))
+  return(res)
 }
-
