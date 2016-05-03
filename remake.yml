@@ -9,48 +9,95 @@ packages:
   - dockertest
   - knitr
   - ggplot2
-  - grid
-  - gridExtra
+  - cowplot
 
 sources:
   - R
   
 plot_options:
-  A4_landscape:
-    width: 11.69
-    height: 8.27
-  
-  A4_portrait:
-    width: 8.27
-    height: 11.69
-  
-  med_square:
-    width: 6
-    height: 6
-  
-  portrait_rectangle:
-    width: 4
-    height: 6
-    
-  large_rectangle:
-    width: 8
-    height: 6
 
   portrait_png:
     width: 750
     height: 900
+    
+  single_col_tall_rectangle:
+    width: 3.46
+    height: 4.2
 
 targets:
   all:
     depends:
-      - precompile
-
-  precompile:
-    depends:
       - precompile/kfold_data/bci_data.rds
       - precompile/bci_data_full.rds
       - figures/plot_obs_v_pred_growth.png
+      
+  process_output:
+    depends:
+      - func_growth_diagnostics
+      - logloss_func_growth
+      - rho_comparisons_diagnostics
+      - logloss_rho_comparisons
+      - figures/fig1.pdf
+      - figures/fig3.pdf
+      
+  #------------- download data ---------------------------
+  downloads/bci.spptable.rdata:
+    command: BCI_download_species_table(target_name)
+    cleanup_level: never
+    check: exists
+    
+  downloads/bci.full.Rdata31Aug2012.zip:
+    command: BCI_download_50ha_plot_full(target_name)
+    cleanup_level: never
+    check: exists
+
+  #------------- Load data  -------------------------------
   
+  BCI_50haplot:
+    command: BCI_load_50ha_plot("downloads/bci.full.Rdata31Aug2012.zip")
+    cleanup_level: purge
+    
+  BCI_traits:
+    command: load_trait_data("data/BCI_traits_20101220.csv")
+    cleanup_level: purge
+
+  BCI_nomenclature:
+    command: BCI_load_nomenclature("downloads/bci.spptable.rdata")
+    
+  BCI_dbh_error_data:
+    command: BCI_load_dbh_error_data("data/dbh_error_data.rdata")
+    cleanup_level: purge
+  
+  #------------- Process data  ----------------------------
+  
+  BCI_cleaned:
+    command: BCI_clean(BCI_50haplot, BCI_nomenclature)
+    cleanup_level: purge
+
+  BCI_model_dataset_full:
+    command: merge_BCI_data(BCI_cleaned, BCI_traits)
+    cleanup_level: purge
+    
+  BCI_model_dataset_unique:
+    command: reduce_to_single_ind_obs(BCI_model_dataset_full)
+    cleanup_level: purge
+    
+  BCI_model_dataset_true_unique:
+    command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
+    cleanup_level: purge
+    
+  BCI_model_dataset_folds:
+    command: split_into_kfolds(BCI_model_dataset_true_unique)
+    cleanup_level: purge
+    
+  BCI_training_full:
+    command: extract_trainheldout_set(BCI_model_dataset_folds, NA)
+    cleanup_level: purge
+    
+  BCI_training_sets:
+    command: make_trainheldout(BCI_model_dataset_folds)
+    cleanup_level: purge
+
   #------------- data export ---------------------------
 
   precompile/kfold_data/bci_data.rds:
@@ -61,82 +108,46 @@ targets:
     command: saveRDS(BCI_training_full, target_name)
     cleanup_level: purge
 
-  #------------- data preparation ---------------------------
-  BCI_training_sets:
-    command: make_trainheldout(BCI_model_dataset_folds)
-    cleanup_level: purge
-
-  BCI_training_full:
-    command: extract_trainheldout_set(BCI_model_dataset_folds, NA)
-    cleanup_level: purge
-
-  BCI_model_dataset_folds:
-    command: split_into_kfolds(BCI_model_dataset_true_unique)
-    cleanup_level: purge
-
-  BCI_model_dataset_true_unique:
-    command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
-    cleanup_level: purge
-
-  BCI_dbh_error_data:
-    command: BCI_load_dbh_error_data("data/dbh_error_data.rdata")
-    cleanup_level: purge
-
-  BCI_model_dataset_unique:
-    command: reduce_to_single_ind_obs(BCI_model_dataset_full)
-    cleanup_level: purge
-
-  BCI_model_dataset_full:
-    command: merge_BCI_data(BCI_cleaned, BCI_traits)
-    cleanup_level: purge
-
-  BCI_cleaned:
-    command: BCI_clean(BCI_50haplot, BCI_nomenclature)
-    cleanup_level: purge
-
-  BCI_traits:
-    command: load_trait_data("data/BCI_traits_20101220.csv")
-    cleanup_level: purge
-
-  BCI_50haplot:
-    command: BCI_load_50ha_plot("downloads/bci.full.Rdata31Aug2012.zip")
-    cleanup_level: purge
-
-  downloads/bci.full.Rdata31Aug2012.zip:
-    command: BCI_download_50ha_plot_full(target_name)
-    cleanup_level: never
-    check: exists
-
-  BCI_nomenclature:
-    command: BCI_load_nomenclature("downloads/bci.spptable.rdata")
-
-  downloads/bci.spptable.rdata:
-    command: BCI_download_species_table(target_name)
-    cleanup_level: never
-    check: exists
-
-  docker_image:
-    command: build_container("docker/dockertest.yml")
 
   #------------- Models ---------------------------
-  
   BCI_true_dbh_model:
     command: run_true_dbh_model(BCI_model_dataset_unique)
     cleanup_level: purge
-    check: exists
+    check: exists  
 
-  models_precompiled:
-    command: precompile_all()
+  models_precompiled_docker:
+    command: precompile_docker(I("traitecoevo/mortality_bci"))
     cleanup_level: purge
     
-  models_precompiled_docker:
-    command: precompile_docker(docker_image)
-    cleanup_level: purge
+  #------------- Process outputs -------------------
+  
+  # function and growth comparison
+  func_growth_diagnostics:
+    command: kfold_diagnostics(I("function_growth_comparison"))
+
+  logloss_func_growth:
+    command: summarise_logloss(I("function_growth_comparison"))
+  
+  # Rho combinations
+  rho_comparisons_diagnostics:
+    command: kfold_diagnostics(I("rho_combinations"))
+    
+  logloss_rho_comparisons:
+    command: summarise_logloss(I("rho_combinations"))
     
   #------------- Figures ---------------------------
   figures/plot_obs_v_pred_growth.png:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
     plot: portrait_png
+    
+  figures/fig1.pdf:
+    command: plot_function_growth_comparison(logloss_func_growth)
+    plot: single_col_tall_rectangle
+    
+  figures/fig3.pdf:
+    command: plot_rho_comparison(logloss_rho_comparisons)
+    plot: single_col_tall_rectangle
+    
   #------------- Manuscript ---------------------------
 
   ms/ms.tex:
