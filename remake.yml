@@ -35,9 +35,12 @@ targets:
     depends:
       - func_growth_diagnostics
       - logloss_func_growth
+      - random_effect_diagnostics
+      - logloss_re_comparison
       - rho_comparisons_diagnostics
       - logloss_rho_comparisons
       - figures/fig1.pdf
+      - figures/fig2.pdf
       - figures/fig3.pdf
       
   #------------- download data ---------------------------
@@ -127,6 +130,13 @@ targets:
 
   logloss_func_growth:
     command: summarise_logloss(I("function_growth_comparison"))
+    
+  # Random effect & non random effect comparison
+  random_effect_diagnostics:
+    command: kfold_diagnostics(I("species_random_effects"))
+    
+  logloss_re_comparison:
+    command: summarise_logloss(I(c("function_growth_comparison", "species_random_effects")))
   
   # Rho combinations
   rho_comparisons_diagnostics:
@@ -144,6 +154,10 @@ targets:
     command: plot_function_growth_comparison(logloss_func_growth)
     plot: single_col_tall_rectangle
     
+  figures/fig2.pdf:
+    command: plot_random_effect_comparison(logloss_re_comparison)
+    plot: single_col_tall_rectangle
+  
   figures/fig3.pdf:
     command: plot_rho_comparison(logloss_rho_comparisons)
     plot: single_col_tall_rectangle
