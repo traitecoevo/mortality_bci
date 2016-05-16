@@ -47,6 +47,8 @@ plot_obs_v_pred_growth <- function(data) {
 # Plot mean CV log likelihoods for functional comparison
 plot_function_growth_comparison <- function(logloss_summary) {
   dat <- logloss_summary %>%
+    filter(model!= "base_hazard" | growth_measure !='true_basal_area_dt') %>%
+    mutate(growth_measure = replace(growth_measure, model=="base_hazard", "none")) %>%
     mutate(model = factor(model, levels=c('base_hazard','growth_hazard', 
                                           'base_growth_hazard'))) %>%
     mutate(model = factor(model, labels = c( "Baseline hazard","Growth hazard","Baseline & growth hazard"))) %>%
@@ -62,17 +64,17 @@ plot_function_growth_comparison <- function(logloss_summary) {
 
 # Plot mean CV log likelihoods for growth comparison
 plot_random_effect_comparison <- function(log_loss_summary) {
-  dat <- filter(log_loss_summary, model =='growth_comparison' & 
-                  logloss =='logloss_heldout' & 
-                  rho_combo=='') %>%
-    mutate(model = factor(growth_measure, levels=c("base_growth_hazard_re","base_growth_hazard"))) %>%
-    mutate(model = factor(growth_measure, labels = c("Without","With"))) %>%
-    arrange(growth_measure)
+  dat <- filter(log_loss_summary, growth_measure =='true_dbh_dt' &
+                  (model =='base_growth_hazard' | model =='base_growth_hazard_re')) %>%
+    mutate(model = factor(model, levels=c("base_growth_hazard","base_growth_hazard_re"))) %>%
+    mutate(model = factor(model, labels = c("Without random effects","With random effects"))) %>%
+    arrange(model)
   
-  ggplot(dat, aes(x = mean,y = model)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(.1), size=0.2) +
-    xlab('Log likelihood') +
-    scale_x_continuous(breaks= scales::pretty_breaks(6)) +
+  ggplot(dat, aes(x = model,y = mean)) + 
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.2) +
+    ylab('Average Logarithmic Loss') +
+    xlab('Model') +
+    scale_y_continuous(breaks= scales::pretty_breaks(6)) +
     partial_plot_theme()
 }
 
