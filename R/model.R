@@ -250,7 +250,7 @@ get_model_chunks_growth_haz <- function(tasks) {
     }
         // Calculation of average negative log likelihood
         logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;"
-  )
+    )
 }
 
 ## base_growth hazard model
@@ -396,16 +396,26 @@ get_model_chunks_base_growth_haz <- function(tasks) {
 
 ## base_growth hazard model with species random effect
 
-get_model_chunks_base_growth_haz_re <- function(tasks) {
+get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
   
   list(
     growth_measure = tasks$growth_measure,
-    pars = c("mu_log_alpha","sigma_log_alpha",
+    
+    pars = if(full_data == FALSE) {
+            c("mu_log_alpha","sigma_log_alpha",
              "mu_log_beta","sigma_log_beta",
              "mu_log_gamma","sigma_log_gamma",
              "census_err","sigma_log_census_err",
-             "logloss_heldout"),
-    data = "
+             "logloss_heldout") 
+    }
+    else {
+    c("mu_log_alpha","sigma_log_alpha",
+             "mu_log_beta","sigma_log_beta",
+             "mu_log_gamma","sigma_log_gamma",
+             "census_err","sigma_log_census_err",
+             "logloss")
+    },
+    data = if(full_data == FALSE) {"
         // Fitted data
         int<lower=1> n_obs;
         int<lower=1> n_census;
@@ -424,7 +434,19 @@ get_model_chunks_base_growth_haz_re <- function(tasks) {
         int<lower=1> spp_heldout[n_obs_heldout];
         vector[n_obs_heldout] census_length_heldout;
         vector[n_obs_heldout] growth_dt_heldout;
-        int<lower=0, upper=1> y_heldout[n_obs_heldout];",
+        int<lower=0, upper=1> y_heldout[n_obs_heldout];"
+      }
+    else {"
+        // Fitted data
+        int<lower=1> n_obs;
+        int<lower=1> n_census;
+        int<lower=1> n_spp;
+        int<lower=1> census[n_obs];
+        int<lower=1> spp[n_obs];
+        vector[n_obs] census_length;
+        vector[n_obs] growth_dt;
+        int<lower=0, upper=1> y[n_obs];"
+      },
     parameters ="
       // Mortality model parameters
       real raw_log_alpha[n_spp];
@@ -488,7 +510,8 @@ get_model_chunks_base_growth_haz_re <- function(tasks) {
     
       raw_log_census_err ~ normal(0, 1);
       sigma_log_census_err ~ cauchy(0, 2.5);",
-    generated_quantities ="
+    generated_quantities =
+    if(full_data==FALSE) {"
       real alpha[n_spp];
       real beta[n_spp];
       real gamma[n_spp];
@@ -529,77 +552,111 @@ get_model_chunks_base_growth_haz_re <- function(tasks) {
     }
         // Calculation of average negative log likelihoods
         logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;"
+    }
+    else {"
+      real alpha[n_spp];
+      real beta[n_spp];
+      real gamma[n_spp];
+      real census_err[n_census];
+      real cumulative_hazard;
+      real loglik;
+      real sum_loglik;
+      real logloss;
+      
+      // Initialization of summed parameter
+      sum_loglik <- 0;
+
+      // Recalulate species random effects
+      for (s in 1:n_spp) {
+        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
+        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma);
+      }
+
+      // Recalculate census random effects      
+      for (t in 1:n_census) {
+      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      }
+      
+      // Calculate log likelihood
+      for (i in 1:n_obs) {
+        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
+        
+        if (y[i] == 0) {
+          loglik <- cumulative_hazard;
+        }
+        else {
+          loglik <- log1m_exp(cumulative_hazard);
+        }
+        sum_loglik <- sum_loglik + loglik;
+    }
+        // Calculation of average negative log likelihoods
+        logloss <- -sum_loglik/n_obs;"
+    }
   )
 }
   
 
 ## FINAL FULL FIT MODEL WITH RANDOM EFFECTS   (STILL BEING FIXED; NOT HOOKED UP TO REST OF REMAKE YET)   
-get_model_chunks_full_fit <- function(rho_combo) {
-  if(nchar(rho_combo) > 0) {
-    rho_combo <- sapply(seq_len(nchar(rho_combo)), function(i) substr(rho_combo, i, i))
-  }
-  
+
+get_final_model_chunks <- function(tasks) {
   list(
-    pars = c("mu_log_a0","sigma_log_a0","a0",if("a" %in% rho_combo) "a1",
-             "mu_log_b0","sigma_log_b0","b0",if("b" %in% rho_combo) "b1",
-             "mu_log_c0","sigma_log_c0","c0",if("c" %in% rho_combo) "c1",
-             "avg_loglik_fit"),
-    data =" 
-      int<lower=1> n_obs;
-      int<lower=1> n_spp;
-      int<lower=1> spp[n_obs];
-      int<lower=0, upper=1> y[n_obs];
-      vector[n_obs] census_length;
-      vector[n_obs] growth_dt;
-      vector[n_spp] rho_c;",
-    parameters = sprintf("
+    growth_measure = tasks$growth_measure,
+    pars = c("mu_log_alpha","sigma_log_alpha",
+             "mu_log_beta","sigma_log_beta",
+             "mu_log_gamma","sigma_log_gamma","c1",
+             "census_err","sigma_log_census_err",
+             "alpha","beta","gamma","logloss"),
+    data = "
+        // Fitted data
+        int<lower=1> n_obs;
+        int<lower=1> n_census;
+        int<lower=1> n_spp;
+        int<lower=1> census[n_obs];
+        int<lower=1> spp[n_obs];
+        vector[n_obs] census_length;
+        vector[n_obs] growth_dt;
+        vector[n_spp] rho_c;
+        int<lower=0, upper=1> y[n_obs];",
+    parameters ="
       // Mortality model parameters
-      real raw_log_a0[n_spp];
-      real mu_log_a0;
-      real<lower=0> sigma_log_a0;
+      real raw_log_alpha[n_spp];
+      real mu_log_alpha;
+      real<lower=0> sigma_log_alpha;
       
-      real raw_log_b0[n_spp];
-      real mu_log_b0;
-      real<lower=0> sigma_log_b0;
+      real raw_log_beta[n_spp];
+      real mu_log_beta;
+      real<lower=0> sigma_log_beta;
       
-      real raw_log_c0[n_spp];
-      real mu_log_c0;
-      real<lower=0> sigma_log_c0;
-      
-      %s
-      %s
-      %s",
-      ifelse("a" %in% rho_combo, "real a1;", ""),
-      ifelse("b" %in% rho_combo, "real b1;", ""),
-      ifelse("c" %in% rho_combo, "real c1;", "")),
-    model = sprintf("
+      real raw_log_gamma[n_spp];
+      real mu_log_gamma;
+      real<lower=0> sigma_log_gamma;
+      real c1;
+    
+      real raw_log_census_err[n_census];
+      real<lower=0> sigma_log_census_err;",
+    model ="
       // Declaring mortality parameters
-      real alpha;
-      real a0[n_spp];
-      
-      real beta;
-      real b0[n_spp];
-      
-      real gamma;
-      real c0[n_spp];
-      
+      real alpha[n_spp];
+      real beta[n_spp];
+      real gamma[n_spp];
+      real census_err[n_census];
       real cumulative_hazard;
-      
+
+      // Calculating census random effects      
+      for (t in 1:n_census) {
+      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      }
       // Calculating species random effects
       for (s in 1:n_spp) {
-        a0[s] <- exp(raw_log_a0[s] * sigma_log_a0 + mu_log_a0); // e.g. implies lognormal(mu_log_a0, sigma_log_a0)
-        b0[s] <- exp(raw_log_b0[s] * sigma_log_b0 + mu_log_b0);
-        c0[s] <- exp(raw_log_c0[s] * sigma_log_c0 + mu_log_c0);
+        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha); // e.g. implies lognormal(mu_log_alpha, sigma_log_alpha)
+        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
       }
       
       for (i in 1:n_obs) {
-        // Calculating mortality parameters
-        alpha <- a0[spp[i]]%s; 
-        beta <- b0[spp[i]]%s; 
-        gamma <- c0[spp[i]]%s;
-        
         // Likelihood for hazard model
-        cumulative_hazard <- -census_length[i] * (alpha * exp(-beta * growth_dt[i]) + gamma);
+        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
         
         if (y[i] == 0) {
           increment_log_prob(cumulative_hazard);
@@ -608,71 +665,62 @@ get_model_chunks_full_fit <- function(rho_combo) {
         }
       }
       
-      // Mortality model priors
-      raw_log_a0 ~ normal(0,1);
-      mu_log_a0 ~ normal(-0.61, 0.57);
-      sigma_log_a0 ~ cauchy(0, 2.5);
+      // Priors
+      raw_log_alpha ~ normal(0,1);
+      mu_log_alpha ~ normal(0, 2.5);
+      sigma_log_alpha ~ cauchy(0, 2.5);
       
-      raw_log_b0 ~ normal(0, 1);
-      mu_log_b0 ~ normal(0, 5);
-      sigma_log_b0 ~ cauchy(0, 2.5);
+      raw_log_beta ~ normal(0, 1);
+      mu_log_beta ~ normal(0, 2.5);
+      sigma_log_beta ~ cauchy(0, 2.5);
       
-      raw_log_c0 ~ normal(0, 1);
-      mu_log_c0 ~ normal(-3.86, 0.2);
-      sigma_log_c0 ~ cauchy(0, 2.5);
+      raw_log_gamma ~ normal(0, 1);
+      mu_log_gamma ~ normal(0, 2.5);
+      sigma_log_gamma ~ cauchy(0, 2.5);
+      c1 ~ normal(0, 2.5);
+    
+      raw_log_census_err ~ normal(0, 1);
+      sigma_log_census_err ~ cauchy(0, 2.5);",
+    generated_quantities = "
+      real alpha[n_spp];
+      real beta[n_spp];
+      real gamma[n_spp];
+      real census_err[n_census];
       
-      %s
-      %s
-      %s",
-      ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a1)", ""),
-      ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b1)", ""),
-      ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c1)", ""),
-      ifelse("a" %in% rho_combo, "a1 ~ normal(0,5);", ""),
-      ifelse("b" %in% rho_combo, "b1 ~ normal(0,5);", ""),
-      ifelse("c" %in% rho_combo, "c1 ~ normal(0,5);", "")),
-    generated_quantities = sprintf("
-      // Declaring fitted parameters
-      real a0[n_spp];
-      real b0[n_spp];
-      real c0[n_spp];
+      // Declaring heldout
+      real cumulative_hazard;
+      real loglik;
+      real sum_loglik;
+      real logloss;
       
-      real alpha;
-      real beta;
-      real gamma;
-      
-      real cumulative_hazard_fit;
-      real loglik_fit;
-      real sum_loglik_fit;
-      
-      // Initialization of summed log likelihoods
-      sum_loglik_fit <- 0;
-      
-      // recalulate species random effects
+      // Initialization of summed parameter
+      sum_loglik <- 0;
+
+      // Recalulate species random effects
       for (s in 1:n_spp) {
-        a0[s] <- exp(raw_log_a0[s] * sigma_log_a0 + mu_log_a0);
-        b0[s] <- exp(raw_log_b0[s] * sigma_log_b0 + mu_log_b0);
-        c0[s] <- exp(raw_log_c0[s] * sigma_log_c0 + mu_log_c0);
+        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
+        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
+      }
+
+      // Recalculate census random effects      
+      for (t in 1:n_census) {
+      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       
-      // log likelihood for fitted model
+      // Calculate log likelihood
       for (i in 1:n_obs) {
-        alpha <- a0[spp[i]]%s; 
-        beta <- b0[spp[i]]%s; 
-        gamma <- c0[spp[i]]%s;
-        
-        cumulative_hazard_fit <- -census_length[i] * (alpha * exp(-beta * growth_dt[i]) + gamma);
+        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
         
         if (y[i] == 0) {
-          loglik_fit <- cumulative_hazard_fit;
+          loglik <- cumulative_hazard;
         }
         else {
-          loglik_fit <- log1m_exp(cumulative_hazard_fit);
+          loglik <- log1m_exp(cumulative_hazard);
         }
-        sum_loglik_fit <- sum_loglik_fit + loglik_fit;
-      }",
-      ifelse("a" %in% rho_combo, " * pow(rho_c[spp[i]], a1)", ""),
-      ifelse("b" %in% rho_combo, " * pow(rho_c[spp[i]], b1)", ""),
-      ifelse("c" %in% rho_combo, " * pow(rho_c[spp[i]], c1)", ""))
-  )
+        sum_loglik <- sum_loglik + loglik;
+    }
+        // Calculation of average negative log likelihoods
+        logloss <- -sum_loglik/n_obs;"
+    )
 }
-
