@@ -66,6 +66,7 @@ targets:
 
   BCI_nomenclature:
     command: BCI_load_nomenclature("downloads/bci.spptable.rdata")
+    cleanup_level: purge
     
   BCI_dbh_error_data:
     command: BCI_load_dbh_error_data("data/dbh_error_data.rdata")
@@ -126,42 +127,50 @@ targets:
   
   # function and growth comparison
   func_growth_diagnostics:
-    command: kfold_diagnostics(I("function_growth_comparison"))
+    command: model_diagnostics(I("function_growth_comparison"))
+    cleanup_level: tidy
 
   logloss_func_growth:
-    command: summarise_logloss(I("function_growth_comparison"))
+    command: summarise_crossval_logloss(I("function_growth_comparison"))
+    cleanup_level: tidy
     
   # Random effect & non random effect comparison
   random_effect_diagnostics:
-    command: kfold_diagnostics(I("species_random_effects"))
+    command: model_diagnostics(I("species_random_effects"))
+    cleanup_level: tidy
     
   logloss_re_comparison:
-    command: summarise_logloss(I(c("function_growth_comparison", "species_random_effects")))
-  
+    command: summarise_crossval_logloss(I(c("function_growth_comparison", "species_random_effects")))
+    cleanup_level: tidy
+    
   # Rho combinations
   rho_comparisons_diagnostics:
-    command: kfold_diagnostics(I("rho_combinations"))
+    command: model_diagnostics(I("rho_combinations"))
+    cleanup_level: tidy
     
   logloss_rho_comparisons:
-    command: summarise_logloss(I("rho_combinations"))
-    
+    command: summarise_crossval_logloss(I("rho_combinations"))
+    cleanup_level: tidy
   #------------- Figures ---------------------------
   figures/plot_obs_v_pred_growth.png:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
     plot: portrait_png
+    cleanup_level: tidy
     
   figures/fig1.pdf:
     command: plot_function_growth_comparison(logloss_func_growth)
     plot: single_col_tall_rectangle
+    cleanup_level: tidy
     
   figures/fig2.pdf:
     command: plot_random_effect_comparison(logloss_re_comparison)
     plot: single_col_tall_rectangle
-  
+    cleanup_level: tidy
+    
   figures/fig3.pdf:
     command: plot_rho_comparison(logloss_rho_comparisons)
     plot: single_col_tall_rectangle
-    
+    cleanup_level: tidy
   #------------- Manuscript ---------------------------
 
   ms/ms.tex:
