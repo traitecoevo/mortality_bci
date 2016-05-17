@@ -17,21 +17,19 @@ combine_stan_chains <- function(files) {
 
 # sub function to compile chains for our workflow
 compile_chains <- function(comparison) {
-  if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations")) {
+  if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations","final_model","final_base_growth_hazard_re")) {
     stop('comparison can only be one of the following: 
-                      "function_growth_comparison","species_random_effects","rho_combinations"')
+                      "function_growth_comparison","species_random_effects","rho_combinations","final_model", "final_base_growth_hazard_re"')
   }
   tasks <- tasks_2_run(comparison)
   sets <- split(tasks,  list(tasks$comparison,tasks$model,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
-  
-  fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
   pars <- lapply(sets,  function(s) s[1, c("comparison","model","growth_measure","rho_combo","kfold")])
-  
+  fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
   list(model_info=pars, fits=fits)
 }
 
 # Compile chains for all models
-compile_models <- function(comparison = c("without_random_effects","with_random_effects")) {
+compile_models <- function(comparison) {
   if(length(comparison) == 1) {
     compile_chains(comparison)
   }
@@ -40,9 +38,8 @@ compile_models <- function(comparison = c("without_random_effects","with_random_
   }
 }
 
-
 # Diagnostic function
-diagnostics <- function(model) {
+diagnose <- function(model) {
   fits <- model$fits
   info <- model$model_info
   out1 <- bind_rows(lapply(fits, function(x) {
@@ -55,7 +52,7 @@ diagnostics <- function(model) {
       n_divergent = sum(sapply(sampler_params, function(y) y[,'n_divergent__'])),
       max_treedepth = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
   }))
-  
+
   out2 <- suppressWarnings(bind_rows(lapply(info, function(x) {
     data.frame(
       comparison = x$comparison,
@@ -63,37 +60,32 @@ diagnostics <- function(model) {
   })))
   
   res <- cbind(out2,out1) %>%
-    arrange(comparison, kfold)
+    arrange(comparison)
   
   row.names(res) <- NULL
   return(res)
 }
 
-kfold_diagnostics_load <- function(comparison) {
-  data <- compile_models(comparison)
-  kfold_diagnostics(data)
-}
-
 # Examine model diagnostics for all analysis
-kfold_diagnostics <- function(comparison) {
+model_diagnostics <- function(comparison) {
   model <- compile_models(comparison)
   if(is.null(model$fits)) { #Check to see if object is multi model 
     out <- suppressWarnings(bind_rows(lapply(model, function(x) {
-      diagnostics(x)})))
+      diagnose(x)})))
     row.names(out) <- NULL
   }
   else {
-    out <- diagnostics(model)
+    out <- diagnose(model)
   }
   return(out)
 }
 
-# sub function to extract log likelihood samples
+# Extract logloss for single model
 logloss_samples <- function(model) {
   fits <- model$fits
   info <- plyr::ldply(model$model_info, .id='modelid')
   samples <- lapply(fits, function(x) 
-    rstan::extract(x, pars = c('logloss_heldout')))
+    rstan::extract(x, pars = grep('logloss', slot(x, 'model_pars'), value=TRUE)))
   
   res <- plyr::ldply(lapply(samples, function(x) {
     tidyr::gather(data.frame(x),'logloss','estimate')}), .id='modelid')
@@ -102,7 +94,7 @@ logloss_samples <- function(model) {
     select(-modelid)
 }
 
-# Extract log likelihood samples for all models.
+# Extract log loss samples for all models.
 extract_logloss_samples <- function(model) {
   if(is.null(model$fits)) { #Check to see if object is multi model 
   samples <- lapply(model, logloss_samples)
@@ -114,8 +106,8 @@ extract_logloss_samples <- function(model) {
   }
 }
 
-# Summarise log likelihood samples
-summarise_logloss <- function(comparison) {
+# Summarise log loss samples
+summarise_crossval_logloss <- function(comparison) {
   models <- compile_models(comparison)
   # We don't make an explict target of compiled models because of
   # a lack of support for long vectors in digest (remake issue #76)
@@ -132,6 +124,7 @@ summarise_logloss <- function(comparison) {
            `97.5%` = mean + ci) %>%
     ungroup()
 }
+
 
 #
 get_times <- function(comparison) {
