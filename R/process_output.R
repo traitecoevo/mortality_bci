@@ -56,11 +56,13 @@ diagnose <- function(model) {
   out2 <- suppressWarnings(bind_rows(lapply(info, function(x) {
     data.frame(
       comparison = x$comparison,
+      growth_measure = x$growth_measure,
+      rho_combo = x$rho_combo,
       kfold = as.integer(x$kfold))
   })))
   
   res <- cbind(out2,out1) %>%
-    arrange(comparison)
+    arrange(comparison, kfold)
   
   row.names(res) <- NULL
   return(res)
@@ -124,7 +126,6 @@ summarise_crossval_logloss <- function(comparison) {
            `97.5%` = mean + ci) %>%
     ungroup()
 }
-
 
 #
 get_times <- function(comparison) {
