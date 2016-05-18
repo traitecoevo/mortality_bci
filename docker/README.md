@@ -38,14 +38,14 @@ Docker is a program that allows users to makes virtual machines (called containe
 ### Create a docker container
 
 Once docker is installed we can build a docker container (a virtual machine). In our case, because we want to compile rstan models we require a container with sufficient amount of memory. 
-Below we quit out of R and build a docker container with 6 GB of ram and 3 CPUs (the exact number will depend on how many cores you are happy to use) in the terminal using the Docker command `docker-machine`. We call this container  `mem6GB`
+Below we quit out of R and build a docker container with 6 GB of ram and 6 virtual CPUs (the exact number will depend on how many cores you are happy to use) in the terminal using the Docker command `docker-machine`. We call this container  `mem6GB`
 
 ```
 q("no") # quits R
-docker-machine create --virtualbox-memory "6000" --driver virtualbox --virtualbox-cpu-count 3 mem6GB
+docker-machine create --virtualbox-memory "6000" --driver virtualbox --virtualbox-cpu-count 6 mem6GB
 ```
 (`--virtualbox-memory "6000"` sets how much virtual memory is available to the virtual machine.
- `----virtualbox-cpu-count 3` sets the number of CPUs you wish to use from your local machine)
+ `----virtualbox-cpu-count 6` sets the number of CPUs you wish to use from your local machine)
 
 ### Precompile stan models for docker container
 
@@ -216,20 +216,20 @@ docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -it traite
 ```
 This will load R in mem6GB and allow you to load `rrqueue`, state what R packages you require and what source code needed to run the jobs. For example, if you only wanted to run the final model you can run the following within the R terminal.
 
-**NOTE** In our analysis we also run a second model to the entire data which only consists of random effects. We ran this model to examine the proportion of species variation explained by wood density in the final model. If you wish to run this model you can run below but change `tasks_2_run(comparison="final_model", iter = 4000)` to  `tasks_2_run(comparison="final_base_growth_hazard_re", iter = 4000)`
+**NOTE** In our analysis we also run a second model to the entire data which only consists of random effects (`final_base_growth_hazard_re`). We ran this model to examine the proportion of species variation explained by wood density in the final model. If you do not wish to run this model you can run below but change `tasks <- rbind(tasks_2_run(comparison="final_model", iter = 4000), tasks_2_run(comparison="final_base_growth_hazard_re", iter = 4000))` to `tasks_2_run(comparison="final_model", iter = 4000)`.
 
 ```
 library(rrqueue)
 packages <- c("rstan","dplyr")
 sources <- c("R/model.R",
-             "R/stan_functions.R")
+             "R/stan_functions.R",
+             "R/utils.R")
 
 #Connect the controller container to the redis container.
 con <- queue("rrq", redis_host="redis", packages=packages, sources=sources)
 
 # Dataframe of jobs
-tasks <- tasks_2_run(comparison="final_model", iter = 4000)
-
+tasks <- rbind(tasks_2_run(comparison="final_model", iter = 4000), tasks_2_run(comparison="final_base_growth_hazard_re", iter = 4000))
 # Submit jobs
 res <- enqueue_bulk(tasks, model_compiler, con, progress_bar = TRUE)
 ```
@@ -244,5 +244,6 @@ Then you run the following for each terminal:
 eval "$(docker-machine env mem6GB)"
 docker run --rm --link mortality_bci_redis:redis -v ${PWD}:/home/data -t traitecoevo/mortality_bci:latest rrqueue_worker --redis-host redis rrq
 ```
+Because we are running 6 chains (3 per model) we will want to run 6 workers. Luckily for us our computer allows for hyperthreading such that mem6GB (which has use of 3 of our CPUs) should be able to run all 6 chains at once.
 
 This will launch workers that will begin to run through your jobs. The progress of these jobs can be seen from the controller terminal. Also as jobs complete they will automatically be exported to your parent directory under `results`.
