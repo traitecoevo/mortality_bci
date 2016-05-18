@@ -31,7 +31,7 @@ targets:
       - precompile/bci_data_full.rds
       - figures/plot_obs_v_pred_growth.png
       
-  process_output:
+  process_crossval:
     depends:
       - func_growth_diagnostics
       - logloss_func_growth
@@ -119,8 +119,12 @@ targets:
     cleanup_level: purge
     check: exists  
 
-  models_precompiled_docker:
+  crossval_models_precompiled_docker:
     command: precompile_docker(I("traitecoevo/mortality_bci"))
+    cleanup_level: purge
+    
+  fulldata_models_precompiled_docker:
+    command: precompile_docker(I("traitecoevo/mortality_bci"), FALSE)
     cleanup_level: purge
     
   #------------- Process outputs -------------------
