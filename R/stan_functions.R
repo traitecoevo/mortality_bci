@@ -184,15 +184,13 @@ prep_kfold_data_for_stan <- function(data, growth_measure) {
 }
 
 # Prepares full dataset for use with stan
-prep_final_model_data <- function(data, growth_measure) {
+prep_full_data_for_stan <- function(data, growth_measure) {
     switch(growth_measure,
          'true_dbh_dt' = {
-           growth_dt <- data$train$true_dbh_dt - 0.172
-           growth_dt_heldout = data$heldout[[growth_measure]] - 0.172
-         },
+           growth_dt <- data$true_dbh_dt - 0.172
+           },
          'true_basal_area_dt' = {
-           growth_dt <- data$train$true_basal_area_dt - 0.338
-           growth_dt_heldout = data$heldout$true_basal_area_dt - 0.338
+           growth_dt <- data$true_basal_area_dt - 0.338
          })
   list(
     n_obs = nrow(data),
@@ -298,7 +296,7 @@ precompile <- function(task) {
 }
 
 #THIS ISN'T ELEGANT BUT IT WORKS
-precompile_all <- function() {
+precompile_crossval_models <- function() {
   # Functional form/growth comparison
   stage1 <- tasks_2_run(comparison = 'function_growth_comparison',iter = 10)
   vapply(df_to_list(stage1), precompile, character(1))
@@ -310,6 +308,16 @@ precompile_all <- function() {
   #Rho combinations
   stage3 <- tasks_2_run(comparison = 'rho_combinations',iter = 10)
   vapply(df_to_list(stage3), precompile, character(1))
+}
+
+precompile_fulldata_models <- function() {
+#Full data RE only
+  stage4 <- tasks_2_run(comparison = 'final_base_growth_hazard_re',iter = 10)
+  vapply(df_to_list(stage4), precompile, character(1))
+  
+  #Final model
+  stage5 <- tasks_2_run(comparison = 'final_model',iter = 10)
+  vapply(df_to_list(stage5), precompile, character(1))
 }
 
 ## Wrapper around platform information that will try to determine if
@@ -330,16 +338,22 @@ precompile_model_path <- function(name=platform()) {
   file.path("precompile/precompiled_models/", name)
 }
 
-precompile_docker <- function(docker_image) {
+precompile_docker <- function(docker_image, crossval = TRUE) {
   if (FALSE) {
     ## Little trick to depend on the appropriate functions (this will
     ## be picked up by remake's dependency detection, but never run).
-    precompile_all()
+    precompile_crossval_models()
+    precompile_fulldata_models()
   }
+  if (crossval == TRUE) {
+    cmd <- '"remake::dump_environment(verbose=FALSE, allow_missing_packages=TRUE); precompile_crossval_models()"'
+    }
+  else {
+    cmd <- '"remake::dump_environment(verbose=FALSE, allow_missing_packages=TRUE); precompile_fulldata_models()"'
+    }
   x<- 3
   unlink(precompile_model_path(), recursive=TRUE)
-  cmd <- '"remake::dump_environment(verbose=FALSE, allow_missing_packages=TRUE); precompile_all()"'
-  dockertest::launch(name=docker_image$name,
+  dockertest::launch(name=docker_image,
                      filename="docker/dockertest.yml",
                      args=c("r", "-e", cmd))
 }
