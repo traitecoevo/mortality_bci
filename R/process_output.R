@@ -56,13 +56,14 @@ diagnose <- function(model) {
   out2 <- suppressWarnings(bind_rows(lapply(info, function(x) {
     data.frame(
       comparison = x$comparison,
+      model = x$model,
       growth_measure = x$growth_measure,
       rho_combo = x$rho_combo,
       kfold = as.integer(x$kfold))
   })))
   
   res <- cbind(out2,out1) %>%
-    arrange(comparison, kfold)
+    arrange(comparison,model,growth_measure,rho_combo,kfold)
   
   row.names(res) <- NULL
   return(res)
