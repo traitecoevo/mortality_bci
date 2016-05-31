@@ -45,52 +45,72 @@ plot_obs_v_pred_growth <- function(data) {
 }
 
 # Plot mean CV log likelihoods for functional comparison
-plot_function_growth_comparison <- function(logloss_summary) {
+plot_function_growth_comparison <- function(logloss_summary, title=NULL) {
   dat <- logloss_summary %>%
     filter(model!= "base_hazard" | growth_measure !='true_basal_area_dt') %>%
     mutate(growth_measure = replace(growth_measure, model=="base_hazard", "none")) %>%
     mutate(model = factor(model, levels=c('base_hazard','growth_hazard', 
                                           'base_growth_hazard'))) %>%
-    mutate(model = factor(model, labels = c( "Baseline hazard","Growth hazard","Baseline & growth hazard"))) %>%
     arrange(model)
   
   ggplot(dat, aes(x = model,y = mean, group = as.factor(growth_measure), colour=as.factor(growth_measure))) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(.1), size=0.2) +
     scale_colour_manual('',values = c("true_basal_area_dt" ="blue","true_dbh_dt" ="red", "none" = "black")) +
-    ylab('Average Logarithmic Loss') + 
+    ylab('Logarithmic Loss') + 
     xlab('Model') +
+    scale_x_discrete(labels=c("base_hazard" = expression(gamma),
+                              "growth_hazard" = expression(alpha*"e"^{-beta~"growth"["i"]}),
+                              "base_growth_hazard" = expression(alpha*"e"^{-beta~"growth"["i"]} + gamma))) +
+    ylim(0.45,0.511) +
+    labs(title=title) +
     partial_plot_theme()
 }
 
 # Plot mean CV log likelihoods for growth comparison
-plot_random_effect_comparison <- function(log_loss_summary) {
+plot_random_effect_comparison <- function(log_loss_summary, title=NULL) {
   dat <- filter(log_loss_summary, growth_measure =='true_dbh_dt' &
                   (model =='base_growth_hazard' | model =='base_growth_hazard_re')) %>%
     mutate(model = factor(model, levels=c("base_growth_hazard","base_growth_hazard_re"))) %>%
-    mutate(model = factor(model, labels = c("Without random effects","With random effects"))) %>%
     arrange(model)
   
   ggplot(dat, aes(x = model,y = mean)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.2) +
-    ylab('Average Logarithmic Loss') +
+    ylab('Logarithmic Loss') +
     xlab('Model') +
-    scale_y_continuous(breaks= scales::pretty_breaks(6)) +
+    scale_x_discrete(labels=c("base_growth_hazard" = expression(alpha*"e"^{-beta~"growth"["i"]} + gamma),
+                                  "base_growth_hazard_re" = expression(alpha["s"]*"e"^{-beta["s"]~"growth"["i"]} + gamma["s"]))) +
+    ylim(0.45,0.511) +
+    labs(title=title) +
     partial_plot_theme()
 }
 
 # Plot mean CV log likelihoods for rho combination comparison
-plot_rho_comparison <- function(log_loss_summary) {
+plot_rho_comparison <- function(log_loss_summary, title = NULL) {
   dat <- filter(log_loss_summary, 
                   logloss =='logloss_heldout') %>%
-    mutate(rho_combo = factor(rho_combo, levels=c("abc","bc","ac","ab","c","b","a","none"))) %>%
-    mutate(rho_combo = factor(rho_combo, labels = c("all parameters","beta & gamma","alpha & gamma",'alpha & beta', "gamma", "beta","alpha","none"))) %>%
+    mutate(rho_combo = factor(rho_combo, levels=c("none","a","b","c","ab","ac","bc","abc"))) %>%
     arrange(rho_combo)
   
-  ggplot(dat, aes(x = mean,y = rho_combo)) + 
-    geom_segment(aes(x=`2.5%`,y=rho_combo, xend=`97.5%`, yend=rho_combo), size=0.2)+
-    geom_point(aes(x=mean, y=rho_combo), size =0.5) +
-    xlab('Logarithmic loss') +
-    ylab('Wood density parameter combinations') +
-    scale_x_continuous(breaks= scales::pretty_breaks(6)) +
+  ggplot(dat, aes(x = rho_combo,y = mean)) + 
+    geom_pointrange(aes(ymin=`2.5%`, ymax=`97.5%`), size=0.2) +
+    xlab('Wood density parameter combinations') +
+    ylab('Logarithmic loss') +
+    ylim(0.45,0.511) +
+    scale_x_discrete(labels=c("none" = "none",
+                              "a" = expression(alpha),
+                              "b" = expression(beta),
+                              "c" = expression(gamma),
+                              "ab" = expression(alpha~"&"~beta),
+                              "ac" = expression(alpha~"&"~gamma),
+                              "bc" = expression(beta~"&"~gamma),
+                              "abc" = expression(alpha~","~beta~","~gamma))) +
+    labs(title=title) +
     partial_plot_theme()
 }
+
+plot_fig1 <- function(logloss_func_growth, logloss_randomeffects, logloss_rho_combo) {
+  p1 <- plot_function_growth_comparison(logloss_func_growth, title="Stage 1")
+  p2 <- plot_random_effect_comparison(logloss_randomeffects, title="Stage 2")
+  p3 <- plot_rho_comparison(logloss_rho_combo, title="Stage 3")
+  plot_grid(p1, p2, p3, ncol=1, labels=LETTERS[1:3], label_size = 7)
+  }
