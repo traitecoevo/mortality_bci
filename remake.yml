@@ -22,14 +22,14 @@ plot_options:
     
   single_col_tall_rectangle:
     width: 3.46
-    height: 4.2
+    height: 8
 
 targets:
   all:
     depends:
       - precompile/kfold_data/bci_data.rds
       - precompile/bci_data_full.rds
-      - figures/plot_obs_v_pred_growth.png
+      - ms/figures/plot_obs_v_pred_growth.png
       
   process_crossval:
     depends:
@@ -39,9 +39,7 @@ targets:
       - logloss_re_comparison
       - rho_comparisons_diagnostics
       - logloss_rho_comparisons
-      - figures/fig1.pdf
-      - figures/fig2.pdf
-      - figures/fig3.pdf
+      - ms/figures/fig1.pdf
       
   #------------- download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -144,7 +142,7 @@ targets:
     cleanup_level: tidy
     
   logloss_re_comparison:
-    command: summarise_crossval_logloss(I(c("function_growth_comparison", "species_random_effects")))
+    command: summarise_crossval_logloss(I("species_random_effects"))
     cleanup_level: tidy
     
   # Rho combinations
@@ -161,18 +159,8 @@ targets:
     plot: portrait_png
     cleanup_level: tidy
     
-  figures/fig1.pdf:
-    command: plot_function_growth_comparison(logloss_func_growth)
-    plot: single_col_tall_rectangle
-    cleanup_level: tidy
-    
-  figures/fig2.pdf:
-    command: plot_random_effect_comparison(logloss_re_comparison)
-    plot: single_col_tall_rectangle
-    cleanup_level: tidy
-    
-  figures/fig3.pdf:
-    command: plot_rho_comparison(logloss_rho_comparisons)
+  ms/figures/fig1.pdf:
+    command: plot_fig1(logloss_func_growth,logloss_re_comparison,logloss_rho_comparisons)
     plot: single_col_tall_rectangle
     cleanup_level: tidy
   #------------- Manuscript ---------------------------
@@ -187,4 +175,7 @@ targets:
   ms/ms.pdf:
     command: latex_build("ms/ms.tex", "ms/refs.bib", clean=TRUE)
     depends:
-      - ms/ms.sty
+      - ms/pnas-new.cls
+      - ms/pnasresearcharticle.sty
+      - ms/widetext.sty
+      - ms/figures/fig1.pdf
