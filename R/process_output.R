@@ -128,6 +128,41 @@ summarise_crossval_logloss <- function(comparison) {
     ungroup()
 }
 
+
+# Combines all cross val logloss outputs.
+combine_logloss_summaries <- function() {
+  logloss_func_growth <- summarise_crossval_logloss("function_growth_comparison")
+  logloss_rho_comparisons <- summarise_crossval_logloss("rho_combinations")
+  logloss_re_comparison <- summarise_crossval_logloss("species_random_effects")
+  
+  logloss_func_growth %>%
+    bind_rows(logloss_rho_comparisons, logloss_re_comparison) %>%
+    arrange(comparison, growth_measure) %>%
+    filter(model!= "base_hazard" | growth_measure !='true_basal_area_dt') %>% # removes unnecessary model base_hazard fit.
+    filter(comparison !='rho_combinations' |  rho_combo!='none') %>% # Already included in logloss_func_growth
+    mutate(growth_measure = replace(growth_measure, model=="base_hazard", "none"), # No growth for base model
+           model = replace(model, model=="base_growth_hazard_re", "base_growth_hazard")) %>% # rename for plotting purposes
+    mutate(model = factor(model, levels=c('base_hazard','growth_hazard','base_growth_hazard')),
+           growth_measure = factor(growth_measure, levels=c('none','true_basal_area_dt','true_dbh_dt')),
+           model_type = paste(comparison,model, rho_combo, sep='_')) %>%
+    mutate(model_type = factor(model_type, levels=c("function_growth_comparison_base_hazard_none",
+                                                    "function_growth_comparison_growth_hazard_none",
+                                                    "function_growth_comparison_base_growth_hazard_none",
+                                                    "rho_combinations_base_growth_hazard_a",
+                                                    "rho_combinations_base_growth_hazard_b",
+                                                    "rho_combinations_base_growth_hazard_ab",
+                                                    "rho_combinations_base_growth_hazard_c",
+                                                    "rho_combinations_base_growth_hazard_ac",
+                                                    "rho_combinations_base_growth_hazard_bc",
+                                                    "rho_combinations_base_growth_hazard_abc",
+                                                    "species_random_effects_base_growth_hazard_none"))) %>%
+    mutate(modelid = as.factor(as.numeric(model_type))) %>%
+    arrange(modelid) %>%
+    select(modelid, model_type, comparison, model, 
+           growth_measure, rho_combo,logloss, 
+           mean, st_err,ci, `2.5%`,`97.5%`)
+}
+
 #
 get_times <- function(comparison) {
    fits <- comparison$fits
