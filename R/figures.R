@@ -2,7 +2,7 @@
 partial_plot_theme <- function(legend.position = "none", strips = FALSE,...) {
   sb <- if(strips==TRUE) element_rect(fill='lightgrey') else element_blank()
   st <- if(strips==TRUE) element_text(face='italic') else element_blank()
-  theme_classic(base_size = 7) + theme(strip.text = st,
+  theme_classic(base_size = 9) + theme(strip.text = st,
                           legend.title = element_blank(),
                           strip.background = sb,
                           legend.position = legend.position,
@@ -44,73 +44,94 @@ plot_obs_v_pred_growth <- function(data) {
   plot_grid(p1, p3, p2, p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
 }
 
-# Plot mean CV log likelihoods for functional comparison
-plot_function_growth_comparison <- function(logloss_summary, title=NULL) {
-  dat <- logloss_summary %>%
-    filter(model!= "base_hazard" | growth_measure !='true_basal_area_dt') %>%
-    mutate(growth_measure = replace(growth_measure, model=="base_hazard", "none")) %>%
-    mutate(model = factor(model, levels=c('base_hazard','growth_hazard', 
-                                          'base_growth_hazard'))) %>%
-    arrange(model)
-  
-  ggplot(dat, aes(x = model,y = mean, group = as.factor(growth_measure), colour=as.factor(growth_measure))) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(.1), size=0.2) +
-    scale_colour_manual('',values = c("true_basal_area_dt" ="blue","true_dbh_dt" ="red", "none" = "black")) +
+plot_fig2 <- function(logloss_summaries) {
+  ggplot(logloss_summaries, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
+    geom_blank() +
+    geom_rect(aes(xmin = which(model_type == 'function_growth_comparison_base_hazard_none') -1,
+                  xmax= which(model_type == 'function_growth_comparison_base_growth_hazard_none')[-2]-0.5,
+                  ymin=-Inf, ymax=Inf), fill ='cornsilk2') +
+    geom_rect(aes(xmin = which(model_type == 'function_growth_comparison_base_growth_hazard_none')[-2]-0.5,
+                  xmax= which(model_type == 'rho_combinations_base_growth_hazard_bc')-0.5,
+                  ymin=-Inf, ymax=Inf), fill ='cornsilk') +
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(.5)) +
     ylab('Logarithmic Loss') + 
     xlab('Model') +
-    scale_x_discrete(labels=c("base_hazard" = expression(gamma),
-                              "growth_hazard" = expression(alpha*"e"^{-beta~"growth"["i"]}),
-                              "base_growth_hazard" = expression(alpha*"e"^{-beta~"growth"["i"]} + gamma))) +
-    ylim(0.45,0.511) +
-    labs(title=title) +
+    scale_shape_manual(values = c(21, 22, 24)) +
+    scale_fill_manual(values =c('white','grey80','black')) +
+    scale_x_discrete(labels=c("function_growth_comparison_base_hazard_none" =  expression(gamma),
+                              "function_growth_comparison_growth_hazard_none" = expression(alpha*"e"^{-beta~"X"["i"]}),
+                              "function_growth_comparison_base_growth_hazard_none" = expression(alpha*"e"^{-beta~"X"["i"]} + gamma),
+                              "rho_combinations_base_growth_hazard_a" = expression(alpha),
+                              "rho_combinations_base_growth_hazard_b" = expression(beta),
+                              "rho_combinations_base_growth_hazard_ab" = expression(alpha~"&"~beta),
+                              "rho_combinations_base_growth_hazard_c" = expression(gamma),
+                              "rho_combinations_base_growth_hazard_ac" = expression(alpha~"&"~gamma),
+                              "rho_combinations_base_growth_hazard_bc" = expression(beta~"&"~gamma),
+                              "rho_combinations_base_growth_hazard_abc" = expression(alpha~","~beta~","~gamma),
+                              "species_random_effects_base_growth_hazard_none" = expression(alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s]))) +
     partial_plot_theme()
 }
 
-# Plot mean CV log likelihoods for growth comparison
-plot_random_effect_comparison <- function(log_loss_summary, title=NULL) {
-  dat <- filter(log_loss_summary, growth_measure =='true_dbh_dt' &
-                  (model =='base_growth_hazard' | model =='base_growth_hazard_re')) %>%
-    mutate(model = factor(model, levels=c("base_growth_hazard","base_growth_hazard_re"))) %>%
-    arrange(model)
-  
-  ggplot(dat, aes(x = model,y = mean)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.2) +
-    ylab('Logarithmic Loss') +
-    xlab('Model') +
-    scale_x_discrete(labels=c("base_growth_hazard" = expression(alpha*"e"^{-beta~"growth"["i"]} + gamma),
-                                  "base_growth_hazard_re" = expression(alpha["s"]*"e"^{-beta["s"]~"growth"["i"]} + gamma["s"]))) +
-    ylim(0.45,0.511) +
-    labs(title=title) +
-    partial_plot_theme()
+plot_fig1a <- function() {
+  par(mfrow=c(1,3), mar=c(0.1,0.1,1.5,0.1), oma=c(1.5,1.5,0,0))
+  # Example baseline hazard
+  plot(seq(0,1,length.out = 14), rep(0.03,14), type='l', ylim=c(0,0.14), xaxs='i', xaxt = "n", yaxt = "n", ylab = NULL, xlab =NULL, lwd=1.5)
+  title(main = expression(gamma), line=0.7)
+  # Example growth-dependent hazard
+  curve(1-exp(-0.15 * exp(-10 * x)), xlim=c(0,1), ylim=c(0,0.14), xaxs='i', xaxt = "n", yaxt = "n", xlab ='X',lwd=1.5)
+  title(main = expression(alpha*"e"^{-beta~"X"["i"]}), line=0.7)
+  # Example full baseline + growth-dependent hazard
+  curve(1-exp(-(0.13 * exp(-10 * x) + 0.03)), xlim=c(0,1), ylim=c(0,0.14),xaxs='i', xaxt = "n", yaxt = "n", xlab ='X', lwd=1.5)
+  title(main = expression(alpha*"e"^{-beta~"X"["i"]} + gamma), line=0.7)
+  title(ylab="Annual probability of death", line=0, outer= TRUE)
+  title(xlab="X", line=0, outer= TRUE)
 }
 
-# Plot mean CV log likelihoods for rho combination comparison
-plot_rho_comparison <- function(log_loss_summary, title = NULL) {
-  dat <- filter(log_loss_summary, 
-                  logloss =='logloss_heldout') %>%
-    mutate(rho_combo = factor(rho_combo, levels=c("none","a","b","c","ab","ac","bc","abc"))) %>%
-    arrange(rho_combo)
-  
-  ggplot(dat, aes(x = rho_combo,y = mean)) + 
-    geom_pointrange(aes(ymin=`2.5%`, ymax=`97.5%`), size=0.2) +
-    xlab('Wood density parameter combinations') +
-    ylab('Logarithmic loss') +
-    ylim(0.45,0.511) +
-    scale_x_discrete(labels=c("none" = "none",
-                              "a" = expression(alpha),
-                              "b" = expression(beta),
-                              "c" = expression(gamma),
-                              "ab" = expression(alpha~"&"~beta),
-                              "ac" = expression(alpha~"&"~gamma),
-                              "bc" = expression(beta~"&"~gamma),
-                              "abc" = expression(alpha~","~beta~","~gamma))) +
-    labs(title=title) +
-    partial_plot_theme()
-}
-
-plot_fig1 <- function(logloss_func_growth, logloss_randomeffects, logloss_rho_combo) {
-  p1 <- plot_function_growth_comparison(logloss_func_growth, title="Stage 1")
-  p2 <- plot_random_effect_comparison(logloss_randomeffects, title="Stage 2")
-  p3 <- plot_rho_comparison(logloss_rho_combo, title="Stage 3")
-  plot_grid(p1, p2, p3, ncol=1, labels=LETTERS[1:3], label_size = 7)
+plot_fig1 <- function() {
+  growth_haz <- function(x) {
+    1-exp(-0.15 * exp(-10 * x))
   }
+  
+  base_growth_haz <- function(x) {
+    1-exp(-(0.13 * exp(-10 * x) + 0.03))
+  }
+  
+  layout(matrix(c(1,2,3,4,4,4,5,5,5), byrow=TRUE, ncol=3))
+  par(mar=c(1.3,1.3,1.3,0.1),ps = 7)
+  # Example baseline hazard
+  plot(seq(0,1,length.out = 14), rep(0.03,14), type='l', ylim=c(0,0.14), xaxs='i', xaxt = "n", yaxt = "n", ylab = NULL, xlab =NULL, lwd=1.5)
+  title(main = expression(gamma), line=0.7)
+  title(ylab="Annual probability of death", line=0.5)
+  
+ # Example growth-dependent hazard
+  curve(growth_haz(x), xlim=c(0,1), ylim=c(0,0.14), xaxs='i', xaxt = "n", yaxt = "n", xlab = NULL,lwd=1.5)
+  title(main = expression(alpha*"e"^{-beta~"X"["i"]}), line=0.7)
+  title(xlab="X", line=0.5)
+  
+ # Example full baseline + growth-dependent hazard
+  curve(base_growth_haz(x), xlim=c(0,1), ylim=c(0,0.14),xaxs='i', xaxt = "n", yaxt = "n", xlab =NULL, lwd=1.5)
+  title(main = expression(alpha*"e"^{-beta~"X"["i"]} + gamma), line=0.7)
+  
+ # Place holder for tree growth diagram
+  plot(c(0, 1), c(0, 1), ann = F, type = 'n', xaxt = 'n', yaxt = 'n')
+  text(0.5,0.5,paste("place holder for \n", "tree growth diagram"))
+  
+  #place holder for cross val diagram
+  plot(c(0, 1), c(0, 1), ann = F, type = 'n', xaxt = 'n', yaxt = 'n')
+  text(0.5,0.5,paste("place holder for \n","crossval diagram"))
+}
+
+
+plot_fig2b <- function(xlim=c(0,0.5)) {
+  suppressMessages(ggplot(dat, aes(x= true_dbh_dt)) +
+    geom_density(stat="density",adjust=5, aes(group = as.factor(dead_next_census), 
+                                     colour= as.factor(dead_next_census),
+                                     fill = as.factor(dead_next_census)),
+                 alpha = 0.3) +
+    scale_colour_manual(values =c("blue","red")) +
+    scale_fill_manual(values =c("blue","red")) +
+    xlim(xlim) +
+    partial_plot_theme())
+}
+
+
