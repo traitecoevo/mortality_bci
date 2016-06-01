@@ -20,9 +20,9 @@ plot_options:
     width: 750
     height: 900
     
-  single_col_tall_rectangle:
-    width: 3.46
-    height: 8
+  double_col_rectangle:
+    width: 6.6
+    height: 3
 
 targets:
   all:
@@ -34,12 +34,11 @@ targets:
   process_crossval:
     depends:
       - func_growth_diagnostics
-      - logloss_func_growth
       - random_effect_diagnostics
-      - logloss_re_comparison
       - rho_comparisons_diagnostics
-      - logloss_rho_comparisons
+      - logloss_summaries
       - ms/figures/fig1.pdf
+      - ms/figures/fig2.pdf
       
   #------------- download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -127,41 +126,38 @@ targets:
     
   #------------- Process outputs -------------------
   
-  # function and growth comparison
+  # Diagnostics
   func_growth_diagnostics:
     command: model_diagnostics(I("function_growth_comparison"))
     cleanup_level: tidy
-
-  logloss_func_growth:
-    command: summarise_crossval_logloss(I("function_growth_comparison"))
-    cleanup_level: tidy
     
-  # Random effect & non random effect comparison
+  rho_comparisons_diagnostics:
+    command: model_diagnostics(I("rho_combinations"))
+    cleanup_level: tidy
+
   random_effect_diagnostics:
     command: model_diagnostics(I("species_random_effects"))
     cleanup_level: tidy
     
-  logloss_re_comparison:
-    command: summarise_crossval_logloss(I("species_random_effects"))
+  # Cross validation summary output
+  logloss_summaries:
+    command: combine_logloss_summaries()
     cleanup_level: tidy
-    
-  # Rho combinations
-  rho_comparisons_diagnostics:
-    command: model_diagnostics(I("rho_combinations"))
-    cleanup_level: tidy
-    
-  logloss_rho_comparisons:
-    command: summarise_crossval_logloss(I("rho_combinations"))
-    cleanup_level: tidy
+
   #------------- Figures ---------------------------
-  figures/plot_obs_v_pred_growth.png:
+  ms/figures/plot_obs_v_pred_growth.png:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
     plot: portrait_png
     cleanup_level: tidy
     
   ms/figures/fig1.pdf:
-    command: plot_fig1(logloss_func_growth,logloss_re_comparison,logloss_rho_comparisons)
-    plot: single_col_tall_rectangle
+    command: plot_fig1()
+    plot: double_col_rectangle
+    cleanup_level: tidy
+    
+  ms/figures/fig2.pdf:
+    command: plot_fig2(logloss_summaries)
+    plot: double_col_rectangle
     cleanup_level: tidy
   #------------- Manuscript ---------------------------
 
@@ -179,3 +175,4 @@ targets:
       - ms/pnasresearcharticle.sty
       - ms/widetext.sty
       - ms/figures/fig1.pdf
+      - ms/figures/fig2.pdf
