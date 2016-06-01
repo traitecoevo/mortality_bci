@@ -70,6 +70,13 @@ However, due to a paucity of data on plant mortality, most dynamic vegetation mo
 
 Recently, research has focused on examining inter-specific variation by correlating intrinsic species' growth rates with population mortality rates \cite[e.g.][]{Poorter:2008iu, Wright:2010fl}. In contrast to intraspecific work, these studies have shown that species with intrinsically faster growth rates exhibit higher mortality rates relative to slower growing species \cite{Loehle:1996vw, Poorter:2008iu, Wright:2010fl}. As such, species appear to exhibit a trade off between greater growth versus greater survival. Ecologists have attempted to explain this interspecific variation by using a variety of functional traits \textemdash attributes of species that are thought to influence vital rates (i.e. survival, growth and reproduction) and ultimately fitness \cite{Westoby:2002tb, Ackerly:2003eb, Falster:2015un}. 
 
+\begin{figure*}
+\centering
+\includegraphics{figures/fig1.pdf}
+\caption{three possible functional curves of plant mortality. Estimating growth. Cross validation proceedure}
+\label{fig1}
+\end{figure*}
+
 Wood density, the biomass invested per unit wood volume, is one such functional trait that has consistently been shown to be negatively correlated with tropical tree mortality \cite{Poorter:2008iu, Chave:2009iy, Kraft:2010kq, Wright:2010fl}. The underlying mechanism of this relationship is thought to be due to denser wood conveying enhanced physical resistance to random events such as stem breakage \cite{Putz:1983wu,vanGelder:2006exa,Chave:2009iy}, embolism \cite{Hacke:2001kj, Jacobsen:2005fx} and fungal and pathogen attack \cite{Augspurger:1984wx}. As such, it is hypothesized that species with higher wood density are likely to exhibit lower stochastic hazards. However, research has also shown that wood density may increase tolerance to low growth rates, and thus alter the growth-mortality relationship. For example, species with high wood density have been found to be more tolerant to both shade \cite{vanGelder:2006exa} and neighbor competition \cite{Kunstler:2016km}. Studies have also shown that wood density may reduce drought induced carbon starvation \cite{McDowell:2011dr} and the susceptibility of ‘stressed’ individuals to opportunistic invertebrate, pathogen or fungal attack \cite{Augspurger:1984wx, McDowell:2011dr}. Consequently, species with high wood density may be more tolerant to both stochastic events such as breakage as well as be more tolerant to periods of low growth.
 
 What both intraspecific and interspecific studies have highlighted is that both individual (e.g. growth rates) and species (e.g. function traits) characteristics are likely to be required in order to develop general and accruate models of plant mortality. However, to date, there has been little crossover of ideas between intraspecific and interspecific studies of plant mortality. For example, we are aware of only one study that uses individual based plant mortality empirical models to examine trait effects on baseline hazards \cite{AubryKientz:2013dg}, and none that examine how traits mediate the growth-mortality relationship.
@@ -78,15 +85,16 @@ In this study, we reconcile both intraspecific and interspecific theory by devel
 
 \section*{Results}
 
-\begin{figure}
+\begin{figure*}
 \centering
-\includegraphics{figures/fig1.pdf}
+\includegraphics{figures/fig2.pdf}
 \caption{Average logarithmic loss $\pm$ 95\% BCIs from 10-fold cross validation. (A) Stage 1: Comparing three functional forms of tropical tree mortality using absolute diameter growth (red) and basal area growth (blue). (B) Comparing model with and without species random effects. (C) Comparing all combinations of wood density effects.}
-\label{fig1}
-\end{figure}
+\label{fig2}
+\end{figure*}
 
 
 \subsection*{Most predictive functional form}
+
 
 Full model most predictive (also most biologically reasonable)
 DBH DT most predictive given functional form
