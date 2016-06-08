@@ -24,6 +24,11 @@ plot_options:
     width: 6.6
     height: 3
 
+  single_col_rectangle:
+    width: 3.46
+    height: 5
+    onefile: FALSE
+
 targets:
   all:
     depends:
@@ -39,6 +44,12 @@ targets:
       - logloss_summaries
       - ms/figures/fig1.pdf
       - ms/figures/fig2.pdf
+
+  process_final_model:
+    depends:
+      - final_model
+      - final_model_diagnostics
+      - ms/figures/fig3.pdf
       
   #------------- download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -144,6 +155,15 @@ targets:
     command: combine_logloss_summaries()
     cleanup_level: tidy
 
+  # Final model
+  final_model:
+    command: compile_models(I('final_model'))
+    cleanup_level: tidy
+
+  final_model_diagnostics:
+    command: model_diagnostics(I("final_model"))
+    cleanup_level: tidy
+
   #------------- Figures ---------------------------
   ms/figures/plot_obs_v_pred_growth.png:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
@@ -157,7 +177,12 @@ targets:
     
   ms/figures/fig2.pdf:
     command: plot_fig2(logloss_summaries)
-    plot: double_col_rectangle
+    plot: single_col_rectangle
+    cleanup_level: tidy
+
+  ms/figures/fig3.pdf:
+    command: plot_fig3(final_model, BCI_training_full)
+    plot: single_col_rectangle
     cleanup_level: tidy
   #------------- Manuscript ---------------------------
 
@@ -176,3 +201,4 @@ targets:
       - ms/widetext.sty
       - ms/figures/fig1.pdf
       - ms/figures/fig2.pdf
+      - ms/figures/fig3.pdf

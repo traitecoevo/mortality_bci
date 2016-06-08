@@ -85,35 +85,27 @@ In this study, we reconcile both intraspecific and interspecific theory by devel
 
 \section*{Results}
 
-\begin{figure*}
+\begin{figure}
 \centering
 \includegraphics{figures/fig2.pdf}
 \caption{Average logarithmic loss $\pm$ 95\% BCIs from 10-fold cross validation. (A) Stage 1: Comparing three functional forms of tropical tree mortality using absolute diameter growth (red) and basal area growth (blue). (B) Comparing model with and without species random effects. (C) Comparing all combinations of wood density effects.}
 \label{fig2}
-\end{figure*}
+\end{figure}
 
+\subsection*{Predictive performance as a function of model form and growth measure}
+We first investigated how model form and growth measure influenced predictive performance. To achieve this we first cross validated three model forms (Fig. \ref{fig1}) of tropical tree mortality using both dbh growth or basal area growth. We found that when the model accounted for both baseline and growth-dependent hazards we obtained a significant improvement in predictive capacity, relative to the other two simpler forms. However, this improvement was dependent on growth measure used, with predictive capacity increasing when dbh growth is used but not when basal area growth is used (Fig. \ref{fig2}). 
 
-\subsection*{Most predictive functional form}
+\subsection*{Predictive performance and species effects}
+Using the most predictive model (i.e. that which used dbh growth and accounted for both baseline and growth-dependent hazards), we then examined how the inclusion of the effect of wood density on various combinations of parameters affected predictive performance. We found that the inclusion of wood density on any of the three parameters significantly improved predictive performance relative to a model without such effects. However, there was little differences in predictive performance across all wood density\textendash parameter combinations. Nonetheless, the most parsimonious model with lowest logarithmic loss was that which contained a wood density effect on only the baseline hazard ($\gamma$). Comparing this model to one that included species random effects on all parameters (i.e. the model that accounts for all species level variation) revealed that wood density accounted for only a small proportion of the maximum predictive gain achievable by accounting for species identification.
 
+\subsection*{Effects of wood denisty}
 
-Full model most predictive (also most biologically reasonable)
-DBH DT most predictive given functional form
-
-\subsection*{What is the most predictive combination of parameter-wood density effects?}
-
-wood density on gamma. Technically significant on alpha too... but effect size is small (can't show this though as focus is on predictive capacity with cross val.)
-
-\subsection*{How well does our model predict if we allow full random effects?}
-
-Seems to account for ~20-30\% of species variability (this will be confirmed once other models are finished).
-
-Figures:
-Single figure of logloss
-figure of species gamma values vs rho
-response curve for low and high wood density species from dataset.
-
-Species variability is highest on gamma (1.2) followed by alpha (0.8) and least on beta (0.3)
-Mention proportion of species variability on gamma explained by wood density.
+\begin{figure}
+\centering
+\includegraphics{figures/fig3.pdf}
+\caption{Average logarithmic loss $\pm$ 95\% BCIs from 10-fold cross validation. (A) Stage 1: Comparing three functional forms of tropical tree mortality using absolute diameter growth (red) and basal area growth (blue). (B) Comparing model with and without species random effects. (C) Comparing all combinations of wood density effects.}
+\label{fig3}
+\end{figure}
 
 \section*{Discussion}
 

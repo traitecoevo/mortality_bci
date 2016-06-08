@@ -52,7 +52,7 @@ diagnose <- function(model) {
       n_divergent = sum(sapply(sampler_params, function(y) y[,'n_divergent__'])),
       max_treedepth = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
   }))
-
+  
   out2 <- suppressWarnings(bind_rows(lapply(info, function(x) {
     data.frame(
       comparison = x$comparison,
@@ -100,9 +100,9 @@ logloss_samples <- function(model) {
 # Extract log loss samples for all models.
 extract_logloss_samples <- function(model) {
   if(is.null(model$fits)) { #Check to see if object is multi model 
-  samples <- lapply(model, logloss_samples)
-  plyr::ldply(samples, .id='modelid') %>%
-    select(-modelid)
+    samples <- lapply(model, logloss_samples)
+    plyr::ldply(samples, .id='modelid') %>%
+      select(-modelid)
   }
   else { 
     logloss_samples(model)
@@ -119,7 +119,7 @@ summarise_crossval_logloss <- function(comparison) {
     group_by(comparison, model, growth_measure, rho_combo, kfold, logloss) %>%
     summarise(kfold_logloss = mean(estimate)) %>%
     ungroup() %>%
-     group_by(comparison, model, growth_measure, rho_combo, logloss) %>%
+    group_by(comparison, model, growth_measure, rho_combo, logloss) %>%
     summarise(mean = mean(kfold_logloss),
               st_err = sd(kfold_logloss)/sqrt(n())) %>%
     mutate(ci = 1.96 * st_err,
@@ -127,7 +127,6 @@ summarise_crossval_logloss <- function(comparison) {
            `97.5%` = mean + ci) %>%
     ungroup()
 }
-
 
 # Combines all cross val logloss outputs.
 combine_logloss_summaries <- function() {
@@ -163,9 +162,11 @@ combine_logloss_summaries <- function() {
            mean, st_err,ci, `2.5%`,`97.5%`)
 }
 
+
+
 #
 get_times <- function(comparison) {
-   fits <- comparison$fits
+  fits <- comparison$fits
   info <- plyr::ldply(comparison$model_info, .id='modelid')
   times <- lapply(fits, function(x) 
     rstan::get_elapsed_time(x))
@@ -185,3 +186,80 @@ summarise_times <- function(times) {
     summarise(mn = median(total_hours))
   return(res)
 }
+
+
+extract_spp_parameters <- function(model, data) {
+  fit <- model$fits[[1]]
+  dat <- prep_full_data_for_stan(data)
+  samples <- rstan::extract(fit, pars=c("alpha","beta","gamma"))
+  
+  lapply(samples, function(x) {
+    cbind.data.frame(
+      sp = dat$sp,
+      wood_density = dat$raw_rho,
+      mean = apply(x,2, mean),
+      median = apply(x,2, median),
+      sd = apply(x,2,sd),
+      aperm(apply(x,2, quantile, c(0.025,0.975)), c(2,1)))
+  })
+}
+
+
+predict_species <- function(model, data, growth_range = c(0.03,0.5)) {
+  
+  spp_parameters <- extract_spp_parameters(model, data)
+  growth_rates <- data.frame(dbh_growth = seq(min(growth_range),max(growth_range),length.out = 100), 
+                             dbh_growth_centered = seq(min(growth_range),max(growth_range),length.out = 100) - 0.172)
+  
+  res <- plyr::ldply(spp_parameters,.id='paramater') %>%
+    select(sp,wood_density, paramater, mean) %>%
+    spread(paramater, mean) %>%
+    merge(growth_rates) %>%
+    mutate(
+      inst_hazard = alpha * exp(-beta * dbh_growth_centered) + gamma,
+      annual_prob_mort = 1- exp(-(alpha * exp(-beta * dbh_growth_centered) + gamma)))
+}
+
+predict_wd_effect <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = TRUE) {
+  fit <- model$fits[[1]]
+  samples <- rstan::extract(fit, pars=c("mu_log_alpha","mu_log_beta","mu_log_gamma","c1"))
+  samples <- as.data.frame(lapply(samples, as.vector)) 
+  covariates <- data.frame(type = as.factor(rep(c('low','high'), each = 100)),
+                           dbh_growth = rep(seq(min(growth_range),max(growth_range),length.out = 100),2), 
+                           dbh_growth_centered = rep(seq(min(growth_range),max(growth_range),length.out = 100) - 0.172,2),
+                           wood_density = rep(wood_density, each = 100),
+                           wood_density_centered = rep(wood_density/0.6, each = 100))
+  
+  output <-samples %>% # only propogate uncertainty in wood density effect
+    merge(covariates) %>%
+    mutate(mu_alpha = mean(exp(mu_log_alpha)),
+           mu_beta = mean(exp(mu_log_beta)),
+           mu_gamma = mean(exp(mu_log_gamma))) %>%
+    mutate(
+      inst_hazard = mu_alpha * exp(-mu_beta * dbh_growth_centered) + mu_gamma * wood_density_centered^c1,
+      annual_prob_mort = 1-exp(-(mu_alpha * exp(-mu_beta * dbh_growth_centered) + mu_gamma * wood_density_centered^c1))) %>%
+    group_by(type, dbh_growth, wood_density)
+  
+  if(hazard_curve == FALSE) { 
+    output %>%
+      summarise(mean = mean(annual_prob_mort),
+                `2.5%` = quantile(annual_prob_mort,0.025),
+                `97.5%` = quantile(annual_prob_mort, 0.975)) %>%
+      ungroup() %>%
+      arrange(type, dbh_growth)
+  }
+  else {
+    output %>%
+      summarise(mean = mean(inst_hazard),
+                `2.5%` = quantile(inst_hazard,0.025),
+                `97.5%` = quantile(inst_hazard, 0.975)) %>%
+      ungroup() %>%
+      arrange(type, dbh_growth)
+  }
+}
+
+
+
+
+
+

@@ -184,14 +184,7 @@ prep_kfold_data_for_stan <- function(data, growth_measure) {
 }
 
 # Prepares full dataset for use with stan
-prep_full_data_for_stan <- function(data, growth_measure) {
-    switch(growth_measure,
-         'true_dbh_dt' = {
-           growth_dt <- data$true_dbh_dt - 0.172
-           },
-         'true_basal_area_dt' = {
-           growth_dt <- data$true_basal_area_dt - 0.338
-         })
+prep_full_data_for_stan <- function(data) {
   list(
     n_obs = nrow(data),
     n_census = max(data$censusid),
@@ -199,10 +192,11 @@ prep_full_data_for_stan <- function(data, growth_measure) {
     census = data$censusid,
     spp = data$sp_id,
     census_length = data$census_interval,
-    growth_dt = growth_dt,
+    growth_dt = data$true_dbh_dt - 0.172,
     rho_c  = unique(data$rho)/0.6,
-    y = as.integer(data$dead_next_census)
-  )
+    y = as.integer(data$dead_next_census),
+    sp = unique(data$sp),
+    raw_rho = unique(data$rho))
 }
 
 # Wrapper function to call either kfold or full data for stan
@@ -211,7 +205,7 @@ prep_data_for_stan <- function(data, growth_measure, crossval) {
     prep_kfold_data_for_stan(data, growth_measure)
   }
   else {
-    prep_full_data_for_stan(data, growth_measure)
+    prep_full_data_for_stan(data)
   }
 }
 
