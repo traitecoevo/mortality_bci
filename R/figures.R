@@ -183,7 +183,7 @@ med <- predict_mu_baseline_hazard(model, data)
 ggplot(spp, aes(x = wood_density,y = log(mean))) + 
       geom_pointrange(aes(ymin = log(`2.5%`), ymax=log(`97.5%`)), size=0.1) +
       geom_ribbon(data = med, aes(ymin = log(`2.5%`),ymax = log(`97.5%`)), alpha=0.4, colour=NA) +
-      geom_line(data = med, aes(x = wood_density, y= log(mean)), size=1) +
+      geom_line(data = med, aes(x = wood_density, y= log(mean))) +
       partial_plot_theme() +
      ylab("log(instantaneous mortality rate)") +
      xlab("Wood density")
