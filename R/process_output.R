@@ -10,12 +10,12 @@ extract_true_dbh_estimates <- function(optimization_results) {
     arrange(ind)
 }
 
-# stan's chain merger
+# rstan's chain merger
 combine_stan_chains <- function(files) {
   rstan::sflist2stanfit(lapply(files, readRDS))
 }
 
-# sub function to compile chains for our workflow
+# Sub-function to compile chains for our workflow
 compile_chains <- function(comparison) {
   if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations","final_model","final_base_growth_hazard_re")) {
     stop('comparison can only be one of the following: 
@@ -28,7 +28,7 @@ compile_chains <- function(comparison) {
   list(model_info=pars, fits=fits)
 }
 
-# Compile chains for all models
+# Compile chains for multiple model comparisons
 compile_models <- function(comparison) {
   if(length(comparison) == 1) {
     compile_chains(comparison)
@@ -38,7 +38,7 @@ compile_models <- function(comparison) {
   }
 }
 
-# Diagnostic function
+# Diagnostic summary function
 diagnose <- function(model) {
   fits <- model$fits
   info <- model$model_info
@@ -69,7 +69,7 @@ diagnose <- function(model) {
   return(res)
 }
 
-# Examine model diagnostics for all analysis
+# Diagnostics summary function for multiple model comparisons
 model_diagnostics <- function(comparison) {
   model <- compile_models(comparison)
   if(is.null(model$fits)) { #Check to see if object is multi model 
@@ -97,7 +97,7 @@ logloss_samples <- function(model) {
     select(-modelid)
 }
 
-# Extract log loss samples for all models.
+# Extract log loss samples for multiple model comparisons.
 extract_logloss_samples <- function(model) {
   if(is.null(model$fits)) { #Check to see if object is multi model 
     samples <- lapply(model, logloss_samples)
@@ -187,8 +187,8 @@ summarise_times <- function(times) {
   return(res)
 }
 
-
-extract_spp_parameters <- function(model, data) {
+# Summarise posteriors of species level parameters
+summarise_spp_params <- function(model, data) {
   fit <- model$fits[[1]]
   dat <- prep_full_data_for_stan(data)
   samples <- rstan::extract(fit, pars=c("alpha","beta","gamma"))
@@ -204,10 +204,10 @@ extract_spp_parameters <- function(model, data) {
   })
 }
 
-
-predict_species <- function(model, data, growth_range = c(0.03,0.5)) {
+# Predict hazard rates/ annual mortality rates for each species
+predict_spp_hazard <- function(model, data, growth_range = c(0.03,0.5)) {
   
-  spp_parameters <- extract_spp_parameters(model, data)
+  spp_parameters <- summarise_spp_params(model, data)
   growth_rates <- data.frame(dbh_growth = seq(min(growth_range),max(growth_range),length.out = 100), 
                              dbh_growth_centered = seq(min(growth_range),max(growth_range),length.out = 100) - 0.172)
   
@@ -220,7 +220,9 @@ predict_species <- function(model, data, growth_range = c(0.03,0.5)) {
       annual_prob_mort = 1- exp(-(alpha * exp(-beta * dbh_growth_centered) + gamma)))
 }
 
-predict_wd_effect <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = TRUE) {
+
+# Predict hazard rates for median species
+predict_mu_hazards <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = TRUE) {
   fit <- model$fits[[1]]
   samples <- rstan::extract(fit, pars=c("mu_log_alpha","mu_log_beta","mu_log_gamma","c1"))
   samples <- as.data.frame(lapply(samples, as.vector)) 
@@ -258,6 +260,24 @@ predict_wd_effect <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.
   }
 }
 
+# Predict median baseline hazard
+predict_mu_baseline_hazard <- function(model,data) {
+  wood_density <- range(data$rho)
+  fit <- model$fits[[1]]
+  samples <- rstan::extract(fit, pars=c("mu_log_gamma","c1"))
+  samples <- as.data.frame(lapply(samples, as.vector)) 
+  covariates <- data.frame(wood_density = seq(min(wood_density),max(wood_density),length.out = 100),
+                           wood_density_centered = seq(min(wood_density),max(wood_density),length.out = 100)/0.6)
+  
+  output <-samples %>%
+    merge(covariates) %>%
+    mutate(inst_hazard = exp(mu_log_gamma) * wood_density_centered^c1) %>%
+    group_by(wood_density) %>%
+    summarise(mean = mean(inst_hazard),
+              `2.5%` = quantile(inst_hazard,0.025),
+              `97.5%` = quantile(inst_hazard, 0.975)) %>%
+    ungroup()
+}
 
 
 
