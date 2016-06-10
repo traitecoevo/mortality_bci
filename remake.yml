@@ -179,10 +179,18 @@ targets:
       res: 300
     cleanup_level: tidy
     
+  ms/figures/fig1_tree.png:
+    download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png
+
   ms/figures/fig1.pdf:
-    command: plot_fig1()
-    plot: double_col_rectangle
+    command: plot_fig1("ms/figures/fig1_tree.png", "ms/dead_tree.png", "ms/Fig1c.png")
+    plot: single_col_rectangle
     cleanup_level: tidy
+    packages:
+      - png
+      - grid
+      - gridBase
+      - gridExtra
     
   ms/figures/fig2.pdf:
     command: plot_fig2(logloss_summaries)

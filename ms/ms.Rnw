@@ -257,7 +257,7 @@ Logarithmic loss, also known as Log Loss, measures the accuracy of a model by in
 \showmatmethods % Display the Materials and Methods section
 
 \acknow{
-J.C was supported by the Science and Industry Endowment Fund (SIEF; RP04-174). M.W was supported by a fellowship from the Australian Research Council (ARC). D.F. was supported by an ARC discovery grant. We thank Lachlan McCalman and Daniel Steinberg for statistical advice; Anias Gibert etc etc.}
+J.C was supported by the Science and Industry Endowment Fund (SIEF; RP04-174). M.W was supported by a fellowship from the Australian Research Council (ARC). D.F. was supported by an ARC discovery grant. We thank Lachlan McCalman and Daniel Steinberg for statistical advice; Anias Gibert etc etc.  Fig. 1a uses images by Tracey Saxby, IAN Image Library (http://ian.umces.edu/imagelibrary)}
 
 
 \showacknow % Display the acknowledgments section

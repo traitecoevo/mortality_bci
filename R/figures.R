@@ -1,3 +1,17 @@
+# position label at a fractional x/y position on a plot
+label <- function(px, py, lab, ..., adj = c(0, 1)) {
+  usr <- par("usr")
+  x <- usr[1] + px * (usr[2] - usr[1])
+  y <- usr[3] + py * (usr[4] - usr[3])
+
+  if (par("ylog"))
+    y <- 10^y
+  if (par("xlog"))
+    x <- 10^x
+
+  text(x, y, lab, adj = adj, xpd=NA, ...)
+}
+
 # Plot theme
 partial_plot_theme <- function(legend.position = "none", strips = FALSE,...) {
   sb <- if(strips==TRUE) element_rect(fill='lightgrey') else element_blank()
@@ -42,6 +56,7 @@ plot_obs_v_pred_growth <- function(data) {
   
   plot_grid(p1, p3, p2, p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
 }
+
 
 plot_fig2a <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
@@ -135,40 +150,108 @@ plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,
 
 # Manuscript figures
 
-plot_fig1 <- function() {
+plot_fig1 <- function(tree1, tree2, panelc) {
   growth_haz <- function(x) {
     1-exp(-0.15 * exp(-10 * x))
   }
-  
+
   base_growth_haz <- function(x) {
     1-exp(-(0.13 * exp(-10 * x) + 0.03))
   }
-  
-  layout(matrix(c(1,2,3,4,4,4,5,5,5), byrow=TRUE, ncol=3))
-  par(mar=c(1.3,1.3,1.3,0.1),ps = 7)
+
+  my_label <- function(text, x=-0.1) label(x, 1.3, text, cex=1.5)
+
+  layout(matrix(c(1,1,1,2,3,4,5,5,5), byrow=TRUE, ncol=3))
+  par(mar=c(2,2,3,1), oma=c(1,1,1,1))
+
+ # Tree growth diagram
+
+  plot(1:2, type='n', ann=FALSE, axes=FALSE, xlim=c(-1,1), ylim=c(-1,1))
+  my_label("a) Repeat census data")
+
+  # note we are only plotting to last viewport, but calls to other two needed to make figure work.
+  vps <- baseViewports()
+  pushViewport(vps$inner, vps$figure, vps$plot)
+  fig.tree(tree1, tree2)
+  popViewport(3)
+
   # Example baseline hazard
-  plot(seq(0,1,length.out = 14), rep(0.03,14), type='l', ylim=c(0,0.14), xaxs='i', xaxt = "n", yaxt = "n", ylab = NULL, xlab =NULL, lwd=1.5)
-  title(main = expression(gamma), line=0.7)
-  title(ylab="Annual probability of death", line=0.5)
-  
-  # Example growth-dependent hazard
-  curve(growth_haz(x), xlim=c(0,1), ylim=c(0,0.14), xaxs='i', xaxt = "n", yaxt = "n", xlab = NULL,lwd=1.5)
-  title(main = expression(alpha*"e"^{-beta~"X"["i"]}), line=0.7)
-  title(xlab="X", line=0.5)
-  
-  # Example full baseline + growth-dependent hazard
-  curve(base_growth_haz(x), xlim=c(0,1), ylim=c(0,0.14),xaxs='i', xaxt = "n", yaxt = "n", xlab =NULL, lwd=1.5)
-  title(main = expression(alpha*"e"^{-beta~"X"["i"]} + gamma), line=0.7)
-  
-  # Place holder for tree growth diagram
-  plot(c(0, 1), c(0, 1), ann = F, type = 'n', xaxt = 'n', yaxt = 'n')
-  text(0.5,0.5,paste("place holder for \n", "tree growth diagram"))
-  
-  #place holder for cross val diagram
-  plot(c(0, 1), c(0, 1), ann = F, type = 'n', xaxt = 'n', yaxt = 'n')
-  text(0.5,0.5,paste("place holder for \n","crossval diagram"))
+  empty_plot <- function(){
+    plot(NA, ylim = c(0,0.14),  xlim=c(0,1), xaxs='i', axes=FALSE, ann=FALSE)
+    axis(1, at = c(-1, 2), labels=NA, lwd=1.5)
+    axis(2, at = c(-1, 2),labels=NA, lwd=1.5)
+  }
+
+  hazard_plot <- function(f, text){
+    x <- seq(0,1,length.out = 50)
+    empty_plot()
+    lines(x, f(x), type='l', lwd=2, col="red")
+    text(0.1, 0.12, text, cex=1.5, pos=4, xpd=NA)
+  }
+
+  hazard_plot(function(x) 0*x +0.03, expression(gamma))
+  my_label("b) Alternative mortality functions", x=-0.45)
+  mtext("Mortality rate", 2, line=1, cex=0.75)
+
+ # Example growth-dependent hazard
+  hazard_plot(growth_haz, expression(alpha*"e"^{-beta~"X"}))
+  mtext("Growth rate", 1, line =1, cex=0.75)
+ # Example full baseline + growth-dependent hazard
+  hazard_plot(base_growth_haz, expression(gamma + alpha*"e"^{-beta~"X"}))
+
+  plot(NA, xlim = c(0, 1), ylim= c(0, 1), ann = FALSE, axes=FALSE)
+  my_label("c) 10-fold cross validation")
+
+  vps <- baseViewports()
+  pushViewport(vps$inner, vps$figure, vps$plot)
+
+  img <- readPNG(panelc)
+  grid.raster(img, unit(0.4, "npc"),  y = unit(0, "npc"),
+              just=c("bottom"), height=unit(1, "npc"))
+
+  popViewport(3)
+  text(1, 0.6,  expression(paste(bar("L"), "=")), cex=1.25, xpd=NA)
+  text(1, 0.4,  expression(sum("L"[i])/10), cex=1.25, xpd=NA)
+
 }
 
+fig.tree <- function(file_alive, file_dead) {
+
+  gp0 <- gpar(cex=0.8)
+  gp2 <- gpar(lwd=2)
+
+  img_alive <- readPNG(file_alive)
+  img_dead <- readPNG(file_dead)
+
+  grid.lines(x = c(0.1, 0.95), y = c(0.1, 0.1),
+              arrow = arrow(ends = "last", length=unit(0.1, "inches")),
+              gp=gpar(lwd=2))
+
+  y0 <- 0.2
+  x0 <- 0.2
+  grid.raster(img_alive, unit(x0, "npc"),  y = unit(y0, "npc"),
+              just=c("bottom"), height=unit(0.60, "npc"))
+  grid.draw(ellipseGrob(x0 - 0.01, y0+0.1, size=1,ar=3,angle=0, def="npc"))
+  grid.text(expression(paste(D[1])), x = x0 + 0.03 , y = y0+0.1, just="left", gp=gp0)
+  grid.lines(x = c(x0, x0), y = c(0.05, 0.1), gp=gp2)
+  grid.text(expression(paste(t[1])), x = x0, y = 0, just="top", gp=gp0)
+
+  x0 <- 0.5
+  grid.raster(img_alive, unit(x0, "npc"),  y = unit(y0, "npc"),
+              just=c("bottom"), height=unit(0.80, "npc"))
+  grid.draw(ellipseGrob(x0 - 0.015, y0+ 0.1, size=1,ar=3,angle=0, def="npc"))
+  grid.text(expression(paste(D[2])), x = x0 + 0.03 , y = y0+0.1, just="left", gp=gp0)
+  grid.lines(x = c(x0, x0), y = c(0.05, 0.1), gp=gp2)
+  grid.text(expression(paste(t[2])), x = x0, y = 0, just="top", gp=gp0)
+
+  x0 <- 0.8
+  grid.raster(img_dead, unit(x0, "npc"),  y = unit(y0, "npc"),
+              just=c("bottom"), height=unit(0.80, "npc"))
+  grid.text(expression(paste(S[3])),
+    x = x0 + 0.03 , y = y0+0.1, just="left", gp=gp0)
+  grid.lines(x = c(x0, x0), y = c(0.05, 0.1), gp=gp2)
+  grid.text(expression(paste(t[3])), x = x0, y = 0, just="top", gp=gp0)
+}
 plot_fig2 <- function(logloss_summaries) {
   p1 <- plot_fig2a(logloss_summaries)
   p2 <- plot_fig2b(logloss_summaries)
