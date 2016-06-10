@@ -1,3 +1,11 @@
+# Calculate logloss outside of stan
+logloss = function(actual, predicted, eps = 1e-15) {
+   predicted = pmin(pmax(predicted, eps), 1-eps)
+   - (actual * log(predicted) + (1 - actual) * log(1 - predicted))
+}
+
+
+
 # Extracts optimization estimates
 extract_true_dbh_estimates <- function(optimization_results) {
   fit <- optimization_results$par
@@ -278,6 +286,29 @@ predict_mu_baseline_hazard <- function(model,data) {
               `97.5%` = quantile(inst_hazard, 0.975)) %>%
     ungroup()
 }
+
+# Predict observations outside stan
+predict_observations <- function(model, data) {
+spp_effects <- summarise_spp_params(model, data)
+wd_effects <- median(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
+census_error <- as.data.frame(rstan::extract(model$fits[[1]], pars=c('census_err'))$census_err) %>%
+  summarise_each(funs(median)) %>%
+  gather('censusid','census_err') %>%
+  mutate(censusid =c(1,2,3))
+
+plyr::ldply(spp, .id='parameter') %>%
+  select(parameter,sp, wood_density, median) %>%
+  spread(parameter, median) %>%
+  merge(data, by.all=sp) %>%
+  merge(census_error, by.all=censusid) %>%
+  mutate(wd_effects = wd_effects) %>%
+  ungroup() %>%
+  mutate(hazard_rate = (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma*(rho/0.6)^wd_effects)*census_err,
+         prob_death = 1-exp(-census_interval * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma * (rho/0.6)^wd_effects)*census_err)) %>%
+  mutate(logloss = logloss(dead_next_census,prob_death))
+}
+
+
 
 
 

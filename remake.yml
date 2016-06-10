@@ -21,7 +21,7 @@ plot_options:
 
   single_col_rectangle:
     width: 3.46
-    height: 5
+    height: 6
     onefile: FALSE
     
   single_col_square:

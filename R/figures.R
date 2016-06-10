@@ -253,9 +253,10 @@ fig.tree <- function(file_alive, file_dead) {
   grid.text(expression(paste(t[3])), x = x0, y = 0, just="top", gp=gp0)
 }
 plot_fig2 <- function(logloss_summaries) {
-  p1 <- plot_fig2a(logloss_summaries)
-  p2 <- plot_fig2b(logloss_summaries)
-  plot_grid(p1,p2, ncol=1, labels=LETTERS[1:2], label_size = 7)
+  p1 <- logloss_curve()
+  p2 <- plot_fig2a(logloss_summaries)
+  p3 <- plot_fig2b(logloss_summaries)
+  plot_grid(p1,p2,p3, ncol=1, labels=LETTERS[1:3], label_size = 7)
 }
 
 # Plot gamma vs wood density with mean trend line
@@ -265,7 +266,7 @@ med <- predict_mu_baseline_hazard(model, data)
 
 ggplot(spp, aes(x = wood_density,y = log(mean))) + 
       geom_pointrange(aes(ymin = log(`2.5%`), ymax=log(`97.5%`)), size=0.1) +
-      geom_ribbon(data = med, aes(ymin = log(`2.5%`),ymax = log(`97.5%`)), alpha=0.4, colour=NA) +
+      geom_ribbon(data = med, aes(ymin = log(`2.5%`),ymax = log(`97.5%`)), alpha=0.2, colour=NA) +
       geom_line(data = med, aes(x = wood_density, y= log(mean))) +
       partial_plot_theme() +
      ylab("log(instantaneous mortality rate)") +
@@ -294,4 +295,16 @@ plot_fig4 <- function(model, data) {
 #   partial_plot_theme()
 #}
 
+logloss_curve <- function() {
+  df <- data.frame(x = seq(0.001,1,length.out = 100))
+  logloss <- function(x, eps = 1e-15) {
+    predicted = pmin(pmax(x, eps), 1-eps)
+    - (1 * log(predicted) + (1 - 1) * log(1 - predicted))
+  }
+  ggplot(df, aes(x)) +
+    stat_function(fun = logloss) +
+    xlab("Predicted probability") +
+    ylab('Logarithmic loss') +
+  partial_plot_theme()
+}
 

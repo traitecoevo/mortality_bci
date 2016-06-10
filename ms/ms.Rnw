@@ -70,12 +70,12 @@ However, due to a paucity of data on plant mortality, most dynamic vegetation mo
 
 Recently, research has focused on examining inter-specific variation by correlating intrinsic species' growth rates with population mortality rates \cite[e.g.][]{Poorter:2008iu, Wright:2010fl}. In contrast to intraspecific work, these studies have shown that species with intrinsically faster growth rates exhibit higher mortality rates relative to slower growing species \cite{Loehle:1996vw, Poorter:2008iu, Wright:2010fl}. As such, species appear to exhibit a trade off between greater growth versus greater survival. Ecologists have attempted to explain this interspecific variation by using a variety of functional traits \textemdash attributes of species that are thought to influence vital rates (i.e. survival, growth and reproduction) and ultimately fitness \cite{Westoby:2002tb, Ackerly:2003eb, Falster:2015un}. 
 
-\begin{figure*}
+\begin{figure}
 \centering
 \includegraphics{figures/fig1.pdf}
-\caption{three possible functional curves of plant mortality. Estimating growth. Cross validation proceedure}
+\caption{Outline of methodology. A) Three functional forms of plant mortality. B) Past growth used to predict future mortality. C) Cross validation proceedure}
 \label{fig1}
-\end{figure*}
+\end{figure}
 
 Wood density, the biomass invested per unit wood volume, is one such functional trait that has consistently been shown to be negatively correlated with tropical tree mortality \cite{Poorter:2008iu, Chave:2009iy, Kraft:2010kq, Wright:2010fl}. The underlying mechanism of this relationship is thought to be due to denser wood conveying enhanced physical resistance to random events such as stem breakage \cite{Putz:1983wu,vanGelder:2006exa,Chave:2009iy}, embolism \cite{Hacke:2001kj, Jacobsen:2005fx} and fungal and pathogen attack \cite{Augspurger:1984wx}. As such, it is hypothesized that species with higher wood density are likely to exhibit lower stochastic hazards. However, research has also shown that wood density may increase tolerance to low growth rates, and thus alter the growth-mortality relationship. For example, species with high wood density have been found to be more tolerant to both shade \cite{vanGelder:2006exa} and neighbor competition \cite{Kunstler:2016km}. Studies have also shown that wood density may reduce drought induced carbon starvation \cite{McDowell:2011dr} and the susceptibility of ‘stressed’ individuals to opportunistic invertebrate, pathogen or fungal attack \cite{Augspurger:1984wx, McDowell:2011dr}. Consequently, species with high wood density may be more tolerant to both stochastic events such as breakage as well as be more tolerant to periods of low growth.
 
@@ -88,24 +88,31 @@ In this study, we reconcile both intraspecific and interspecific theory by devel
 \begin{figure}
 \centering
 \includegraphics{figures/fig2.pdf}
-\caption{Average logarithmic loss $\pm$ 95\% BCIs from 10-fold cross validation. (A) Stage 1: Comparing three functional forms of tropical tree mortality using absolute diameter growth (red) and basal area growth (blue). (B) Comparing model with and without species random effects. (C) Comparing all combinations of wood density effects.}
+\caption{Average logarithmic loss from 10-fold cross validation. (A) Example logarithmic loss curve for a single observed death. B) Comparing various functional forms of tropical tree mortality with different growth measures different (white = no growth, grey = basal area growth, black = dbh growth) and species effects. (C) Comparing model forms with various combinations of wood density effects.}
 \label{fig2}
 \end{figure}
 
 \subsection*{Predictive performance as a function of model form and growth measure}
 We first investigated how model form and growth measure influenced predictive performance. To achieve this we first cross validated three model forms (Fig. \ref{fig1}) of tropical tree mortality using both dbh growth or basal area growth. We found that when the model accounted for both baseline and growth-dependent hazards we obtained a significant improvement in predictive capacity, relative to the other two simpler forms. However, this improvement was dependent on growth measure used, with predictive capacity increasing when dbh growth is used but not when basal area growth is used (Fig. \ref{fig2}). 
 
+\begin{figure}
+\centering
+\includegraphics{figures/fig3.pdf}
+\caption{Estimated log baseline mortality against wood density. Points are individual species and solid line is the mean trendline. All errors are $\pm$ 95\% BCI.}
+\label{fig3}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{figures/fig4.pdf}
+\caption{Estimated curves of instantaneous mortality rate and annual mortality probability. A,C) Highlight expected response curves for a hypothetical median species at low (0.3) and high (0.8) wood density. B,D) Predicted response curves for all species. Errors are $\pm$ 95\% BCI.}
+\label{fig4}
+\end{figure}
+
 \subsection*{Predictive performance and species effects}
 Using the most predictive model (i.e. that which used dbh growth and accounted for both baseline and growth-dependent hazards), we then examined how the inclusion of the effect of wood density on various combinations of parameters affected predictive performance. We found that the inclusion of wood density on any of the three parameters significantly improved predictive performance relative to a model without such effects. However, there was little differences in predictive performance across all wood density\textendash parameter combinations. Nonetheless, the most parsimonious model with lowest logarithmic loss was that which contained a wood density effect on only the baseline hazard ($\gamma$). Comparing this model to one that included species random effects on all parameters (i.e. the model that accounts for all species level variation) revealed that wood density accounted for only a small proportion of the maximum predictive gain achievable by accounting for species identification.
 
 \subsection*{Effects of wood denisty}
-
-\begin{figure}
-\centering
-\includegraphics{figures/fig3.pdf}
-\caption{Average logarithmic loss $\pm$ 95\% BCIs from 10-fold cross validation. (A) Stage 1: Comparing three functional forms of tropical tree mortality using absolute diameter growth (red) and basal area growth (blue). (B) Comparing model with and without species random effects. (C) Comparing all combinations of wood density effects.}
-\label{fig3}
-\end{figure}
 
 \section*{Discussion}
 
