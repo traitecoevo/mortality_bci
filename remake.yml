@@ -15,11 +15,6 @@ sources:
   - R
   
 plot_options:
-
-  portrait_png:
-    width: 750
-    height: 900
-    
   double_col_rectangle:
     width: 6.6
     height: 3
@@ -28,28 +23,29 @@ plot_options:
     width: 3.46
     height: 5
     onefile: FALSE
+    
+  single_col_square:
+    width: 3.46
+    height: 3.46
 
 targets:
   all:
     depends:
-      - precompile/kfold_data/bci_data.rds
-      - precompile/bci_data_full.rds
-      - ms/figures/plot_obs_v_pred_growth.png
-      
+      - ms/ms.pdf
+
   process_crossval:
     depends:
       - func_growth_diagnostics
       - random_effect_diagnostics
       - rho_comparisons_diagnostics
       - logloss_summaries
-      - ms/figures/fig1.pdf
-      - ms/figures/fig2.pdf
 
   process_final_model:
     depends:
       - final_model
       - final_model_diagnostics
-      - ms/figures/fig3.pdf
+      - final_spp_re_model
+      - final_spp_re_model_diagnostics
       
   #------------- download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -163,11 +159,24 @@ targets:
   final_model_diagnostics:
     command: model_diagnostics(I("final_model"))
     cleanup_level: tidy
+    
+  # Final only random effect model
+  final_spp_re_model:
+    command: compile_models(I('final_base_growth_hazard_re'))
+    cleanup_level: tidy
+
+  final_spp_re_model_diagnostics:
+    command: model_diagnostics(I("final_base_growth_hazard_re"))
+    cleanup_level: tidy
 
   #------------- Figures ---------------------------
-  ms/figures/plot_obs_v_pred_growth.png:
+  ms/figures/supp_fig1.png:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
-    plot: portrait_png
+    plot:
+      width: 3.46
+      height: 5
+      units: "in"
+      res: 300
     cleanup_level: tidy
     
   ms/figures/fig1.pdf:
@@ -179,9 +188,14 @@ targets:
     command: plot_fig2(logloss_summaries)
     plot: single_col_rectangle
     cleanup_level: tidy
-
+    
   ms/figures/fig3.pdf:
     command: plot_fig3(final_model, BCI_training_full)
+    plot: single_col_square
+    cleanup_level: tidy
+
+  ms/figures/fig4.pdf:
+    command: plot_fig4(final_model, BCI_training_full)
     plot: single_col_rectangle
     cleanup_level: tidy
   #------------- Manuscript ---------------------------
@@ -202,3 +216,5 @@ targets:
       - ms/figures/fig1.pdf
       - ms/figures/fig2.pdf
       - ms/figures/fig3.pdf
+      - ms/figures/fig4.pdf
+      - ms/figures/supp_fig1.png
