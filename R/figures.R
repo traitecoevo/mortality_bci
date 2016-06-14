@@ -61,21 +61,24 @@ plot_obs_v_pred_growth <- function(data) {
 plot_fig2a <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
     filter(model_type == "rho_combinations_base_growth_hazard_c" |
-             comparison %in% c("function_growth_comparison","species_random_effects"))
+             comparison %in% c("null_model","function_growth_comparison","species_random_effects"))
   
   ggplot(dat, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(.5)) +
     ylab('Logarithmic Loss') + 
-    xlab('Model') +
+    xlab(NULL) +
     scale_shape_manual(values = c(21, 24, 22)) +
     scale_fill_manual(values =c('white','grey80','black')) +
-    scale_x_discrete(labels=c("function_growth_comparison_base_hazard_none" =  expression(gamma),
-                              "function_growth_comparison_growth_hazard_none" = expression(alpha*"e"^{-beta~"X"["i"]}),
-                              "function_growth_comparison_base_growth_hazard_none" = expression(alpha*"e"^{-beta~"X"["i"]} + gamma),
-                              "rho_combinations_base_growth_hazard_c" = expression(alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s"]^gamma[1]),
-                              "species_random_effects_base_growth_hazard_none" = expression(alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s]))) +
-    partial_plot_theme()
-}
+    scale_y_continuous(breaks= scales::pretty_breaks(5)) +
+    scale_x_discrete(labels=c("null_model_base_hazard_none" = expression(gamma),
+                              "function_growth_comparison_base_hazard_none" =  expression(gamma~"c"["t"]),
+                              "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~"c"["t"]),
+                              "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"]),
+                              "rho_combinations_base_growth_hazard_c" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~"c"["t"]),
+                              "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~"c"["t"]))) +
+    partial_plot_theme() +
+    theme(axis.text.x = element_text(angle=45, hjust = 1)) 
+  }
 
 
 plot_fig2b <- function(logloss_summaries) {
@@ -87,7 +90,7 @@ plot_fig2b <- function(logloss_summaries) {
   ggplot(dat, aes(x = model_type,y = mean)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black') +
     ylab('Logarithmic Loss') + 
-    xlab(expression('Wood density effects on'~alpha*"e"^{-beta~"X"["i"]} + gamma)) +
+    xlab(expression('Wood density effects on'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"])) +
     scale_x_discrete(labels=c("function_growth_comparison_base_growth_hazard_none" = "none",
                               "rho_combinations_base_growth_hazard_a" = expression(alpha),
                               "rho_combinations_base_growth_hazard_b" = expression(beta),
@@ -263,18 +266,29 @@ plot_fig3 <- function(model, data) {
 spp <- summarise_spp_params(model, data)$gamma
 med <- predict_mu_baseline_hazard(model, data)
 
-ggplot(spp, aes(x = wood_density,y = log(mean))) + 
-      geom_pointrange(aes(ymin = log(`2.5%`), ymax=log(`97.5%`)), size=0.1) +
-      geom_ribbon(data = med, aes(ymin = log(`2.5%`),ymax = log(`97.5%`)), alpha=0.2, colour=NA) +
-      geom_line(data = med, aes(x = wood_density, y= log(mean))) +
+breaks <- c(0.001,0.01,0.1, 1, 10)
+labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
+
+ggplot(spp, aes(x = wood_density,y = mean)) + 
+      geom_ribbon(data = med, aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.5, colour=NA) +
+      geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.25, shape= 16) +
+      geom_point(shape= 21, fill='red') +
+      geom_line(data = med, aes(x = wood_density, y= mean), col='lightgrey') +
       partial_plot_theme() +
-     ylab("log(instantaneous mortality rate)") +
+      scale_y_log10(breaks= breaks, labels = labels) +
+     ylab("Instantaneous mortality rate") +
      xlab("Wood density")
 }
 
 plot_fig4 <- function(model, data) {
-  p1 <- plot_mu_curves(model, hazard_curve= TRUE) + ggtitle('Median species')
-  p2 <- plot_spp_curves(model, data, hazard_curve = TRUE) + partial_plot_theme(legend.position= c(0.8,0.65)) + ggtitle('All species') + theme(legend.key.size =unit(0.4, "cm"))
+  p1 <- plot_mu_curves(model, hazard_curve= TRUE) + 
+    ggtitle('High/Low wood density') + 
+    theme(title = element_text(size=6))
+  p2 <- plot_spp_curves(model, data, hazard_curve = TRUE) +
+    partial_plot_theme(legend.position= c(0.8,0.65)) + 
+    ggtitle('Species mortality curves') + 
+    theme(title = element_text(size=6)) + 
+    theme(legend.key.size =unit(0.4, "cm"))
   p3 <- plot_mu_curves(model, hazard_curve= FALSE)
   p4 <- plot_spp_curves(model, data, hazard_curve = FALSE) + partial_plot_theme()
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
