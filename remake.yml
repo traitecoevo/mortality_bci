@@ -174,7 +174,7 @@ targets:
     command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
     plot:
       width: 3.46
-      height: 5
+      height: 6
       units: "in"
       res: 300
     cleanup_level: tidy
