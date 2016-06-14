@@ -147,37 +147,37 @@ Wood density for each species was estimated by coring trees located within 15 km
 
 \subsection*{Estimating true growth}
 
-Field measurements of diameter inevitably include observation error, errors that may ultimately bias conclusions. In our dataset, \Sexpr{proportion_negative}\% of observed growth rates were negative. While there are physiological processes (e.g. water depletion and bark drop) that can lead to trunk shrinkages overtime \cite{Pastur:2007kl}, it is biologically impossible for growth (i.e. the creation of new biomass) to be negative \cite{Clark:2007ve}. To ensure our model was not biased by these implausible values we estimated \textit{``true growth''}(i.e. observed growth minus observation error) by first using another BCI dataset collected explicitly to examine observation errors \cite{Condit:2012nz}. This dataset consisted of \Sexpr{n_obs_errors} randomly selected trees that had their diameter measured twice within a 30 day period \cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual. We did this by first modelling the observed initial ($D_{i,0}$) and final diameter ($D_{i,1}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,0}}$ and $\widehat{D_{i,1}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma} (i.e. the observed measurement error):
+Field measurements of diameter inevitably include observation error, errors that may ultimately bias conclusions. In our dataset, \Sexpr{proportion_negative}\% of observed growth rates were negative. While there are physiological processes (e.g. water depletion and bark drop) that can lead to trunk shrinkages overtime \cite{Pastur:2007kl}, it is biologically impossible for growth (i.e. the creation of new biomass) to be negative \cite{Clark:2007ve}. To ensure our model was not biased by these implausible values we estimated \textit{``true growth''}(i.e. observed growth minus observation error) by first using another BCI dataset collected explicitly to examine observation errors \cite{Condit:2012nz}. This dataset consisted of \Sexpr{n_obs_errors} randomly selected trees that had their diameter measured twice within a 30 day period \cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual. We did this by first modelling the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma} (i.e. the observed measurement error):
 
 \begin{equation}\label{eq:true_growth_obs} 
 \begin{aligned}
-D_{i,0} &\sim \mathcal{N}(\widehat{D}_{i,0}, 0.75) \\
-D_{i,1} &\sim \mathcal{N}(\widehat{D}_{i,1}, 0.75)
+D_{i,1} &\sim \mathcal{N}(\widehat{D}_{i,1}, 0.75) \\
+D_{i,2} &\sim \mathcal{N}(\widehat{D}_{i,2}, 0.75)
 \end{aligned} 
 \end{equation}
 
-The initial diameter for each individual $i$, $\widehat{D}_{i,0}$, was sampled as a random realisation from a log-normal distribution:
+The initial diameter for each individual $i$, $\widehat{D}_{i,1}$, was sampled as a random realisation from a log-normal distribution:
 \begin{equation} \label{eq:true_dbh1}
-\widehat{D}_{i,0} \sim \log \mathcal{N}(\mu_{D_0}, \sigma_{D_0}),
+\widehat{D}_{i,1} \sim \log \mathcal{N}(\mu_{D_1}, \sigma_{D_1}),
 \end{equation}
-where $\mu_{D_0}$ is the expected mean of log initial diameter and $\sigma_{D_0}$ defines that variation around that mean. $\mu_{D_0}$ was estimated using a normal prior $\mathcal{N}(0, 2.5)$, which represents our prior expectation that the mean initial diameter would be greater than zero but less than 150 cm. $\sigma_{D_0}$ was estimated using a weakly informative half Cauchy prior centerd on zero and a scale parameter of 2.5.
+where $\mu_{D_1}$ is the expected mean of log initial diameter and $\sigma_{D_1}$ defines that variation around that mean. $\mu_{D_1}$ was estimated using a normal prior $\mathcal{N}(0, 2.5)$, which represents our prior expectation that the mean initial diameter would be greater than zero but less than 150 cm. $\sigma_{D_1}$ was estimated using a weakly informative half Cauchy prior centerd on zero and a scale parameter of 2.5.
 
-The final diameter measurement for each individual $i$, $D_{i,1}$ was estimated as:
+The final diameter measurement for each individual $i$, $D_{i,2}$ was estimated as:
 \begin{equation}\label{eq:true_dbh2}
-\widehat{D}_{i,1} = \widehat{D}_{i,0} + \Delta D_{i,1} \, (t_1-t_0),
+\widehat{D}_{i,2} = \widehat{D}_{i,1} + \Delta D_{i,2} \, (t_2-t_1),
 \end{equation}
-where $\Delta D_{i,1}$ represents the annual true increase in diameter (cm) and $(t_1-t_0)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,1}$ as a random realisation from a log-normal distribution centerd on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm/yr.
+where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centerd on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm/yr.
 
-Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,0}$, true final diameter, $\widehat{D}_{i,1}$, and true annual diameter growth $\Delta D_{i,1}$. We then used annual diameter growth, $\Delta D_{i,1}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,1}) - (\pi \, 0.25 \, \widehat{D}_{i,0})}{(t_1-t_0)}$ in the subsequent mortality analysis.
+Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis.
 
 
 \subsection*{Mortality analysis}
 
-In survival analysis, the probability that an individual dies between $t_1$ and $t_2$, $p_{t_1\rightarrow t_2}$ is defined by:
+In survival analysis, the probability that an individual dies between $t_2$ and $t_3$, $p_{t_2\rightarrow t_3}$ is defined by:
 \begin{equation} \label{eq:mortality_model}
-p_{i,t_1\rightarrow t_2} = 1 - \exp\left(- \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t\right).
+p_{i,t_2\rightarrow t_3} = 1 - \exp\left(- \int_{t_2}^{t_3} \lambda_i(t) {\rm d}t\right).
 \end{equation}
-where, $\lambda$ is the instantaneous hazard rate of death per unit time \cite{Kleinbaum:2012tn} and $\int_{t_1}^{t_2} \lambda_i(t) {\rm d}t$ is the cumulative hazard between $t_1$ and $t_2$.
+where, $\lambda$ is the instantaneous hazard rate of death per unit time \cite{Kleinbaum:2012tn} and $\int_{t_2}^{t_3} \lambda_i(t) {\rm d}t$ is the cumulative hazard between $t_2$ and $t_3$.
 
 Here we examine the performance of three functional forms of $\lambda$ to predict observed patterns of tropical tree mortality. The simplest model (eq. \ref{base_haz}), assumes a single baseline hazard, which is constant irrespective of a plant's growth rate. The second model (eq. \ref{growth_haz} describes a growth-dependent hazard which assumes plants can only die due to a growth related cause. In this model, we make an explicit assumption that the growth-mortality relationship is captured by a negative exponential curve whereby the probability of death is high at low growth rates and as growth increases the probability of dying decays at an exponential rate until an asymptote at zero is reached. This negative exponential relationship has been used in other studies to model growth-dependent mortality \cite[e.g.][]{Kobe:1995tw} and broadly reflects patterns observed in non-parametric growth-mortality models \cite{Wyckoff:2000un, Kunstler:2005bn, Vieilledent:2010fv}. The third model (eq. \ref{add_haz}, and potentially the most biologically realistic, is the summation of the two previous models. Specifically, this model allows $\lambda$ to decrease exponentially with increasing growth, but, unlike a standard negative exponential, will asymptote at some baseline hazard instead of zero. The advantage of this model is that it effectively accounts for two independent causes of mortality: death due to growth and death due to chance (i.e. stochastic events such as wind throw and fire). The parameters of eq. \ref{add_haz} are also biologically interpretable: $\alpha$ represents the intercept and defines the instantaneous mortality hazard $\lambda$ at low annual growth rate. $\beta$ represents the exponential decay rate or the sensitivity of hazard rates to change with growth rate; and $\gamma$, is the asymptote and defines the baseline hazard. $\alpha$ and $\beta$ are intrinsically linked to a plants growth rate, and as such are growth-dependent parameters. By contrast, $\gamma$ is a growth-independent parameter that accounts for stochastic events (e.g. windfall, fire) that can kill a plant irrespective of its growth rate.
 \begin{align}
@@ -191,17 +191,17 @@ The central aim of this study is to identify the most parsimonious combination o
 
 \subsection*{Model fitting}
 
-Our observations are for survival outcomes $S_{i, t_1\rightarrow t_2}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_1$ and $t_2$. We model these observations as random realizations from a Bernoulli distribution
+Our observations are for survival outcomes $S_{i, t_2\rightarrow t_3}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_2$ and $t_3$. We model these observations as random realizations from a Bernoulli distribution
 \begin{equation}
-S_{i,t_1\rightarrow t_2} \sim \textrm{Bernoulli}(p_{i,t_1\rightarrow t_2}),
+S_{i,t_2\rightarrow t_3} \sim \textrm{Bernoulli}(p_{i,t_2\rightarrow t_3}),
 \end{equation}
-where $p_{i,t_1\rightarrow t_2}$ is the probability individual $i$ dies in the interval $t_1$--$t_2$. Using standard survival analysis, this probability is given by
+where $p_{i,t_2\rightarrow t_3}$ is the probability individual $i$ dies in the interval $t_2$--$t_3$. Using standard survival analysis, this probability is given by
 \begin{equation}
-p_{i,t_1\rightarrow t_2} = 1 - \exp\left(- \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t\right).
+p_{i,t_2\rightarrow t_3} = 1 - \exp\left(- \int_{t_2}^{t_3} \lambda_i(t) {\rm d}t\right).
 \end{equation}
-As we only have a point estimate of $\lambda_i(t)$ at $t=t_1$, the cumulative hazard from  $t_1$--$t_2$ is approximated as
+As we only have a point estimate of $\lambda_i(t)$ at $t=t_2$, the cumulative hazard from  $t_2$--$t_3$ is approximated as
 \begin{equation}
-  \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t \approx \lambda_i(t_1) (t_2-t_1).
+  \int_{t_2}^{t_3} \lambda_i(t) {\rm d}t \approx \lambda_i(t_2) (t_3-t_2).
 \end{equation}
 
 As we have multiple hypothesized functional forms of $\lambda_i$ (e.g. equations \ref{base_haz}\textendash\ref{add_haz}), we describe here the fitting procedure of our most complicated model, of which all others may be considered special cases. The instantaneous rate of mortality is
@@ -252,9 +252,9 @@ For each model we used Bayesian inference and fitted models in R \Sexpr{paste(ve
 \subsection*{Model evaluation}
 We examined predictive accuracy of each model by using K-fold cross-validation. This involved randomly partitioning the data into ten folds of \Sexpr{n_heldout} observations, while ensuring that each K-fold had at least one observation per species. We then fitted models to nine folds and predicted to the tenth fold. This was repeated until each fold had been used nine times for model fitting, and once as a held-out dataset for predicting. Cross-validation is a typical approach to model evaluation, and assesses a model’s accuracy when extrapolating to data not used in model calibration, thereby indicating the model’s predictive accuracy \cite{Stone:1997tg}.
 
-Predictive accuracy was quantified by estimating the average log loss across K-folds for held-out data, $\bar{\mathcal{L}}$ (Fig. \ref{fig1}). Logarithmic loss, also known as log loss and indicated by $\mathcal{L}$, measures the accuracy of a model by incorporating probabilistic confidence. It does this by penalizing incorrect predictions based on how wrong the predicted probability is from the observed outcome (Fig ??). By minimizing the $\bar{\mathcal{L}}$, we maximize predictive skill. The average log loss across all individuals for the $k$th fold of held-out data, $\mathcal{L}_k$, is given by
+Predictive accuracy was quantified by estimating the average log loss across K-folds for held-out data, $\bar{\mathcal{L}}$ (Fig. \ref{fig1}). Logarithmic loss -- commonly known as log loss, and indicated by $\mathcal{L}$-- measures the accuracy of a model by penalizing incorrect predictions based on how wrong the predicted probability is from the observed outcome (Fig ??). By minimizing the $\bar{\mathcal{L}}$, we maximize predictive skill. The average log loss across all individuals for the $k$th fold of held-out data, $\mathcal{L}_k$, is given by
 \begin{equation} \label{eq:logloss}
-\mathcal{L}_k = - \frac1{N_k}\,\sum_{i=1}^{N_k}\big(S_i\,\log(p_{i,t_1\rightarrow t_2}) + ( 1 - S_i)\,\log(1 - p_{i,t_1\rightarrow t_2})\big),
+\mathcal{L}_k = - \frac1{N_k}\,\sum_{i=1}^{N_k}\big(S_i\,\log(p_{i,t_2\rightarrow t_3}) + ( 1 - S_i)\,\log(1 - p_{i,t_2\rightarrow t_3})\big),
 \end{equation}
 where $N_k$ refers to the number of observations in fold.
 
