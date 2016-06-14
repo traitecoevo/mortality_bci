@@ -6,7 +6,7 @@ kfold_tasks <- function(comparison,iter=4000,path='.') {
          "null_model" = {
            growth_measure <- "true_dbh_dt"
            rho_combo <- "none"
-           model  <- "null_model"
+           model  <- "base_hazard"
          }, 
          "function_growth_comparison" = {
            growth_measure <- c("true_dbh_dt",'true_basal_area_dt')
