@@ -25,9 +25,9 @@ combine_stan_chains <- function(files) {
 
 # Sub-function to compile chains for our workflow
 compile_chains <- function(comparison) {
-  if(!comparison %in% c("function_growth_comparison","species_random_effects","rho_combinations","final_model","final_base_growth_hazard_re")) {
+  if(!comparison %in% c("null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model","final_base_growth_hazard_re")) {
     stop('comparison can only be one of the following: 
-                      "function_growth_comparison","species_random_effects","rho_combinations","final_model", "final_base_growth_hazard_re"')
+                      "null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model", "final_base_growth_hazard_re"')
   }
   tasks <- tasks_2_run(comparison)
   sets <- split(tasks,  list(tasks$comparison,tasks$model,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
@@ -138,21 +138,23 @@ summarise_crossval_logloss <- function(comparison) {
 
 # Combines all cross val logloss outputs.
 combine_logloss_summaries <- function() {
+  logloss_null_model <- summarise_crossval_logloss("null_model")
   logloss_func_growth <- summarise_crossval_logloss("function_growth_comparison")
   logloss_rho_comparisons <- summarise_crossval_logloss("rho_combinations")
   logloss_re_comparison <- summarise_crossval_logloss("species_random_effects")
   
   logloss_func_growth %>%
-    bind_rows(logloss_rho_comparisons, logloss_re_comparison) %>%
+    bind_rows(logloss_null_model,logloss_rho_comparisons, logloss_re_comparison) %>%
     arrange(comparison, growth_measure) %>%
     filter(model!= "base_hazard" | growth_measure !='true_basal_area_dt') %>% # removes unnecessary model base_hazard fit.
     filter(comparison !='rho_combinations' |  rho_combo!='none') %>% # Already included in logloss_func_growth
-    mutate(growth_measure = replace(growth_measure, model=="base_hazard", "none"), # No growth for base model
+    mutate(growth_measure = replace(growth_measure, model %in% c("null_model","base_hazard"), "none"), # No growth for base model
            model = replace(model, model=="base_growth_hazard_re", "base_growth_hazard")) %>% # rename for plotting purposes
     mutate(model = factor(model, levels=c('base_hazard','growth_hazard','base_growth_hazard')),
            growth_measure = factor(growth_measure, levels=c('none','true_basal_area_dt','true_dbh_dt')),
            model_type = paste(comparison,model, rho_combo, sep='_')) %>%
-    mutate(model_type = factor(model_type, levels=c("function_growth_comparison_base_hazard_none",
+    mutate(model_type = factor(model_type, levels=c("null_model_base_hazard_none",
+                                                    "function_growth_comparison_base_hazard_none",
                                                     "function_growth_comparison_growth_hazard_none",
                                                     "function_growth_comparison_base_growth_hazard_none",
                                                     "rho_combinations_base_growth_hazard_a",
