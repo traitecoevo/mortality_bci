@@ -61,6 +61,77 @@ run_true_dbh_model <- function(data) {
   fit <- optimizing(model,
                     data = stan_data, iter=50000, refresh=1000)
 }
+
+# Null Model
+get_model_chunks_null <- function(tasks) {
+  
+  list(
+    growth_measure = tasks$growth_measure,
+    pars = c("log_gamma",
+             "logloss_heldout"),
+    data = "
+        // Fitted data
+        int<lower=1> n_obs;
+        vector[n_obs] census_length;
+        int<lower=0, upper=1> y[n_obs];
+        
+        // Heldout data
+        int<lower=1> n_obs_heldout;
+        vector[n_obs_heldout] census_length_heldout;
+        int<lower=0, upper=1> y_heldout[n_obs_heldout];",
+    parameters ="
+      real log_gamma;",
+    model ="
+      real cumulative_hazard;
+      real gamma;
+      
+      // Put gamma on normal scale
+      gamma <- exp(log_gamma);
+
+      for (i in 1:n_obs) {
+        cumulative_hazard <- -census_length[i] * gamma;
+        
+        if (y[i] == 0) {
+          increment_log_prob(cumulative_hazard);
+        } else {
+          increment_log_prob(log1m_exp(cumulative_hazard));
+        }
+      }
+      // Priors
+      log_gamma ~ normal(0, 2.5);",
+    generated_quantities ="
+      real gamma;
+      
+      // Declaring heldout
+      real cumulative_hazard_heldout;
+      real loglik_heldout;
+      real sum_loglik_heldout;
+      real logloss_heldout;
+
+      // Initialization of summed parameter
+      sum_loglik_heldout <- 0;
+
+      // Put normal on normal scale;
+      gamma <- exp(log_gamma);
+      
+      // Calculate log likelihood for heldout data
+      for (j in 1:n_obs_heldout) {
+        cumulative_hazard_heldout <- -census_length_heldout[j] * gamma;
+        
+        if (y_heldout[j] == 0) {
+          loglik_heldout <- cumulative_hazard_heldout;
+        }
+        else {
+          loglik_heldout <- log1m_exp(cumulative_hazard_heldout);
+        }
+        sum_loglik_heldout <- sum_loglik_heldout + loglik_heldout;
+      }
+        // Calculation of average negative log likelihood
+        logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;"
+  )
+}
+
+
 ## baseline hazard model
 
 get_model_chunks_base_haz <- function(tasks) {

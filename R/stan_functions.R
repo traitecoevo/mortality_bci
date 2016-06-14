@@ -3,6 +3,11 @@ kfold_tasks <- function(comparison,iter=4000,path='.') {
   n_kfolds = 10
   n_chains = 3
   switch(comparison,
+         "null_model" = {
+           growth_measure <- "true_dbh_dt"
+           rho_combo <- "none"
+           model  <- "null_model"
+         }, 
          "function_growth_comparison" = {
            growth_measure <- c("true_dbh_dt",'true_basal_area_dt')
            rho_combo <- "none"
@@ -89,6 +94,10 @@ model_compiler <- function(task) {
   model <- task$model
   ## Assemble the stan model:
   switch(model, 
+         "null_model"= {
+           chunks <- get_model_chunks_null(task)
+           chunks$crossval <- TRUE
+         },
          "base_hazard"= {
            chunks <- get_model_chunks_base_haz(task)
            chunks$crossval <- TRUE
@@ -240,6 +249,10 @@ precompile <- function(task) {
   model <- task$model
   ## Assemble the stan model:
   switch(model, 
+         "null_model"= {
+           chunks <- get_model_chunks_null(task)
+           chunks$crossval <- TRUE
+         },
          "base_hazard"= {
            chunks <- get_model_chunks_base_haz(task)
            chunks$crossval <- TRUE
@@ -291,17 +304,21 @@ precompile <- function(task) {
 
 #THIS ISN'T ELEGANT BUT IT WORKS
 precompile_crossval_models <- function() {
-  # Functional form/growth comparison
-  stage1 <- tasks_2_run(comparison = 'function_growth_comparison',iter = 10)
+  # Null model
+  stage1 <- tasks_2_run(comparison = 'null_model',iter = 10)
   vapply(df_to_list(stage1), precompile, character(1))
   
-  #Constant vs species random effects
-  stage2 <- tasks_2_run(comparison = 'species_random_effects',iter = 10)
+  # Functional form/growth comparison
+  stage2 <- tasks_2_run(comparison = 'function_growth_comparison',iter = 10)
   vapply(df_to_list(stage2), precompile, character(1))
   
-  #Rho combinations
-  stage3 <- tasks_2_run(comparison = 'rho_combinations',iter = 10)
+  #Constant vs species random effects
+  stage3 <- tasks_2_run(comparison = 'species_random_effects',iter = 10)
   vapply(df_to_list(stage3), precompile, character(1))
+  
+  #Rho combinations
+  stage4 <- tasks_2_run(comparison = 'rho_combinations',iter = 10)
+  vapply(df_to_list(stage4), precompile, character(1))
 }
 
 precompile_fulldata_models <- function() {

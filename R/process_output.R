@@ -309,6 +309,35 @@ plyr::ldply(spp, .id='parameter') %>%
 }
 
 
+predict_levels <- function(model, data) {
+spp_effects <- summarise_spp_params(model, data)
+wd_effects <- median(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
+census_error <- as.data.frame(rstan::extract(model$fits[[1]], pars=c('census_err'))$census_err) %>%
+  summarise_each(funs(median)) %>%
+  gather('censusid','census_err') %>%
+  mutate(censusid =c(1,2,3))
+
+test <-plyr::ldply(spp_effects, .id='parameter') %>%
+  select(parameter,sp, wood_density, median) %>%
+  spread(parameter, median) %>%
+  merge(data, by.all=sp) %>%
+  merge(census_error, by.all=censusid) %>%
+  mutate(wd_effects = wd_effects) %>%
+  ungroup() %>%
+  mutate(prob_death_all = 1-exp(-census_interval * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma * (rho/0.6)^wd_effects)*census_err),
+         prob_death_spp = 1-exp(-census_interval * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma)),
+         prob_death_rho = 1-exp(-census_interval * (mean(alpha) * exp(-mean(beta) * (true_dbh_dt - 0.172)) + mean(gamma) * (rho/0.6)^wd_effects)),
+         prob_death_cen = 1-exp(-census_interval * (mean(alpha) * exp(-mean(beta) * (true_dbh_dt - 0.172)) + mean(gamma)*census_err))) %>%
+  summarise(
+    spp_rho_census = sum((prob_death_all - mean(prob_death_all))^2),
+    spp = sum((prob_death_spp - mean(prob_death_spp))^2),
+    wood_density = sum((prob_death_rho - mean(prob_death_rho))^2),
+    census = sum((prob_death_cen - mean(prob_death_cen))^2)) %>%
+      mutate(total_sum_sq = sum(unexplained, spp, wood_density, census)) %>%
+  gather(level, sum_res_sq, -total_sum_sq) %>%
+  mutate(proportions = sum_res_sq/total_sum_sq)
+}
+
 
 
 

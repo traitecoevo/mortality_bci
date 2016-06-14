@@ -167,7 +167,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
  # Tree growth diagram
 
   plot(1:2, type='n', ann=FALSE, axes=FALSE, xlim=c(-1,1), ylim=c(-1,1))
-  my_label("a) Repeat census data")
+  my_label("A) Repeat census data")
 
   # note we are only plotting to last viewport, but calls to other two needed to make figure work.
   vps <- baseViewports()
@@ -190,7 +190,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   }
 
   hazard_plot(function(x) 0*x +0.03, expression(gamma))
-  my_label("b) Alternative mortality functions", x=-0.45)
+  my_label("B) Alternative mortality functions", x=-0.45)
   mtext("Mortality rate", 2, line=1, cex=0.75)
 
  # Example growth-dependent hazard
@@ -200,7 +200,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   hazard_plot(base_growth_haz, expression(gamma + alpha*"e"^{-beta~"X"}))
 
   plot(NA, xlim = c(0, 1), ylim= c(0, 1), ann = FALSE, axes=FALSE)
-  my_label("c) 10-fold cross validation")
+  my_label("C) 10-fold cross validation")
 
   vps <- baseViewports()
   pushViewport(vps$inner, vps$figure, vps$plot)
@@ -253,10 +253,9 @@ fig.tree <- function(file_alive, file_dead) {
   grid.text(expression(paste(t[3])), x = x0, y = 0, just="top", gp=gp0)
 }
 plot_fig2 <- function(logloss_summaries) {
-  p1 <- logloss_curve()
-  p2 <- plot_fig2a(logloss_summaries)
-  p3 <- plot_fig2b(logloss_summaries)
-  plot_grid(p1,p2,p3, ncol=1, labels=LETTERS[1:3], label_size = 7)
+  p1 <- plot_fig2a(logloss_summaries)
+  p2 <- plot_fig2b(logloss_summaries)
+  plot_grid(p1,p2, ncol=1, labels=LETTERS[1:2], label_size = 7)
 }
 
 # Plot gamma vs wood density with mean trend line
@@ -275,7 +274,7 @@ ggplot(spp, aes(x = wood_density,y = log(mean))) +
 
 plot_fig4 <- function(model, data) {
   p1 <- plot_mu_curves(model, hazard_curve= TRUE) + ggtitle('Median species')
-  p2 <- plot_spp_curves(model, data, hazard_curve = TRUE) + partial_plot_theme(legend.position= c(0.8,0.5)) + ggtitle('All species')
+  p2 <- plot_spp_curves(model, data, hazard_curve = TRUE) + partial_plot_theme(legend.position= c(0.8,0.65)) + ggtitle('All species') + theme(legend.key.size =unit(0.4, "cm"))
   p3 <- plot_mu_curves(model, hazard_curve= FALSE)
   p4 <- plot_spp_curves(model, data, hazard_curve = FALSE) + partial_plot_theme()
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
