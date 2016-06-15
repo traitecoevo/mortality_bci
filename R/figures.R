@@ -15,7 +15,7 @@ label <- function(px, py, lab, ..., adj = c(0, 1)) {
 # Plot theme
 partial_plot_theme <- function(legend.position = "none", strips = FALSE,...) {
   sb <- if(strips==TRUE) element_rect(fill='lightgrey') else element_blank()
-  st <- if(strips==TRUE) element_text(face='italic') else element_blank()
+  st <- if(strips==TRUE) element_text() else element_blank()
   theme_classic(base_size = 7) + theme(strip.text = st,
                                        strip.background = sb,
                                        legend.position = legend.position,
@@ -57,52 +57,6 @@ plot_obs_v_pred_growth <- function(data) {
   plot_grid(p1, p3, p2, p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
 }
 
-
-plot_fig2a <- function(logloss_summaries) {
-  dat <- logloss_summaries %>%
-    filter(model_type == "rho_combinations_base_growth_hazard_c" |
-             comparison %in% c("null_model","function_growth_comparison","species_random_effects"))
-  
-  ggplot(dat, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(.5)) +
-    ylab('Logarithmic Loss') + 
-    xlab(NULL) +
-    scale_shape_manual(values = c(21, 24, 22)) +
-    scale_fill_manual(values =c('white','grey80','black')) +
-    scale_y_continuous(breaks= scales::pretty_breaks(5)) +
-    scale_x_discrete(labels=c("null_model_base_hazard_none" = expression(gamma),
-                              "function_growth_comparison_base_hazard_none" =  expression(gamma~"c"["t"]),
-                              "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~"c"["t"]),
-                              "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"]),
-                              "rho_combinations_base_growth_hazard_c" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~"c"["t"]),
-                              "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~"c"["t"]))) +
-    partial_plot_theme() +
-    theme(axis.text.x = element_text(angle=45, hjust = 1)) 
-  }
-
-
-plot_fig2b <- function(logloss_summaries) {
-  dat <- logloss_summaries %>%
-    filter(growth_measure == "true_dbh_dt" &
-             (comparison == "rho_combinations" |
-                model_type == "function_growth_comparison_base_growth_hazard_none"))
-  
-  ggplot(dat, aes(x = model_type,y = mean)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black') +
-    ylab('Logarithmic Loss') + 
-    xlab(expression('Wood density effects on'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"])) +
-    scale_x_discrete(labels=c("function_growth_comparison_base_growth_hazard_none" = "none",
-                              "rho_combinations_base_growth_hazard_a" = expression(alpha),
-                              "rho_combinations_base_growth_hazard_b" = expression(beta),
-                              "rho_combinations_base_growth_hazard_ab" = expression(alpha~"&"~beta),
-                              "rho_combinations_base_growth_hazard_c" = expression(gamma),
-                              "rho_combinations_base_growth_hazard_ac" = expression(alpha~"&"~gamma),
-                              "rho_combinations_base_growth_hazard_bc" = expression(beta~"&"~gamma),
-                              "rho_combinations_base_growth_hazard_abc" = expression(alpha~","~beta~","~gamma))) +
-    partial_plot_theme()
-}
-
-
 # Plot species predicted mortality v growth curves
 plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FALSE) {
   preds <- predict_spp_hazard(model, data, growth_range)
@@ -141,7 +95,7 @@ plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,
   }
   ggplot(preds, aes(x = dbh_growth,y = mean, group = type, colour = wood_density, fill=wood_density)) + 
     geom_line(size=0.3) +
-    scale_color_gradient(limits=c(0.197,NA),low='blue',high='red') +
+    scale_color_gradient(name  =expression("E"~(g/cm^3)),limits=c(0.197,NA),low='blue',high='red') +
     geom_ribbon(aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.4, colour=NA) +
     scale_fill_gradient(limits=c(0.2,NA),low='blue',high='red') +
     scale_x_continuous(expand=c(0,0)) +
@@ -255,6 +209,54 @@ fig.tree <- function(file_alive, file_dead) {
   grid.lines(x = c(x0, x0), y = c(0.05, 0.1), gp=gp2)
   grid.text(expression(paste(t[3])), x = x0, y = 0, just="top", gp=gp0)
 }
+
+plot_fig2a <- function(logloss_summaries) {
+  dat <- logloss_summaries %>%
+    filter(model_type == "rho_combinations_base_growth_hazard_c" |
+             comparison %in% c("null_model","function_growth_comparison","species_random_effects")) %>%
+    mutate(comparison = factor(comparison, levels=c('null_model','function_growth_comparison','rho_combinations','species_random_effects'),
+                               labels = c('null model','functional form','wood density','species effects')))
+  
+  ggplot(dat, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(1)) +
+    ylab('Logarithmic Loss') + 
+    xlab('Model') +
+    scale_shape_manual(values = c(21, 24, 22)) +
+    scale_fill_manual(values =c('white','grey80','black')) +
+    scale_y_continuous(breaks= scales::pretty_breaks(5)) +
+    scale_x_discrete(labels=c("null_model_base_hazard_none" = expression(gamma),
+                              "function_growth_comparison_base_hazard_none" =  expression(gamma~"c"["t"]),
+                              "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~"c"["t"]),
+                              "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"]),
+                              "rho_combinations_base_growth_hazard_c" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~"c"["t"]),
+                              "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~"c"["t"]))) +
+    facet_wrap(~comparison, scales='free_x', ncol=4, drop=TRUE) +
+    partial_plot_theme(strips = TRUE) +
+    theme(axis.text.x = element_text(angle=45, hjust = 1)) 
+  }
+
+
+plot_fig2b <- function(logloss_summaries) {
+  dat <- logloss_summaries %>%
+    filter(growth_measure == "true_dbh_dt" &
+             (comparison == "rho_combinations" |
+                model_type == "function_growth_comparison_base_growth_hazard_none"))
+  
+  ggplot(dat, aes(x = model_type,y = mean)) + 
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black') +
+    ylab('Logarithmic Loss') + 
+    xlab(expression('Wood density effects on'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"])) +
+    scale_x_discrete(labels=c("function_growth_comparison_base_growth_hazard_none" = "none",
+                              "rho_combinations_base_growth_hazard_a" = expression(alpha),
+                              "rho_combinations_base_growth_hazard_b" = expression(beta),
+                              "rho_combinations_base_growth_hazard_ab" = expression(alpha~"&"~beta),
+                              "rho_combinations_base_growth_hazard_c" = expression(gamma),
+                              "rho_combinations_base_growth_hazard_ac" = expression(alpha~"&"~gamma),
+                              "rho_combinations_base_growth_hazard_bc" = expression(beta~"&"~gamma),
+                              "rho_combinations_base_growth_hazard_abc" = expression(alpha~","~beta~","~gamma))) +
+    partial_plot_theme()
+}
+
 plot_fig2 <- function(logloss_summaries) {
   p1 <- plot_fig2a(logloss_summaries)
   p2 <- plot_fig2b(logloss_summaries)
