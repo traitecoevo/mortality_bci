@@ -200,7 +200,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   hazard_plot(growth_haz, expression(alpha*"e"^{-beta~"X"}))
   mtext("Growth rate", 1, line =1, cex=0.75)
  # Example full baseline + growth-dependent hazard
-  hazard_plot(base_growth_haz, expression(gamma + alpha*"e"^{-beta~"X"}))
+  hazard_plot(base_growth_haz, expression(alpha*"e"^{-beta~"X"}+gamma))
 
   plot(NA, xlim = c(0, 1), ylim= c(0, 1), ann = FALSE, axes=FALSE)
   my_label("C) 10-fold cross validation")
@@ -213,8 +213,8 @@ plot_fig1 <- function(tree1, tree2, panelc) {
               just=c("bottom"), height=unit(1, "npc"))
 
   popViewport(3)
-  text(1, 0.6,  expression(paste(bar("L"), "=")), cex=1.25, xpd=NA)
-  text(1, 0.4,  expression(sum("L"[i])/10), cex=1.25, xpd=NA)
+  text(1, 0.65,  expression(paste(bar("L"), "=")), cex=1.25, xpd=NA)
+  text(1, 0.35,  expression(sum("L"[i])/10), cex=1.25, xpd=NA)
 
 }
 
