@@ -312,36 +312,48 @@ plyr::ldply(spp, .id='parameter') %>%
 
 
 predict_levels <- function(model, data) {
+  
 spp_effects <- summarise_spp_params(model, data)
-wd_effects <- median(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
+wd_effects <- mean(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
+mu_effects <- rstan::extract(model$fits[[1]], pars=c('mu_log_alpha', 'mu_log_beta','mu_log_gamma'))
+mu_effects <- as.data.frame(lapply(mu_effects, as.vector)) %>%
+  summarise_each(funs(mean))
+
 census_error <- as.data.frame(rstan::extract(model$fits[[1]], pars=c('census_err'))$census_err) %>%
-  summarise_each(funs(median)) %>%
+  summarise_each(funs(mean)) %>%
   gather('censusid','census_err') %>%
   mutate(censusid =c(1,2,3))
 
-test <-plyr::ldply(spp_effects, .id='parameter') %>%
-  select(parameter,sp, wood_density, median) %>%
-  spread(parameter, median) %>%
-  merge(data, by.all=sp) %>%
-  merge(census_error, by.all=censusid) %>%
-  mutate(wd_effects = wd_effects) %>%
-  ungroup() %>%
-  mutate(prob_death_all = 1-exp(-census_interval * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma * (rho/0.6)^wd_effects)*census_err),
-         prob_death_spp = 1-exp(-census_interval * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma)),
-         prob_death_rho = 1-exp(-census_interval * (mean(alpha) * exp(-mean(beta) * (true_dbh_dt - 0.172)) + mean(gamma) * (rho/0.6)^wd_effects)),
-         prob_death_cen = 1-exp(-census_interval * (mean(alpha) * exp(-mean(beta) * (true_dbh_dt - 0.172)) + mean(gamma)*census_err))) %>%
-  summarise(
-    spp_rho_census = sum((prob_death_all - mean(prob_death_all))^2),
-    spp = sum((prob_death_spp - mean(prob_death_spp))^2),
-    wood_density = sum((prob_death_rho - mean(prob_death_rho))^2),
-    census = sum((prob_death_cen - mean(prob_death_cen))^2)) %>%
-      mutate(total_sum_sq = sum(unexplained, spp, wood_density, census)) %>%
-  gather(level, sum_res_sq, -total_sum_sq) %>%
-  mutate(proportions = sum_res_sq/total_sum_sq)
+sum_squares <- function(x) {
+  sum((x-mean(x))^2)
 }
 
+out <- plyr::ldply(spp_effects, .id='parameter') %>%
+  select(parameter,sp, wood_density, mn) %>%
+  spread(parameter, mn) %>%
+  merge(data, by.all=sp) %>%
+  merge(census_error, by.all=censusid) %>%
+  mutate(wd_effects = wd_effects,
+        gamma_re = gamma/((rho/0.6)^wd_effects)
+        ) %>%
+  merge(mu_effects) %>%
+  ungroup() %>%
+  mutate(full_model = 1-exp(-1 * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma)*census_err),
+         full_m_cens = 1-exp(-1 * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma)*1),
+         full_m_rho = 1-exp(-1 * (alpha * exp(-beta * (true_dbh_dt - 0.172)) + gamma_re)*census_err),
+         full_m_spp = 1-exp(-1 * (median(alpha) * exp(-median(beta) * (true_dbh_dt - 0.172)) + median(gamma))*census_err),
+         full_m_growth =1-exp(-1 * (alpha * exp(-beta * (median(true_dbh_dt) - 0.172)) + gamma)*census_err), 
+         full_m_sppre_cens = 1-exp(-1 * (median(alpha) * exp(-median(beta) * (true_dbh_dt - 0.172)) + median(gamma_re)*(rho/0.6)^wd_effects) *1),
+         w_growth = 1-exp(-1 * (median(alpha) * exp(-median(beta) * (true_dbh_dt - 0.172)) + median(gamma)) *1),
+         w_cens = 1-exp(-1 * (median(alpha) * exp(-median(beta) * (median(true_dbh_dt) - 0.172)) + median(gamma)) *census_err),
+         w_rho =  1-exp(-1 * (median(alpha) * exp(-median(beta) * (median(true_dbh_dt) - 0.172)) + median(gamma_re)*(rho/0.6)^wd_effects) *1),
+         w_spp =  1-exp(-1 * (alpha * exp(-beta * (median(true_dbh_dt) - 0.172)) + gamma)*1),
+         w_growth_indep = 1-exp(-1 * (gamma)*1),
+         w_growth_dep = 1-exp(-1 * (alpha * exp(-beta * (true_dbh_dt - 0.172)))*1),
+         w_growth_rho =  1-exp(-1 * (median(alpha) * exp(-median(beta) * (true_dbh_dt - 0.172)) + median(gamma_re)*(rho/0.6)^wd_effects) *1)) %>%
+  select(full_model, full_m_cens, full_m_rho, full_m_spp, full_m_growth, full_m_sppre_cens, w_growth, w_cens, w_rho, w_spp, w_growth_dep,  w_growth_indep, w_growth_rho)  %>%
+  summarise_each(funs(sum_squares))
 
+out[1,]/ out[1,1]*100
 
-
-
-
+}
