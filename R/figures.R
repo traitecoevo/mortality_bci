@@ -67,7 +67,7 @@ plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve
       scale_y_continuous(expand=c(0,0), limits = c(0, NA)) +
       ylab("Annual mortality probability") +
       xlab("Annual dbh growth (cm)") +
-      scale_colour_gradient("wood density",low="blue", high="red") +
+      scale_colour_gradient(expression("wood density"~("g/cm"^3)),low="blue", high="red") +
       partial_plot_theme(legend.position="right")
   }
   else {
@@ -77,7 +77,7 @@ plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve
       scale_y_continuous(expand=c(0,0), limits = c(0, NA)) +
       ylab("Instantaneous mortality rate") +
       xlab("Annual dbh growth (cm)") +
-      scale_colour_gradient("wood density",low="blue", high="red") +
+      scale_colour_gradient(expression("wood density"~(g/cm^3)),low="blue", high="red") +
       partial_plot_theme(legend.position="right")
   }
 }
@@ -279,7 +279,7 @@ ggplot(spp, aes(x = wood_density,y = mean)) +
       partial_plot_theme() +
       scale_y_log10(breaks= breaks, labels = labels) +
      ylab("Instantaneous mortality rate") +
-     xlab("Wood density")
+     xlab(expression("wood density"~("g/cm"^3)))
 }
 
 plot_fig4 <- function(model, data) {
@@ -287,10 +287,10 @@ plot_fig4 <- function(model, data) {
     ggtitle('High/Low wood density') + 
     theme(title = element_text(size=6))
   p2 <- plot_spp_curves(model, data, hazard_curve = TRUE) +
-    partial_plot_theme(legend.position= c(0.8,0.65)) + 
+    partial_plot_theme(legend.position= c(0.8,0.5)) + 
     ggtitle('Species mortality curves') + 
     theme(title = element_text(size=6)) + 
-    theme(legend.key.size =unit(0.4, "cm"))
+    theme(legend.key.size =unit(0.4, "cm"), legend.title=element_text(size=5))
   p3 <- plot_mu_curves(model, hazard_curve= FALSE)
   p4 <- plot_spp_curves(model, data, hazard_curve = FALSE) + partial_plot_theme()
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
