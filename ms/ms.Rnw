@@ -115,7 +115,7 @@ Using 10-fold cross validation our first aim was to determine which model form (
 
 \begin{figure}[ht]
 \includegraphics{figures/fig2.pdf}
-\caption{Average logarithmic loss from 10-fold cross validation. A) Comparing various functional forms of tropical tree mortality with different growth measures different (white = no growth, grey = basal area growth, black = DBH growth) and species effects. B) Comparing model forms with various combinations of wood density effects.}
+\caption{Average logarithmic loss (lower = higher accuracy). A) Four sequential stages of model selection. Null model: shows the expected logloss for the null model with no census effect; because mortality varied substantially between censuses it was included on all subsequent models; Functional form: comparison between baseline hazard model ($\gamma c$; circle), growth\textendash dependent hazard model ($(\alpha e^{\beta X_{i}}) c$; triangle) and model incorporating both baseline and growth\textendash dependent hazards ($(\alpha e^{\beta X_{i}} + \gamma) c$; square); Wood density: Most parsimonious effect of wood density; Species effects: Model with species random effects on all parameters \textendash indicating the total gain in predictive capacity if accounting for all species variability. B) Wood density effects on all parameter combinations in the model that incorporates both baseline and growth-dependent hazards. Colors represent growth measure used: white = no growth measure, grey = basal area growth, black = dbh growth. Errors are $\pm$ 95\% BCI.}
 \label{fig2}
 \end{figure}
 
@@ -124,7 +124,7 @@ Using the model with both baseline and growth-dependent hazards coupled with DBH
 
 \begin{figure}[ht]
 \includegraphics{figures/fig3.pdf}
-\caption{Estimated log baseline mortality against wood density. Points are individual species and solid line is the mean trend line. All errors are $\pm$ 95\% BCI.}
+\caption{Estimated relationship between wood density and baseline mortality rate. Points are species estimates and solid line is the mean species trendline. All errors are $\pm$ 95\% BCI.}
 \label{fig3}
 \end{figure}
 
@@ -133,7 +133,7 @@ Once determining that the most predictive model was one that accounted for both 
 
 \begin{figure}[ht]
 \includegraphics{figures/fig4.pdf}[ht]
-\caption{Estimated curves of instantaneous mortality rate and annual mortality probability. A,C) Highlight expected response curves for a hypothetical median species at low (0.3) and high (0.8) wood density. B,D) Predicted response curves for all species. Errors are $\pm$ 95\% BCI.}
+\caption{Predicted instantaneous mortality rates its derivative annual mortality probability. A,C) Effect of high (0.8) and low (0.3) wood density on growth-mortality relationship. B,D) Predicted growth\textendash mortality response curves for each species. Errors are $\pm$ 95\% BCI.}
 \label{fig4}
 \end{figure}
 
