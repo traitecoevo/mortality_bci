@@ -155,6 +155,7 @@ run_single_stan_chain <- function(model, data, chain_id, iter=4000,
        pars = model$pars,
        iter = iter,
        chains=1,
+       seed = 12345,
        chain_id=chain_id,
        control =list(stepsize=0.1, adapt_delta=0.99, max_treedepth=15))
 }
