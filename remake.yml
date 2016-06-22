@@ -1,4 +1,5 @@
 packages:
+  - readr
   - RCurl
   - downloader
   - rmarkdown
@@ -57,6 +58,11 @@ targets:
     command: BCI_download_50ha_plot_full(target_name)
     cleanup_level: never
     check: exists
+    
+  downloads/bci.full_canopy_Aug2012.zip:
+    command: BCI_download_canopy_data_full(target_name)
+    cleanup_level: never
+    check: exists
 
   #------------- Load data  -------------------------------
   
@@ -74,6 +80,10 @@ targets:
     
   BCI_dbh_error_data:
     command: BCI_load_dbh_error_data("data/dbh_error_data.rdata")
+    cleanup_level: purge
+    
+  BCI_canopy:
+    command: BCI_load_canopy("downloads/bci.full_canopy_Aug2012.zip")
     cleanup_level: purge
   
   #------------- Process data  ----------------------------
