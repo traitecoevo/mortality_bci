@@ -19,6 +19,11 @@ BCI_download_50ha_plot_full<- function(dest) {
   download(url, dest, mode="wb")
 }
 
+BCI_download_canopy_data_full<- function(dest) {
+  url <-"https://repository.si.edu/bitstream/handle/10088/21929/Canopy_Ascii.zip"
+  download(url, dest, mode="wb")
+}
+
 #Load 50ha census data
 BCI_load_50ha_plot <- function(path_to_zip) {
 
@@ -55,6 +60,32 @@ data$dbh1 <- data$dbh1/10 # convert mm to cm
 data$dbh2 <- data$dbh2/10 # convert mm to cm 
 data$discrep <- data$dbh1 - data$dbh2
 data
+}
+
+#Load 50ha canopy data
+BCI_load_canopy <- function(path_to_zip) {
+  
+  tmp <- tempfile()
+  unzip(path_to_zip, exdir=tmp)
+  on.exit(unlink(tmp, recursive=TRUE))
+  
+  files <- list.files(tmp, pattern=".csv", full.names=TRUE)
+  tbl_df(lapply(list.files(tmp, pattern=".csv", full.names=TRUE), function(x)
+    read_tsv(x, col_types=cols_only(
+      x = "d",
+      y = "d",
+      ht0_2 = "d",
+      ht0_1 = "d",
+      ht1_2 = "d",
+      ht2_5 = "d",
+      ht5_10 = "d",
+      ht10_20 = "d",
+      ht20_30 = "d",
+      ht30_ = "d")) %>% 
+      mutate_(year = gsub('^.*_|\\D', '', basename(x))) %>%
+      mutate_each(funs(replace(.,.==100,1)), -x,-y,-year)) %>%
+      rbind_all) %>%
+    select(x,y,year,ht0_1,ht0_2,ht1_2,ht2_5,ht5_10,ht10_20,ht20_30,ht30_)
 }
 
 #Look up family
@@ -117,7 +148,7 @@ BCI_clean <- function(BCI_data, spp_table) {
 
   data <- BCI_data %>%
     arrange(sp, treeid, exactdate) %>%
-    select(sp, species, family, treeid, nostems, census, exactdate, dfstatus, pom, dbh) %>%
+    select(gx,gy,sp, species, family, treeid, nostems, census, exactdate, dfstatus, pom, dbh) %>%
     filter(
       # Remove stems from earlier census, measured with course resolution
       # First measurement in 1990 ='1990-02-06'
@@ -173,7 +204,7 @@ BCI_clean <- function(BCI_data, spp_table) {
     # ensures at least 1 individual is in the heldout dataset
     filter(n_ind >=10) %>%
     ungroup() %>%
-    select(sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
+    select(gx,gy,sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
            dbh_prev,dbh,dead_next_census)
 
   }
@@ -195,7 +226,7 @@ reduce_to_single_ind_obs <- function(data) {
       filter(keep) %>%
       select(-keep) %>%
       ungroup() %>%
-    select(sp, sp_id, censusid, dead_next_census,
+    select(gx, gy,sp, sp_id, censusid, dead_next_census,
            census_interval, rho, dbh_prev, dbh)
 }
 
