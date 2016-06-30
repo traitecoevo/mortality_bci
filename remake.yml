@@ -33,6 +33,10 @@ plot_options:
   single_col_rectangle:
     width: 3.46
     height: 2.5
+    
+  single_col_square:
+    width: 3.46
+    height: 3.46
 
 targets:
   all:
@@ -264,13 +268,9 @@ targets:
       res: 300
     cleanup_level: tidy
     
-  ms/figures/supp_fig2.png:
+  ms/figures/supp_fig2.pdf:
     command: plot_recruits_gapindex(gap_index_raster, recruit_gap_conditions)
-    plot:
-      width: 3.46
-      height: 3.46
-      units: "in"
-      res: 300
+    plot: single_col_square
     cleanup_level: tidy
     
   
@@ -299,4 +299,4 @@ targets:
       - ms/figures/fig5.pdf
       - ms/figures/fig6.pdf
       - ms/figures/supp_fig1.png
-      - ms/figures/supp_fig2.png
+      - ms/figures/supp_fig2.pdf
