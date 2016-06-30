@@ -244,7 +244,7 @@ make_stan_model <- function(chunks) {
   )
 }
 
-# Precompiles model for clustereous
+# Precompiles model
 precompile <- function(task) {
   path <- precompile_model_path()
   model <- task$model
@@ -303,7 +303,7 @@ precompile <- function(task) {
   filename_rds
 }
 
-#THIS ISN'T ELEGANT BUT IT WORKS
+# PRECOMPILE ALL CROSS VALIDATION MODELS
 precompile_crossval_models <- function() {
   # Null model
   stage1 <- tasks_2_run(comparison = 'null_model',iter = 10)
