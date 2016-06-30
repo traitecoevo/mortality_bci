@@ -3,6 +3,11 @@ packages:
   - RCurl
   - downloader
   - rmarkdown
+  - sp
+  - viridisLite
+  - raster
+  - rasterVis
+  - latticeExtra
   - dplyr
   - tidyr
   - rstan
@@ -20,12 +25,12 @@ plot_options:
     width: 6.6
     height: 3
 
-  single_col_rectangle:
+  single_col_portrait:
     width: 3.46
     height: 4.5
     onefile: FALSE
     
-  single_col_square:
+  single_col_rectangle:
     width: 3.46
     height: 2.5
 
@@ -47,6 +52,8 @@ targets:
       - final_model_diagnostics
       - final_spp_re_model
       - final_spp_re_model_diagnostics
+      - predicted_mu_basehaz_by_rho
+      - spp_params_and_covs
       
   #------------- download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -179,22 +186,43 @@ targets:
     command: model_diagnostics(I("final_base_growth_hazard_re"))
     cleanup_level: tidy
 
-  #------------- Figures ---------------------------
-  ms/figures/supp_fig1.png:
-    command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
-    plot:
-      width: 3.46
-      height: 6
-      units: "in"
-      res: 300
+  spp_params:
+    command: summarise_spp_params(final_model, BCI_training_full)
+    cleanup_level: tidy
+
+  predicted_mu_basehaz_by_rho:
+    command: predict_mu_baseline_hazard_by_rho(final_model, BCI_training_full)
     cleanup_level: tidy
     
+  param_variance_explained:
+    command: get_param_variance_explained(final_model, BCI_training_full)
+    cleanup_level: tidy
+
+  #------------- Other covariates -------------------
+  recruits:
+    command: recruits_8595(BCI_50haplot)
+    cleanup_level: tidy
+  
+  gap_index_raster:
+    command: get_gap_index_raster(BCI_canopy)
+    cleanup_level: tidy
+  
+  recruit_gap_conditions:
+    command: get_recruit_gap_conditions(recruits, gap_index_raster)
+    cleanup_level: tidy
+  
+  #------ Merging fitted species params with covariates -------
+  spp_params_and_covs:
+    command: merge_spp_params_covs(spp_params, recruit_gap_conditions, BCI_50haplot)
+    cleanup_level: tidy
+
+  #------------- Figures ---------------------------
   ms/figures/fig1_tree.png:
     download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png
 
   ms/figures/fig1.pdf:
     command: plot_fig1("ms/figures/fig1_tree.png", "ms/dead_tree.png", "ms/Fig1c.png")
-    plot: single_col_rectangle
+    plot: single_col_portrait
     cleanup_level: tidy
     packages:
       - png
@@ -204,18 +232,48 @@ targets:
     
   ms/figures/fig2.pdf:
     command: plot_fig2(logloss_summaries)
-    plot: single_col_rectangle
+    plot: single_col_portrait
     cleanup_level: tidy
     
   ms/figures/fig3.pdf:
-    command: plot_fig3(final_model, BCI_training_full)
-    plot: single_col_square
+    command: plot_fig3(spp_params_and_covs, predicted_mu_basehaz_by_rho)
+    plot: single_col_rectangle
     cleanup_level: tidy
 
   ms/figures/fig4.pdf:
     command: plot_fig4(final_model, BCI_training_full)
-    plot: single_col_rectangle
+    plot: single_col_portrait
     cleanup_level: tidy
+    
+  ms/figures/fig5.pdf:
+    command: plot_fig5(param_variance_explained)
+    plot: single_col_portrait
+    cleanup_level: tidy
+    
+  ms/figures/fig6.pdf:
+    command: plot_fig6(spp_params_and_covs)
+    plot: single_col_portrait
+    cleanup_level: tidy
+    
+  ms/figures/supp_fig1.png:
+    command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
+    plot:
+      width: 3.46
+      height: 6
+      units: "in"
+      res: 300
+    cleanup_level: tidy
+    
+  ms/figures/supp_fig2.png:
+    command: plot_recruits_gapindex(gap_index_raster, recruit_gap_conditions)
+    plot:
+      width: 3.46
+      height: 3.46
+      units: "in"
+      res: 300
+    cleanup_level: tidy
+    
+  
   #------------- Manuscript ---------------------------
 
   ms/ms.tex:
@@ -238,4 +296,7 @@ targets:
       - ms/figures/fig2.pdf
       - ms/figures/fig3.pdf
       - ms/figures/fig4.pdf
+      - ms/figures/fig5.pdf
+      - ms/figures/fig6.pdf
       - ms/figures/supp_fig1.png
+      - ms/figures/supp_fig2.png
