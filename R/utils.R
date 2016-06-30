@@ -1,80 +1,67 @@
-create_dirs <- function(dirs) {
-  for (d in dirs) {
-    dir.create(d, FALSE, TRUE)
+
+
+#loads an RData file, and returns it
+load_rdata <- function(file) {
+  v <- load(file)
+  get(v)
+}
+
+## Really ugly working around something I've not worked out how to do
+## in remake (1 function -> n file outputs)
+export_data <- function(data, filename) {
+  filename_fmt <- sub("\\.rds$", "_%s.rds", filename)
+  filename_sub <- sprintf(filename_fmt, seq_along(data))
+  for (i in seq_along(data)) {
+    saveRDS(data[[i]], filename_sub[[i]])
   }
 }
 
-to.png <- function(expr, filename, ...) {
-  png(filename, ...)
-  on.exit(dev.off())
-  eval.parent(substitute(expr))
-}
-
-pandoc_build <- function(file){
-  args <- list('--template=data/include.tex', '--latex-engine=xelatex')
-  pandoc_convert(file, output= paste0(tools::file_path_sans_ext(file), ".pdf"), citeproc = TRUE, options = args, verbose = TRUE, wd = ".")
-}
-
-get_amnat_csl <- function(dest, url="https://raw.githubusercontent.com/citation-style-language/styles/master/the-american-naturalist.csl"){
-	cat(getURL(url), file=dest)
-}
-# define accessoryfunctions
-inv_cloglog <- function(x) {1 - exp(-exp(x))}
-
-bernoulli_log <- function(y, p) {
-  dbinom(y, size=1, p, log = TRUE)
-}
-
-inv_cloglog <- function(x) {1 - exp(-exp(x))}
-
-bernoulli_log <- function(y, p) {
-  dbinom(y, size=1, p, log = TRUE)
-}
-
-to_df <- function(x) {
-	d <- as.list(x)
-  names(d) <- paste0("X", seq_along(d))
-  attr(d, "row.names") <- "1"
-  class(d) <- "data.frame"
-  d
-}
-
-# An extension of capture.output function, allows you to run and
-# log both output and results to file
-capture_output2 <- function(..., name, divert_messages=!interactive()) {
-
-  filename <- sprintf("%s.rds", name)
-  logfile <- sprintf("%s.txt", name)
-
-  dir.create(dirname(name), showWarnings=FALSE, recursive=TRUE)
-
-  if (divert_messages) {
-    message("Diverting messages to ", logfile)
-    con <- file(logfile, open="wt")
-    sink(con, type="message") # Dangerous!
-    sink(con, type="output")
-    on.exit(sink(NULL, type="message"))
-    on.exit(sink(NULL, type="output"), add=TRUE)
-  }
-  message("--- Starting at ", Sys.time())
-
-  # This next section adapated from capture.output
-  # Evaluate all expressions in parent frame
-  # NB only last one is returned
-  args <- substitute(list(...))[-1L]
-  for (i in seq_along(args)) {
-      expr <- args[[i]]
-      tmp <- eval(expr,   envir = parent.frame())
-  }
-
-  saveRDS(tmp, filename)
-  message("--- Finishing at ", Sys.time())
-  filename
-}
-
-str_eval <- function(x) {eval(parse(text=x))}
-
+# Convert df to list
 df_to_list <- function(x) {
   attr(x, "out.attrs") <- NULL # expand.grid leaves this behind.
   unname(lapply(split(x, seq_len(nrow(x))), as.list))
+}
+
+# Drop last observation
+drop_last <- function(x) {
+  if(length(x) > 0)
+    x[seq_len(length(x)-1)]
+  else
+    NULL
+}
+
+# Calculate logloss
+logloss = function(actual, predicted, eps = 1e-15) {
+  predicted = pmin(pmax(predicted, eps), 1-eps)
+  - (actual * log(predicted) + (1 - actual) * log(1 - predicted))
+}
+# Sum of squares
+sum_squares <- function(x) {
+  sum((x-mean(x))^2)
+}
+
+# position label at a fractional x/y position on a plot
+label <- function(px, py, lab, ..., adj = c(0, 1)) {
+  usr <- par("usr")
+  x <- usr[1] + px * (usr[2] - usr[1])
+  y <- usr[3] + py * (usr[4] - usr[3])
+  
+  if (par("ylog"))
+    y <- 10^y
+  if (par("xlog"))
+    x <- 10^x
+  
+  text(x, y, lab, adj = adj, xpd=NA, ...)
+}
+
+# Plot theme
+partial_plot_theme <- function(legend.position = "none", strips = FALSE,...) {
+  sb <- if(strips==TRUE) element_rect(fill='lightgrey') else element_blank()
+  st <- if(strips==TRUE) element_text() else element_blank()
+  theme_classic(base_size = 7) + theme(strip.text = st,
+                                       strip.background = sb,
+                                       legend.position = legend.position,
+                                       axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+                                       axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+                                       plot.margin = unit(c(3,3,3,3), "mm"))
 }
