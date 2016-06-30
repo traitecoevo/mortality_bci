@@ -1,28 +1,3 @@
-# position label at a fractional x/y position on a plot
-label <- function(px, py, lab, ..., adj = c(0, 1)) {
-  usr <- par("usr")
-  x <- usr[1] + px * (usr[2] - usr[1])
-  y <- usr[3] + py * (usr[4] - usr[3])
-
-  if (par("ylog"))
-    y <- 10^y
-  if (par("xlog"))
-    x <- 10^x
-
-  text(x, y, lab, adj = adj, xpd=NA, ...)
-}
-
-# Plot theme
-partial_plot_theme <- function(legend.position = "none", strips = FALSE,...) {
-  sb <- if(strips==TRUE) element_rect(fill='lightgrey') else element_blank()
-  st <- if(strips==TRUE) element_text() else element_blank()
-  theme_classic(base_size = 7) + theme(strip.text = st,
-                                       strip.background = sb,
-                                       legend.position = legend.position,
-                                       axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-                                       axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
-                                       plot.margin = unit(c(3,3,3,3), "mm"))
-}
 # Plot observed vs predicted true dbh and growth
 plot_obs_v_pred_growth <- function(data) {
   
@@ -60,6 +35,10 @@ plot_obs_v_pred_growth <- function(data) {
 # Plot species predicted mortality v growth curves
 plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FALSE) {
   preds <- predict_spp_hazard(model, data, growth_range)
+  
+  breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
+  labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
+  
   if(hazard_curve ==FALSE) {
     ggplot(preds, aes(x = dbh_growth,y = annual_prob_mort, group = sp, colour = wood_density)) + 
       geom_line(alpha=0.4, size=0.3) +
@@ -68,41 +47,137 @@ plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve
       ylab("Annual mortality probability") +
       xlab("Annual dbh growth (cm)") +
       scale_colour_gradient(expression("wood density"~("g/cm"^3)),low="blue", high="red") +
-      partial_plot_theme(legend.position="right")
+      partial_plot_theme()
   }
   else {
     ggplot(preds, aes(x = dbh_growth,y = inst_hazard, group = sp, colour = wood_density)) + 
       geom_line(alpha=0.4, size=0.2) +
       scale_x_continuous(expand=c(0,0)) +
-      scale_y_continuous(expand=c(0,0), limits = c(0, NA)) +
+      scale_y_log10(breaks= breaks, labels = labels, limits=c(0.001,100)) +
       ylab("Instantaneous mortality rate") +
       xlab("Annual dbh growth (cm)") +
       scale_colour_gradient(expression("wood density"~(g/cm^3)),low="blue", high="red") +
-      partial_plot_theme(legend.position="right")
+      partial_plot_theme()
   }
 }
 
+# Plot average species curve
 plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = FALSE) {
   preds <- predict_mu_hazards(model,wood_density, growth_range, hazard_curve)
   
+  breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
+  labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
+  
+  p1 <- ggplot(preds, aes(x = dbh_growth,y = mean, group = type, colour = wood_density, fill=wood_density)) + 
+    geom_line(size=0.3) +
+    scale_color_gradient(name=expression("wood density"~(g/cm^3)),limits=c(0.197,NA),low='blue',high='red') +
+    geom_ribbon(aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.4, colour=NA) +
+    scale_fill_gradient(expression("wood density"~(g/cm^3)),limits=c(0.197,NA),low='blue',high='red') +
+    scale_x_continuous(expand=c(0,0)) +
+    xlab("Annual dbh growth (cm)")
+  
   if(hazard_curve ==FALSE) {
-    ylab <- "Annual mortality probability"
-    limits = c(0, 1)
+    p1 + ylab("Annual mortality probability") + 
+      scale_y_continuous(expand=c(0,0), limits=c(0,1)) + 
+      partial_plot_theme()
   }
   else {
-    ylab <- "Instantaneous mortality rate"
-    limits = c(0, NA)
+    p1 + ylab("Instantaneous mortality rate") + 
+      scale_y_log10(breaks= breaks, labels = labels, limits=c(0.001,100)) +
+      partial_plot_theme()
   }
-  ggplot(preds, aes(x = dbh_growth,y = mean, group = type, colour = wood_density, fill=wood_density)) + 
-    geom_line(size=0.3) +
-    scale_color_gradient(name  =expression("E"~(g/cm^3)),limits=c(0.197,NA),low='blue',high='red') +
-    geom_ribbon(aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.4, colour=NA) +
-    scale_fill_gradient(limits=c(0.2,NA),low='blue',high='red') +
-    scale_x_continuous(expand=c(0,0)) +
-    scale_y_continuous(expand=c(0,0), limits = limits) +
+}
+
+# Plot proportions of predicted variance explained by wood density, species and census
+plot_param_prop_explained <- function(param_prop_explained, ylab=NULL, xlab=NULL) {
+  dat <- filter(param_prop_explained, !model %in% c("baseline", "growth_dependent")) %>% droplevels()
+  ggplot(dat, aes(x=model, y=proportion)) +
+    geom_bar(stat='identity') +
+    scale_x_discrete(labels=c('species','census','wood density')) +
+    scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
     ylab(ylab) +
-    xlab("Annual dbh growth (cm)") +
+    xlab(xlab) +
+    partial_plot_theme() 
+}
+
+# Plot proportions of predicted variance explained by baseline and growth dependent hazards
+plot_base_v_growth_prop_explained <- function(param_prop_explained, ylab=NULL, xlab=NULL) {
+  dat <- filter(param_prop_explained, model %in% c("baseline", "growth_dependent")) %>% droplevels()
+  ggplot(dat, aes(x=model, y=proportion)) +
+    geom_bar(stat='identity') +
+    scale_x_discrete(labels=c('growth dependent hazard','baseline hazard')) +
+    scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
+    ylab(ylab) +
+    xlab(xlab) +
+    partial_plot_theme() 
+}
+
+# Plot log loss curve
+logloss_curve <- function() {
+  df <- data.frame(x = seq(0.001,1,length.out = 100))
+  logloss <- function(x, eps = 1e-15) {
+    predicted = pmin(pmax(x, eps), 1-eps)
+    - (1 * log(predicted) + (1 - 1) * log(1 - predicted))
+  }
+  ggplot(df, aes(x)) +
+    stat_function(fun = logloss) +
+    xlab("Predicted probability") +
+    ylab('Logarithmic loss') +
     partial_plot_theme()
+}
+
+# Map of plot gap index with recruits overlayed for 1985 to 1990 and 1990 to 1995
+plot_recruits_gapindex <- function(gap_index_raster, recruit_gap_conditions) {
+  #pdf(f <- tempfile(fileext = '.pdf'), 4.5, 4.5)
+  print(rasterVis::levelplot(raster::stack(gap_index_raster), 
+                       names.attr=paste("Recruits from", names(gap_index_raster)),
+                       layout=c(1, 2), 
+                       colorkey=list(height=0.6), 
+                       scales=list(alternating=FALSE, tck=c(0.5, 0.5), 
+                                   x=list(at=seq(0, 1000, 200)),
+                                   y=list(at=seq(0, 400, 100))),
+                       col.regions=viridisLite::viridis(100),
+                       at=seq(0,1,0.1), 
+                       par.settings = list(fontsize = list(text = 7), 
+                                           strip.background=list(col='white'),
+                                           strip.border=list(col='transparent'))) +
+          latticeExtra::layer(sp::sp.points(SpatialPoints(recruit_gap_conditions[[panel.number()]]), 
+                                        pch='.', col='black', alpha=0.4), 
+                              data=list(recruit_gap_conditions=recruit_gap_conditions)))
+  
+}
+
+# Plot other covariates by parameter
+plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_index", ylab =NULL, xlab = NULL) {
+  spp <- data[[focal_param]] %>%
+    select_('sp', covariate, 'mean', '`2.5%`','`97.5%`') %>%
+    filter(complete.cases(.))
+  
+  # Sets limit for beta in order to produce nice log axis
+  if (focal_param =='beta') {
+    ylim <- c(1,100)
+  } else {
+    ylim = NULL
+  }
+  
+  breaks <- c(0.001,0.01,0.1, 1, 10, 100)
+  labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
+  
+  p1 <- ggplot(spp, aes_string(x = covariate,y = "mean")) + 
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.1, shape= 16) +
+    geom_point(shape= 21, fill='red', size=0.6) +
+    geom_smooth(level=0.95, method='lm', size=0.5, alpha =0.7) +
+    partial_plot_theme() +
+    scale_y_log10(breaks= breaks, labels = labels, limits=ylim) +
+    ylab(ylab) +
+    xlab(xlab)
+  
+  if(covariate =="dbh_95") {
+    p1 + scale_x_log10(breaks= breaks, labels = labels)
+  }
+  else {
+    p1
+  }
 }
 
 # Manuscript figures
@@ -111,79 +186,79 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   growth_haz <- function(x) {
     1-exp(-0.15 * exp(-10 * x))
   }
-
+  
   base_growth_haz <- function(x) {
     1-exp(-(0.13 * exp(-10 * x) + 0.03))
   }
-
+  
   my_label <- function(text, x=-0.1) label(x, 1.3, text, cex=1.5)
-
+  
   layout(matrix(c(1,1,1,2,3,4,5,5,5), byrow=TRUE, ncol=3))
   par(mar=c(2,2,3,1), oma=c(1,1,1,1))
-
- # Tree growth diagram
-
+  
+  # Tree growth diagram
+  
   plot(1:2, type='n', ann=FALSE, axes=FALSE, xlim=c(-1,1), ylim=c(-1,1))
   my_label("A) Repeat census data")
-
+  
   # note we are only plotting to last viewport, but calls to other two needed to make figure work.
   vps <- baseViewports()
   pushViewport(vps$inner, vps$figure, vps$plot)
   fig.tree(tree1, tree2)
   popViewport(3)
-
+  
   # Example baseline hazard
   empty_plot <- function(){
     plot(NA, ylim = c(0,0.14),  xlim=c(0,1), xaxs='i', axes=FALSE, ann=FALSE)
     axis(1, at = c(-1, 2), labels=NA, lwd=1.5)
     axis(2, at = c(-1, 2),labels=NA, lwd=1.5)
   }
-
+  
   hazard_plot <- function(f, text){
     x <- seq(0,1,length.out = 50)
     empty_plot()
     lines(x, f(x), type='l', lwd=2, col="red")
     text(0.1, 0.12, text, cex=1.5, pos=4, xpd=NA)
   }
-
+  
   hazard_plot(function(x) 0*x +0.03, expression(gamma))
   my_label("B) Alternative mortality functions", x=-0.45)
   mtext("Mortality rate", 2, line=1, cex=0.75)
-
- # Example growth-dependent hazard
+  
+  # Example growth-dependent hazard
   hazard_plot(growth_haz, expression(alpha*"e"^{-beta~"X"}))
   mtext("Growth rate", 1, line =1, cex=0.75)
- # Example full baseline + growth-dependent hazard
+  # Example full baseline + growth-dependent hazard
   hazard_plot(base_growth_haz, expression(alpha*"e"^{-beta~"X"}+gamma))
-
+  
   plot(NA, xlim = c(0, 1), ylim= c(0, 1), ann = FALSE, axes=FALSE)
   my_label("C) 10-fold cross validation")
-
+  
   vps <- baseViewports()
   pushViewport(vps$inner, vps$figure, vps$plot)
-
+  
   img <- readPNG(panelc)
   grid.raster(img, unit(0.4, "npc"),  y = unit(0, "npc"),
               just=c("bottom"), height=unit(1, "npc"))
-
+  
   popViewport(3)
   text(1, 0.65,  expression(paste(bar("L"), "=")), cex=1.25, xpd=NA)
   text(1, 0.35,  expression(sum("L"[i])/10), cex=1.25, xpd=NA)
-
+  
 }
 
 fig.tree <- function(file_alive, file_dead) {
-
+  
   gp0 <- gpar(cex=0.8)
   gp2 <- gpar(lwd=2)
-
+  
   img_alive <- readPNG(file_alive)
   img_dead <- readPNG(file_dead)
-
+  
   grid.lines(x = c(0.1, 0.95), y = c(0.1, 0.1),
-              arrow = arrow(ends = "last", length=unit(0.1, "inches")),
-              gp=gpar(lwd=2))
-
+             arrow = arrow(ends = "last", length=unit(0.1, "inches")),
+             gp=gpar(lwd=2))
+  
   y0 <- 0.2
   x0 <- 0.2
   grid.raster(img_alive, unit(x0, "npc"),  y = unit(y0, "npc"),
@@ -192,7 +267,7 @@ fig.tree <- function(file_alive, file_dead) {
   grid.text(expression(paste(D[1])), x = x0 + 0.03 , y = y0+0.1, just="left", gp=gp0)
   grid.lines(x = c(x0, x0), y = c(0.05, 0.1), gp=gp2)
   grid.text(expression(paste(t[1])), x = x0, y = 0, just="top", gp=gp0)
-
+  
   x0 <- 0.5
   grid.raster(img_alive, unit(x0, "npc"),  y = unit(y0, "npc"),
               just=c("bottom"), height=unit(0.80, "npc"))
@@ -200,12 +275,12 @@ fig.tree <- function(file_alive, file_dead) {
   grid.text(expression(paste(D[2])), x = x0 + 0.03 , y = y0+0.1, just="left", gp=gp0)
   grid.lines(x = c(x0, x0), y = c(0.05, 0.1), gp=gp2)
   grid.text(expression(paste(t[2])), x = x0, y = 0, just="top", gp=gp0)
-
+  
   x0 <- 0.8
   grid.raster(img_dead, unit(x0, "npc"),  y = unit(y0, "npc"),
               just=c("bottom"), height=unit(0.80, "npc"))
   grid.text(expression(paste(S[3])),
-    x = x0 + 0.03 , y = y0+0.1, just="left", gp=gp0)
+            x = x0 + 0.03 , y = y0+0.1, just="left", gp=gp0)
   grid.lines(x = c(x0, x0), y = c(0.05, 0.1), gp=gp2)
   grid.text(expression(paste(t[3])), x = x0, y = 0, just="top", gp=gp0)
 }
@@ -233,8 +308,7 @@ plot_fig2a <- function(logloss_summaries) {
     facet_wrap(~comparison, scales='free_x', ncol=4, drop=TRUE) +
     partial_plot_theme(strips = TRUE) +
     theme(axis.text.x = element_text(angle=45, hjust = 1)) 
-  }
-
+}
 
 plot_fig2b <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
@@ -264,62 +338,53 @@ plot_fig2 <- function(logloss_summaries) {
 }
 
 # Plot gamma vs wood density with mean trend line
-plot_fig3 <- function(model, data) {
-spp <- summarise_spp_params(model, data)$gamma
-med <- predict_mu_baseline_hazard(model, data)
-
-breaks <- c(0.001,0.01,0.1, 1, 10)
-labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
-
-ggplot(spp, aes(x = wood_density,y = mean)) + 
-      geom_ribbon(data = med, aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.5, colour=NA) +
-      geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.25, shape= 16) +
-      geom_point(shape= 21, fill='red') +
-      geom_line(data = med, aes(x = wood_density, y= mean), col='lightgrey') +
-      partial_plot_theme() +
-      scale_y_log10(breaks= breaks, labels = labels) +
-     ylab("Instantaneous mortality rate") +
-     xlab(expression("wood density"~("g/cm"^3)))
+plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
+  spp <- spp_params_covs[["gamma"]]
+  
+  breaks <- c(0.001,0.01,0.1, 1, 10)
+  labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
+  
+  ggplot(spp, aes(x = wood_density,y = mean)) + 
+    geom_ribbon(data = pred_mu_basehaz, aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.5, colour=NA) +
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.25, shape= 16) +
+    geom_point(shape= 21, fill='red') +
+    geom_line(data = pred_mu_basehaz, aes(x = wood_density, y= mean), col='lightgrey') +
+    partial_plot_theme() +
+    scale_y_log10(breaks= breaks, labels = labels) +
+    ylab("Instantaneous baseline mortality rate") +
+    xlab(expression("wood density"~("g/cm"^3)))
 }
 
 plot_fig4 <- function(model, data) {
-  p1 <- plot_mu_curves(model, hazard_curve= TRUE) + 
-    ggtitle('High/Low wood density') + 
+  p1 <- plot_spp_curves(model, data, hazard_curve = FALSE) +
     theme(title = element_text(size=6))
-  p2 <- plot_spp_curves(model, data, hazard_curve = TRUE) +
-    partial_plot_theme(legend.position= c(0.8,0.5)) + 
-    ggtitle('Species mortality curves') + 
-    theme(title = element_text(size=6)) + 
-    theme(legend.key.size =unit(0.4, "cm"), legend.title=element_text(size=5))
-  p3 <- plot_mu_curves(model, hazard_curve= FALSE)
-  p4 <- plot_spp_curves(model, data, hazard_curve = FALSE) + partial_plot_theme()
+  
+  p2 <- plot_mu_curves(model, hazard_curve= FALSE) +
+    theme(legend.position= c(0.8,0.8),
+          legend.key.size =unit(0.3, "cm"), 
+          legend.title=element_text(size=4),
+          legend.text = element_text(size=4),
+          legend.title.align =0.75)
+  
+  p3 <- plot_spp_curves(model, data, hazard_curve = TRUE)
+  p4 <- plot_mu_curves(model, hazard_curve= TRUE)
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
 }
 
-# plot_fig2a <- function() {
-# df <- data.frame(
-#   x = seq(0,4,length.out = 100)
-# )
-# 
-# prob_mort <- function(x) {
-#   1-exp(-5 * (0.13 * exp(-10 * x) + 0.03))
-# }
-# 
-# ggplot(df, aes(x)) +
-#   stat_function(fun = prob_mort) +
-#   partial_plot_theme()
-#}
-
-logloss_curve <- function() {
-  df <- data.frame(x = seq(0.001,1,length.out = 100))
-  logloss <- function(x, eps = 1e-15) {
-    predicted = pmin(pmax(x, eps), 1-eps)
-    - (1 * log(predicted) + (1 - 1) * log(1 - predicted))
-  }
-  ggplot(df, aes(x)) +
-    stat_function(fun = logloss) +
-    xlab("Predicted probability") +
-    ylab('Logarithmic loss') +
-  partial_plot_theme()
+# Proportion of variance explained
+plot_fig5 <- function(param_prop_explained) {
+  p1 <- plot_param_prop_explained(param_prop_explained, ylab="Proportion of variation explained")
+  p2 <- plot_base_v_growth_prop_explained(param_prop_explained, ylab="Proportion of variation explained")
+  plot_grid(p1,p2, ncol=1, labels=LETTERS[1:2], label_size = 7)
 }
 
+# params vs other covariates
+plot_fig6 <- function(data) {
+p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression(alpha), xlab ='Gap index') + ggtitle('Shade intolerance') 
+p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = expression(alpha), xlab =expression('DBH'['max'])) + ggtitle('Maximum size') 
+p3 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression(beta), xlab ='Gap index')
+p4 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = expression(beta), xlab =expression('DBH'['max']))
+p5 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression(gamma), xlab ='Gap index')
+p6 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = expression(gamma), xlab = expression('DBH'['max']))
+plot_grid(p1,p2,p3,p4,p5,p6, ncol=2, labels=LETTERS[1:6], label_size = 7)
+}
