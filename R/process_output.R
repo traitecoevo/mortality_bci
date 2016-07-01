@@ -340,9 +340,9 @@ get_param_variance_explained <- function(model, data) {
            full_minus_baseline =  1-exp(-1 * (alpha * exp(-beta * true_dbh_dt_c))*census_err)) %>%
     select(full_model, census = full_minus_census, wood_density = full_minus_rho, species = full_minus_spp, growth_dependent = full_minus_growthdep, baseline = full_minus_baseline)  %>%
     summarise_each(funs(sum_squares)) %>%
-    tidyr::gather(model,SS, - full_model) %>%
+    tidyr::gather(param,SS, - full_model) %>%
     mutate(proportion = 1- (SS/full_model),
-           model = factor(model, levels=c("species","census","wood_density","growth_dependent","baseline")))
+           param = factor(param, levels=c("species","census","wood_density","growth_dependent","baseline")))
 }
 
 # Merge estimated model parameters with other covariates
