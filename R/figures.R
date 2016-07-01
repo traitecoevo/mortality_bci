@@ -2,34 +2,42 @@
 plot_obs_v_pred_growth <- function(data) {
   
   p1 <- ggplot(data = data,  aes(x = dbh_prev, y = true_dbh1)) + 
-    geom_point(alpha = 0.4) +
-    geom_abline(intercept = 0, slope = 1) +
-    ylab('Estimated true dbh at t-1 (cm)') + 
-    xlab('Observed dbh at t-1 (cm)') +
+    geom_point(alpha = 0.4, size= 0.2) +
+    geom_abline(intercept = 0, slope = 1,col='red', size= 0.2) +
+    scale_x_continuous(expand=c(0,0), limit=c(NA, 160)) +
+    scale_y_continuous(expand=c(0,0), limit=c(0, 160)) +
+    ylab(expression(widehat("DBH"["t1"])~(cm))) + 
+    xlab("DBH"["t1"]~("cm")) +
     partial_plot_theme()
   
   p2 <- ggplot(data = data,  aes(x = dbh, y = true_dbh2)) + 
-    geom_point(alpha = 0.4) +
-    geom_abline(intercept = 0, slope = 1) +
-    ylab('Estimated true dbh at t (cm)') + 
-    xlab('Observed dbh at t (cm)') +
+    geom_point(alpha = 0.4,size= 0.2) +
+    geom_abline(intercept = 0, slope = 1,col='red', size= 0.2) +
+    scale_x_continuous(expand=c(0,0), limit=c(NA, 160)) +
+    scale_y_continuous(expand=c(0,0), limit=c(0, 160)) +
+    ylab(expression(widehat("DBH"["t2"])~(cm))) + 
+    xlab("DBH"["t2"]~("cm")) +
     partial_plot_theme()
   
   p3 <- ggplot(data = data,  aes(x = obs_dbh_dt, y = true_dbh_dt)) + 
-    geom_point(alpha = 0.4) +
-    geom_abline(intercept = 0, slope = 1) +
-    ylab('Estimated true annual dbh growth (cm)') + 
-    xlab('Observed annual dbh growth (cm)') +
+    geom_point(alpha = 0.4, size= 0.2) +
+    geom_abline(intercept = 0, slope = 1, col='red', size= 0.2) +
+    scale_x_continuous(expand=c(0,0), limit=c(NA, 5)) +
+    scale_y_continuous(expand=c(0,0), limit=c(0, 5)) +
+    ylab(expression(widehat("DBH growth")~(cm/yr))) + 
+    xlab('DBH growth (cm/yr)') +
     partial_plot_theme()
   
   p4 <- ggplot(data = data,  aes(x = obs_basal_area_dt, y = true_basal_area_dt)) + 
-    geom_point(alpha = 0.4) +
-    geom_abline(intercept = 0, slope = 1) +
-    ylab('Estimated true annual basal area growth (cm)') + 
-    xlab('Observed annual basal area growth (cm)') +
+    geom_point(alpha = 0.4, size= 0.2) +
+    geom_abline(intercept = 0, slope = 1, col='red', size= 0.2) +
+    scale_x_continuous(expand=c(0,0), limit=c(NA, 300)) +
+    scale_y_continuous(expand=c(0,0), limit=c(0, 300)) +
+    ylab(expression(widehat("Basal area growth")~(cm^2/yr))) + 
+    xlab(expression("Basal area growth"~(cm^2/yr))) +
     partial_plot_theme()
   
-  plot_grid(p1, p3, p2, p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
+  plot_grid(p1, p2, p3, p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
 }
 
 # Plot species predicted mortality v growth curves
@@ -90,21 +98,25 @@ plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,
 
 # Plot proportions of predicted variance explained by wood density, species and census
 plot_param_prop_explained <- function(param_prop_explained, ylab=NULL, xlab=NULL) {
-  dat <- filter(param_prop_explained, !model %in% c("baseline", "growth_dependent")) %>% droplevels()
-  ggplot(dat, aes(x=model, y=proportion)) +
-    geom_bar(stat='identity') +
-    scale_x_discrete(labels=c('species','census','wood density')) +
+  dat <- filter(param_prop_explained, !param %in% c("baseline", "growth_dependent")) %>% droplevels() %>%
+    mutate(param = factor(param, levels=c("wood_density","species","census")),
+           level = ifelse(param %in% c("wood_density","species"), "species","census"),
+           level = factor(level, levels=c("species","census")))
+  ggplot(dat, aes(x=level, y=proportion)) +
+    geom_bar(stat='identity', aes(fill=param)) +
+    scale_x_discrete(labels=c('species','census')) +
     scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
+    scale_fill_manual(values = c("wood_density" ="darkgrey","species" ="black", "census"="black")) + 
     ylab(ylab) +
     xlab(xlab) +
-    partial_plot_theme() 
+    partial_plot_theme(legend.position="none") 
 }
 
 # Plot proportions of predicted variance explained by baseline and growth dependent hazards
 plot_base_v_growth_prop_explained <- function(param_prop_explained, ylab=NULL, xlab=NULL) {
-  dat <- filter(param_prop_explained, model %in% c("baseline", "growth_dependent")) %>% droplevels()
-  ggplot(dat, aes(x=model, y=proportion)) +
-    geom_bar(stat='identity') +
+  dat <- filter(param_prop_explained, param %in% c("baseline", "growth_dependent")) %>% droplevels()
+  ggplot(dat, aes(x=param, y=proportion)) +
+    geom_bar(stat='identity', fill='black') +
     scale_x_discrete(labels=c('growth dependent hazard','baseline hazard')) +
     scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
     ylab(ylab) +
