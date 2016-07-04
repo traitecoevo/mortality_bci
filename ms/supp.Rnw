@@ -1,0 +1,125 @@
+\documentclass[9pt,twocolumn,twoside]{pnas-new}
+% Use the lineno option to display guide line numbers if required.
+% Note that the use of elements such as single-column equations
+% may affect the guide line number alignment. 
+
+\templatetype{pnasresearcharticle} % Choose template 
+% {pnasresearcharticle} = Template for a two-column research article
+% {pnasmathematics} = Template for a one-column mathematics article
+% {pnasinvited} = Template for a PNAS invited submission
+
+\title{Unifying intraspecific and interspecific variation in tropical tree mortality}
+
+% Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
+\author[a,1]{James S Camac}
+\author[a]{Mark Westoby} 
+\author[b]{S Joseph Wright}
+\author[a]{Daniel S Falster}
+
+% Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
+\affil[a]{Department of Biological Sciences, Macquarie University NSW 2109, Australia}
+\affil[b]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
+
+% Please give the surname of the lead author for the running footer
+\leadauthor{Camac} 
+
+% Please add here a significance statement to explain the relevance of your work
+\significancestatement{Add something significant here}
+
+% Please include corresponding author, author contribution and author declaration information
+\authorcontributions{J.C. designed and performed the analysis; D.F. conceived the idea, supervized the development of this work; S.J.W \& M.W. provided biological insight. All authors contributed to the writing of this manuscript.}
+
+\authordeclaration{The authors declare that they have no competing financial interests.}
+\correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: james.camac@gmail.com}
+
+% Keywords are not mandatory, but authors are strongly encouraged to provide them. If provided, please include two to five keywords, separated by the pipe symbol, e.g:
+\keywords{Tropical trees $|$ wood density $|$ growth $|$ mortality $|$ interspecific} 
+
+\begin{document}
+% Optional adjustment to line up main text (after abstract) of first page with line numbers, when using both lineno and twocolumn options.
+% You should only change this length when you've finalized the article contents.
+\verticaladjustment{-2pt}
+
+\maketitle
+\thispagestyle{firststyle}
+\ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
+
+\subsection*{Modelling true growth}
+
+We did this by first modelling the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma} (i.e. the observed measurement error):
+
+\begin{equation}\label{eq:true_growth_obs} 
+\begin{aligned}
+D_{i,1} &\sim \mathcal{N}(\widehat{D}_{i,1}, 0.75) \\
+D_{i,2} &\sim \mathcal{N}(\widehat{D}_{i,2}, 0.75)
+\end{aligned} 
+\end{equation}
+
+The initial diameter for each individual $i$, $\widehat{D}_{i,1}$, was sampled as a random realisation from a log-normal distribution:
+\begin{equation} \label{eq:true_dbh1}
+\widehat{D}_{i,1} \sim \log \mathcal{N}(\mu_{D_1}, \sigma_{D_1}),
+\end{equation}
+where $\mu_{D_1}$ is the expected mean of log initial diameter and $\sigma_{D_1}$ defines that variation around that mean. $\mu_{D_1}$ was estimated using a normal prior $\mathcal{N}(0, 2.5)$, which represents our prior expectation that the mean initial diameter would be greater than zero but less than 150 cm. $\sigma_{D_1}$ was estimated using a weakly informative half Cauchy prior centerd on zero and a scale parameter of 2.5.
+
+The final diameter measurement for each individual $i$, $D_{i,2}$ was estimated as:
+\begin{equation}\label{eq:true_dbh2}
+\widehat{D}_{i,2} = \widehat{D}_{i,1} + \Delta D_{i,2} \, (t_2-t_1),
+\end{equation}
+where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centerd on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm/yr.
+
+Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis.
+
+
+\subsection*{Mortality model}
+\subsection*{Model fitting}
+Our observations are for survival outcomes $S_{i, t_2\rightarrow t_3}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_2$ and $t_3$. We model these observations as random realizations from a Bernoulli distribution
+\begin{equation}
+S_{i,t_2\rightarrow t_3} \sim \textrm{Bernoulli}(p_{i,t_2\rightarrow t_3}),
+\end{equation}
+where $p_{i,t_2\rightarrow t_3}$ is the probability individual $i$ dies in the interval $t_2$--$t_3$ *(eq. \ref{eq:mortality_model}). As we only have a point estimate of $\lambda_i(t)$ at $t=t_2$, the cumulative hazard from  $t_2$--$t_3$ is approximated as
+\begin{equation}
+  \int_{t_2}^{t_3} \lambda_i(t) {\rm d}t \approx \lambda_i(t_2) (t_3-t_2).
+\end{equation}
+
+As we have multiple hypothesized functional forms of $\lambda_i$ (e.g. equations \ref{base_haz}\textendash\ref{add_haz}), we describe here the fitting procedure of our most complicated model, of which all others may be considered special cases. The instantaneous rate of mortality is
+\begin{equation}
+\lambda_i = \left(\overbrace{\alpha_{s[i]} \, \exp\left(-\beta_{s[i]} \, X_i \right)}^{\text{Growth dependent}} +
+\overbrace{\gamma_{s[i]}}^{\text{Growth independent}}\right) \times \overbrace{\delta_{t[i]}}^{\text{Census effect}}
+\end{equation}  
+In this model, $\alpha_s$, $\beta_s$ and $\gamma_s$ are allowed to vary by species as a function of both wood density (measured at species level) and a species random effects, e.g.
+\begin{equation}\label{eq:submodels}
+\alpha_s = \alpha_{0,s} \, \left(\frac{\rho}{\rho_c}\right)^{\alpha_{1}},
+\end{equation}
+with similar formulations for $\beta_s$ and $\gamma_s$. Here $\alpha_{1}$ captures the effect of wood density $\rho$ on $\alpha_s$, while $\alpha_{0,s}$ captures any other species-level residual error not explained by wood density for species $s$ within which individual $i$ belongs. The form of sub-model in eq. \ref{eq:submodels} ensures that parameters $\alpha_s$, $\beta_s$ and $\gamma_s$ remain positive. On a log scale this model equates to an additive linear model , e.g. $\log \alpha_s = \log \alpha_{0,s} + (\alpha_{1} - \log \rho_c) \, \log \rho$.
+
+We standardized wood density via the transformation: $\frac{\rho}{\rho_c}$, where $\rho_c=0.6$ g cm${^-3}$. This operation is equivalent to centering a log-transformed $\rho$ around $\rho_c$ and enables mean hyper-parameters  to be interpreted as the value for a species with average wood density of 0.6 cm${^-3}$. Similarly, we also centered $X_i$ at the lower 5\% quantile for both diameter increment and area growth (0.172 and 0.338, respectively), meaning $\alpha_s$ should be interpreted as the hazard rate when growth rate was very low.
+
+We modelled species random effects as random realisations from log-normal distributions:
+\begin{equation}
+\alpha_{0,s} \sim \log \mathcal{N}\left(\mu_{\log \alpha_0}, \sigma_{\log \alpha_0}\right),
+\end{equation}
+with similar formulations for $\beta_{0,s}$ and $\gamma_{0,s}$.
+
+All three mean hyperparameters, $\mu_{\log \alpha_0}$, the average log species residual error at zero growth, $\mu_{\log \beta_0}$, the average species error on the exponential decay rate, and $\mu_{\log \gamma_0}$, the average baseline log species residual error, were estimated using normal distributions centered on zero with a standard deviation of 2.5.
+\begin{equation}
+\mu_{\log \alpha_{0}},\mu_{\log \beta_0},\mu_{\log \gamma_0} \sim \mathcal{N}\left(0, 2.5\right).\\
+\end{equation}
+
+Standard deviations associated with species random effects (i.e. $\sigma_{a0}$, $\sigma_{b0}$, $\sigma_{c0}$), were estimated using positive half Cauchy priors centered on zero with a scale of 2.5.
+\begin{equation}
+\sigma_{a0},\sigma_{b0},\sigma_{c0} \sim \textrm{Cauchy+}\left(0, 2.5\right).\\
+\end{equation}
+
+For models that did not include species random effects, single intercepts were estimated for each parameter using log normal distributions centered on zero with standard deviations of 2.5.
+
+We estimated wood density effects (i.e. $\alpha_1$, $\beta_1$ and $\gamma_1$) using normal priors centered on zero and a standard deviation of 2.5:
+\begin{equation} \label{eq:rho_effects}
+\alpha_1, \beta_1, \gamma_1 \sim \mathcal{N}\left(0, 2.5\right).\\
+\end{equation}
+
+We accounted for possible variation in mortality rates across different census periods by allowing $\lambda_i$ to be scaled by $\delta_t$ for each census $t$. We estimated $\delta_t$ as a random realization from a log-normal distribution centered on zero and a variance parameter $\sigma_{\delta}$ defines the variation in census effects:
+
+\begin{equation} \label{eq:census_effect}
+\delta_t \sim \log \mathcal{N}\left(0, \sigma_{\delta}\right)\\
+\sigma_{\delta} \sim \textrm{Cauchy+}\left(0, 2.5\right).
+\end{equation}
