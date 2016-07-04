@@ -162,22 +162,6 @@ plot_recruits_gapindex <- function(gap_index_raster, recruit_gap_conditions) {
 }
 
 # Plot other covariates by parameter
-
-
-ggplotRegression <- function (fit) {
-
-require(ggplot2)
-
-ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
-  geom_point() +
-  stat_smooth(method = "lm", col = "red") +
-  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
-                     "Intercept =",signif(fit$coef[[1]],5 ),
-                     " Slope =",signif(fit$coef[[2]], 5),
-                     " P =",signif(summary(fit)$coef[2,4], 5)))
-}
-
-
 plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_index", ylab =NULL, xlab = NULL) {
   spp <- data[[focal_param]] %>%
     select_('sp', covariate, 'mean', '`2.5%`','`97.5%`') %>%
@@ -196,7 +180,7 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
   p1 <- ggplot(spp, aes_string(x = covariate,y = "mean")) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.1, shape= 16) +
     geom_point(shape= 21, fill='red', size=0.6) +
-    geom_smooth(level=0.95, method='lm', size=0.5, alpha =0.7) +
+    geom_smooth(method='lm', size=0.5, alpha =0.7, se=FALSE) +
     partial_plot_theme() +
     scale_y_log10(breaks= breaks, labels = labels, limits=ylim) +
     ylab(ylab) +
