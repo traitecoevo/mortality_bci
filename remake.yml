@@ -32,7 +32,7 @@ plot_options:
     
   single_col_rectangle:
     width: 3.46
-    height: 2.5
+    height: 2
     
   single_col_square:
     width: 3.46
