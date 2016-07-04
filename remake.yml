@@ -251,7 +251,7 @@ targets:
     
   ms/figures/fig5.pdf:
     command: plot_fig5(param_variance_explained)
-    plot: single_col_portrait
+    plot: single_col_rectangle
     cleanup_level: tidy
     
   ms/figures/fig6.pdf:
