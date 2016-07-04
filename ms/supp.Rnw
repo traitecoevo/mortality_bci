@@ -35,15 +35,22 @@
 % Keywords are not mandatory, but authors are strongly encouraged to provide them. If provided, please include two to five keywords, separated by the pipe symbol, e.g:
 \keywords{Tropical trees $|$ wood density $|$ growth $|$ mortality $|$ interspecific} 
 
+\dates{This manuscript was compiled on \today}
+\doi{\url{www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX}}
+
+
+<<preload, echo=FALSE>>=
+n_inds <- as.character(round(nrow(BCI_model_dataset_true_unique),-2))
+n_spp <- length(unique(BCI_model_dataset_true_unique$sp))
+proportion_negative <- round(nrow(subset(BCI_model_dataset_true_unique, obs_dbh_dt<0))/nrow(BCI_model_dataset_true_unique)*100)
+n_obs_errors <- nrow(BCI_dbh_error_data$discrep)
+obs_error_sigma <- round(sd(BCI_dbh_error_data$discrep),2)
+n_heldout <- as.character(nrow(BCI_training_sets[[1]]$heldout))
+
+@
+
 \begin{document}
-% Optional adjustment to line up main text (after abstract) of first page with line numbers, when using both lineno and twocolumn options.
-% You should only change this length when you've finalized the article contents.
-\verticaladjustment{-2pt}
-
-\maketitle
-\thispagestyle{firststyle}
-\ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
-
+\section*{Supplementary}
 \subsection*{Modelling true growth}
 
 We did this by first modelling the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma} (i.e. the observed measurement error):
@@ -71,7 +78,6 @@ Using this model we then used \texttt{rstan}'s \textit{optimizing} function to m
 
 
 \subsection*{Mortality model}
-\subsection*{Model fitting}
 Our observations are for survival outcomes $S_{i, t_2\rightarrow t_3}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_2$ and $t_3$. We model these observations as random realizations from a Bernoulli distribution
 \begin{equation}
 S_{i,t_2\rightarrow t_3} \sim \textrm{Bernoulli}(p_{i,t_2\rightarrow t_3}),
@@ -123,3 +129,5 @@ We accounted for possible variation in mortality rates across different census p
 \delta_t \sim \log \mathcal{N}\left(0, \sigma_{\delta}\right)\\
 \sigma_{\delta} \sim \textrm{Cauchy+}\left(0, 2.5\right).
 \end{equation}
+
+\end{document}
