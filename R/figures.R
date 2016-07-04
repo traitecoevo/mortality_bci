@@ -390,7 +390,7 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
 }
 
 plot_fig4 <- function(model, data) {
-  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE, xlab=NULL)
+  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE, xlab=NULL, ylab="Instantaneous mortality rate")
   p2 <- plot_mu_curves(model, hazard_curve= TRUE, ylab=NULL, xlab=NULL) +
     theme(legend.position= c(0.8,0.8),
           legend.key.size =unit(0.3, "cm"), 
@@ -398,7 +398,7 @@ plot_fig4 <- function(model, data) {
           legend.text = element_text(size=4),
           legend.title.align =0.75)
   
-  p3 <- plot_spp_curves(model, data, hazard_curve = FALSE, ylab="Instantaneous mortality rate")
+  p3 <- plot_spp_curves(model, data, hazard_curve = FALSE)
   p4 <- plot_mu_curves(model, hazard_curve= FALSE, ylab=NULL)
   
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
