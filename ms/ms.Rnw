@@ -135,7 +135,7 @@ Using the model with both baseline and growth-dependent hazards coupled with DBH
 Once determining that the most predictive model was one that accounted for both growth-dependent and baseline hazards, used DBH growth, and allowed $\gamma$ to vary by wood density, we then fitted two final models to the entire dataset. The first contained both species random effects on all parameters and wood density on the baseline hazard, $\gamma$. This allowed us to examine the range of species growth-mortality curves, the effect of wood density and how mortality varied over time. We also fitted a second model that only contained species random effects. This allowed us to determine which parameter varied most by species and what proportion of the baseline hazard species variability was explained by wood density. We found that baseline hazard rates were significantly lower for species with high wood density relative to those with low wood density (Fig. \ref{fig3}). That is, high wood density species had a lower probability of dying irrespective of growth rate. For example, our model predicts that on average a species with a wood density of 0.3 has a instantaneous mortality rate of XX, whereas a species with a wood density of 0.8 has a instantaneous mortality rate of XX, translating to an annual mortality rate of XX\% and XX\%, respectively. Furthermore, our model also revealed that instantaneous mortality rates varied over time. Specifically, mortality rates at BCI decreased over time with hazard rates being scaled by \Sexpr{census_effects(final_model,1)},\Sexpr{census_effects(final_model,2)} and \Sexpr{census_effects(final_model,3)} for census periods, 1995\textendash 2000, 2000\textendash 2005 and 2005\textendash 2010, respectively.
 
 \begin{figure}[ht]
-\includegraphics{figures/fig4.pdf}[ht]
+\includegraphics{figures/fig4.pdf}
 \caption{Predicted instantaneous mortality rates its derivative annual mortality probability. A,C) Effect of high (0.8) and low (0.3) wood density on growth-mortality relationship. B,D) Predicted growth\textendash mortality response curves for each species. Errors are $\pm$ 95\% BCI.}
 \label{fig4}
 \end{figure}
@@ -145,14 +145,14 @@ We found that the baseline hazard, $\gamma$, varied the most between species fol
 
 
 \begin{figure}[ht]
-\includegraphics{figures/fig5.pdf}[ht]
+\includegraphics{figures/fig5.pdf}
 \caption{Predicted instantaneous mortality rates its derivative annual mortality probability. A,C) Effect of high (0.8) and low (0.3) wood density on growth-mortality relationship. B,D) Predicted growth\textendash mortality response curves for each species. Errors are $\pm$ 95\% BCI.}
 \label{fig5}
 \end{figure}
 
 
 \begin{figure}[ht]
-\includegraphics{figures/fig6.pdf}[ht]
+\includegraphics{figures/fig6.pdf}
 \caption{Predicted instantaneous mortality rates its derivative annual mortality probability. A,C) Effect of high (0.8) and low (0.3) wood density on growth-mortality relationship. B,D) Predicted growth\textendash mortality response curves for each species. Errors are $\pm$ 95\% BCI.}
 \label{fig6}
 \end{figure}
