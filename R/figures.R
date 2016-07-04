@@ -412,10 +412,10 @@ plot_fig5 <- function(param_prop_explained) {
 # params vs other covariates
 plot_fig6 <- function(data) {
 p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab ='Gap index') + ggtitle('Shade intolerance') 
-p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = expression(alpha), xlab =expression('DBH'['max'])) + ggtitle('Maximum size') 
+p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = expression("Low growth effect"~(alpha)), xlab =expression('DBH'['max'])) + ggtitle('Maximum size') 
 p3 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Expontential decay rate"~(beta)), xlab ='Gap index')
-p4 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = expression(beta), xlab =expression('DBH'['max']))
+p4 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = expression("Expontential decay rate"~(beta)), xlab =expression('DBH'['max']))
 p5 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline hazard"~(gamma)), xlab ='Gap index')
-p6 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = expression(gamma), xlab = expression('DBH'['max']))
+p6 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = expression("Baseline hazard"~(gamma)), xlab = expression('DBH'['max']))
 plot_grid(p1,p2,p3,p4,p5,p6, ncol=2, labels=LETTERS[1:6], label_size = 7)
 }
