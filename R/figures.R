@@ -41,7 +41,8 @@ plot_obs_v_pred_growth <- function(data) {
 }
 
 # Plot species predicted mortality v growth curves
-plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FALSE) {
+plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FALSE, 
+                            ylab="Annual mortality probability", xlab="Annual mortality probability") {
   preds <- predict_spp_hazard(model, data, growth_range)
   
   breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
@@ -52,8 +53,8 @@ plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve
       geom_line(alpha=0.4, size=0.3) +
       scale_x_continuous(expand=c(0,0)) +
       scale_y_continuous(expand=c(0,0), limits = c(0, NA)) +
-      ylab("Annual mortality probability") +
-      xlab("Annual dbh growth (cm)") +
+      ylab(ylab) +
+      xlab(xlab) +
       scale_colour_gradient(expression("wood density"~("g/cm"^3)),low="blue", high="red") +
       partial_plot_theme()
   }
@@ -62,15 +63,16 @@ plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve
       geom_line(alpha=0.4, size=0.2) +
       scale_x_continuous(expand=c(0,0)) +
       scale_y_log10(breaks= breaks, labels = labels, limits=c(0.001,100)) +
-      ylab("Instantaneous mortality rate") +
-      xlab("Annual dbh growth (cm)") +
+      ylab(ylab) +
+      xlab(xlab) +
       scale_colour_gradient(expression("wood density"~(g/cm^3)),low="blue", high="red") +
       partial_plot_theme()
   }
 }
 
 # Plot average species curve
-plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = FALSE) {
+plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = FALSE, 
+                           ylab="Annual mortality probability", xlab="Annual dbh growth (cm)") {
   preds <- predict_mu_hazards(model,wood_density, growth_range, hazard_curve)
   
   breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
@@ -82,15 +84,15 @@ plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,
     geom_ribbon(aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.4, colour=NA) +
     scale_fill_gradient(expression("wood density"~(g/cm^3)),limits=c(0.197,NA),low='blue',high='red') +
     scale_x_continuous(expand=c(0,0)) +
-    xlab("Annual dbh growth (cm)")
+    xlab(xlab)
   
   if(hazard_curve ==FALSE) {
-    p1 + ylab("Annual mortality probability") + 
+    p1 + ylab(ylab) + 
       scale_y_continuous(expand=c(0,0), limits=c(0,1)) + 
       partial_plot_theme()
   }
   else {
-    p1 + ylab("Instantaneous mortality rate") + 
+    p1 + ylab(ylab) + 
       scale_y_log10(breaks= breaks, labels = labels, limits=c(0.001,100)) +
       partial_plot_theme()
   }
@@ -117,7 +119,7 @@ plot_base_v_growth_prop_explained <- function(param_prop_explained, ylab=NULL, x
   dat <- filter(param_prop_explained, param %in% c("baseline", "growth_dependent")) %>% droplevels()
   ggplot(dat, aes(x=param, y=proportion)) +
     geom_bar(stat='identity', fill='black', width=0.5) +
-    scale_x_discrete(labels=c('growth dependent \n hazard','baseline \n hazard')) +
+    scale_x_discrete(labels=c('growth dependent','baseline')) +
     scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
     ylab(ylab) +
     xlab(xlab) +
@@ -202,7 +204,7 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
   
   if(covariate =="dbh_95") {
    fit <- data.frame(r2 = summary(lm(log10(mean)~log10(get(covariate)), data = data[[focal_param]]))$r.squared)
-    p1 + scale_x_log10(breaks= breaks, labels = labels) +
+    p1 + scale_x_log10(breaks= breaks) +
       annotate('text',x=Inf,y=0, label=paste("r2 =", signif(fit$r2,1)), vjust=-0.7, hjust=1, size=2)
   }
   else {
@@ -388,16 +390,16 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
 }
 
 plot_fig4 <- function(model, data) {
-  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE)
-  p2 <- plot_mu_curves(model, hazard_curve= TRUE) +
+  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE, xlab=NULL)
+  p2 <- plot_mu_curves(model, hazard_curve= TRUE, ylab=NULL, xlab=NULL) +
     theme(legend.position= c(0.8,0.8),
           legend.key.size =unit(0.3, "cm"), 
           legend.title=element_text(size=4),
           legend.text = element_text(size=4),
           legend.title.align =0.75)
   
-  p3 <- plot_spp_curves(model, data, hazard_curve = FALSE)
-  p4 <- plot_mu_curves(model, hazard_curve= FALSE)
+  p3 <- plot_spp_curves(model, data, hazard_curve = FALSE, ylab="Instantaneous mortality rate")
+  p4 <- plot_mu_curves(model, hazard_curve= FALSE, ylab=NULL)
   
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
 }
@@ -411,11 +413,11 @@ plot_fig5 <- function(param_prop_explained) {
 
 # params vs other covariates
 plot_fig6 <- function(data) {
-p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab ='Gap index') + ggtitle('Shade intolerance') 
-p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = expression("Low growth effect"~(alpha)), xlab =expression('DBH'['max'])) + ggtitle('Maximum size') 
-p3 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Expontential decay rate"~(beta)), xlab ='Gap index')
-p4 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = expression("Expontential decay rate"~(beta)), xlab =expression('DBH'['max']))
+p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + ggtitle('Shade intolerance') 
+p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = NULL, xlab =NULL) + ggtitle('Maximum size') 
+p3 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Expontential decay rate"~(beta)), xlab =NULL)
+p4 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = NULL, xlab =NULL)
 p5 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline hazard"~(gamma)), xlab ='Gap index')
-p6 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = expression("Baseline hazard"~(gamma)), xlab = expression('DBH'['max']))
+p6 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = NULL, xlab = expression('DBH'['max']))
 plot_grid(p1,p2,p3,p4,p5,p6, ncol=2, labels=LETTERS[1:6], label_size = 7)
 }
