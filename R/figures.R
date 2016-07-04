@@ -160,6 +160,22 @@ plot_recruits_gapindex <- function(gap_index_raster, recruit_gap_conditions) {
 }
 
 # Plot other covariates by parameter
+
+
+ggplotRegression <- function (fit) {
+
+require(ggplot2)
+
+ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") +
+  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
+                     "Intercept =",signif(fit$coef[[1]],5 ),
+                     " Slope =",signif(fit$coef[[2]], 5),
+                     " P =",signif(summary(fit)$coef[2,4], 5)))
+}
+
+
 plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_index", ylab =NULL, xlab = NULL) {
   spp <- data[[focal_param]] %>%
     select_('sp', covariate, 'mean', '`2.5%`','`97.5%`') %>%
@@ -185,10 +201,13 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
     xlab(xlab)
   
   if(covariate =="dbh_95") {
-    p1 + scale_x_log10(breaks= breaks, labels = labels)
+   fit <- data.frame(r2 = summary(lm(log10(mean)~log10(get(covariate)), data = data[[focal_param]]))$r.squared)
+    p1 + scale_x_log10(breaks= breaks, labels = labels) +
+      annotate('text',x=Inf,y=0, label=paste("r2 =", signif(fit$r2,1)), vjust=-0.7, hjust=1, size=2)
   }
   else {
-    p1
+    fit <- data.frame(r2 = summary(lm(log10(mean)~get(covariate), data = data[[focal_param]]))$r.squared)
+    p1 + annotate('text',x=Inf,y=0, label=paste("r2 =", signif(fit$r2,2)), vjust=-0.7, hjust=1, size=2)
   }
 }
 
@@ -301,25 +320,26 @@ plot_fig2a <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
     filter(model_type == "rho_combinations_base_growth_hazard_c" |
              comparison %in% c("null_model","function_growth_comparison","species_random_effects")) %>%
-    mutate(comparison = factor(comparison, levels=c('null_model','function_growth_comparison','rho_combinations','species_random_effects'),
-                               labels = c('null model','functional form','wood density','species effects')))
+    mutate(comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
+      comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','rho_combinations','species_random_effects'),
+                               labels = c('null','census','function form','wd','species')))
   
   ggplot(dat, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(1)) +
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(1), stroke = 0.5, size=0.4) +
     ylab('Logarithmic Loss') + 
     xlab('Model') +
     scale_shape_manual(values = c(21, 24, 22)) +
     scale_fill_manual(values =c('white','grey80','black')) +
     scale_y_continuous(breaks= scales::pretty_breaks(5)) +
     scale_x_discrete(labels=c("null_model_base_hazard_none" = expression(gamma),
-                              "function_growth_comparison_base_hazard_none" =  expression(gamma~"c"["t"]),
-                              "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~"c"["t"]),
-                              "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"]),
-                              "rho_combinations_base_growth_hazard_c" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~"c"["t"]),
-                              "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~"c"["t"]))) +
-    facet_wrap(~comparison, scales='free_x', ncol=4, drop=TRUE) +
+                              "function_growth_comparison_base_hazard_none" =  expression(gamma~delta["t"]),
+                              "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~delta["t"]),
+                              "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"]),
+                              "rho_combinations_base_growth_hazard_c" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~delta["t"]),
+                              "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]))) +
+    facet_grid(.~comparison, scales='free_x', drop=TRUE, space = "free_x") +
     partial_plot_theme(strips = TRUE) +
-    theme(axis.text.x = element_text(angle=45, hjust = 1)) 
+    theme(axis.text.x = element_text(angle=15, hjust = 1)) 
 }
 
 plot_fig2b <- function(logloss_summaries) {
@@ -329,9 +349,9 @@ plot_fig2b <- function(logloss_summaries) {
                 model_type == "function_growth_comparison_base_growth_hazard_none"))
   
   ggplot(dat, aes(x = model_type,y = mean)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black') +
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black', stroke = 0.5,size=0.4) +
     ylab('Logarithmic Loss') + 
-    xlab(expression('Wood density effects on'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~"c"["t"])) +
+    xlab(expression('Wood density effects on'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"])) +
     scale_x_discrete(labels=c("function_growth_comparison_base_growth_hazard_none" = "none",
                               "rho_combinations_base_growth_hazard_a" = expression(alpha),
                               "rho_combinations_base_growth_hazard_b" = expression(beta),
@@ -363,21 +383,22 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
     geom_line(data = pred_mu_basehaz, aes(x = wood_density, y= mean), col='lightgrey') +
     partial_plot_theme() +
     scale_y_log10(breaks= breaks, labels = labels) +
-    ylab("Instantaneous baseline mortality rate") +
+    ylab(expression("Baseline mortality rate"~(gamma))) +
     xlab(expression("wood density"~("g/cm"^3)))
 }
 
 plot_fig4 <- function(model, data) {
-  p1 <- plot_spp_curves(model, data, hazard_curve = FALSE)
-  p2 <- plot_mu_curves(model, hazard_curve= FALSE) +
+  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE)
+  p2 <- plot_mu_curves(model, hazard_curve= TRUE) +
     theme(legend.position= c(0.8,0.8),
           legend.key.size =unit(0.3, "cm"), 
           legend.title=element_text(size=4),
           legend.text = element_text(size=4),
           legend.title.align =0.75)
   
-  p3 <- plot_spp_curves(model, data, hazard_curve = TRUE)
-  p4 <- plot_mu_curves(model, hazard_curve= TRUE)
+  p3 <- plot_spp_curves(model, data, hazard_curve = FALSE)
+  p4 <- plot_mu_curves(model, hazard_curve= FALSE)
+  
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
 }
 
@@ -390,11 +411,11 @@ plot_fig5 <- function(param_prop_explained) {
 
 # params vs other covariates
 plot_fig6 <- function(data) {
-p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression(alpha), xlab ='Gap index') + ggtitle('Shade intolerance') 
+p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab ='Gap index') + ggtitle('Shade intolerance') 
 p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = expression(alpha), xlab =expression('DBH'['max'])) + ggtitle('Maximum size') 
-p3 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression(beta), xlab ='Gap index')
+p3 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Expontential decay rate"~(beta)), xlab ='Gap index')
 p4 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = expression(beta), xlab =expression('DBH'['max']))
-p5 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression(gamma), xlab ='Gap index')
+p5 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline hazard"~(gamma)), xlab ='Gap index')
 p6 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = expression(gamma), xlab = expression('DBH'['max']))
 plot_grid(p1,p2,p3,p4,p5,p6, ncol=2, labels=LETTERS[1:6], label_size = 7)
 }
