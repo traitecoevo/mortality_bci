@@ -169,14 +169,22 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
   
   # Sets limit for beta in order to produce nice log axis
   if (focal_param =='beta') {
-    ylim <- c(1,100)
+      ylim <- c(5,50)
+      breaks <- c(5,10, 20, 40)
+      labels <- breaks
   } else {
-    ylim = NULL
+    ylim = c(5E-4, 2E1)
+    breaks <- c(0.001,0.01,0.1, 1, 10, 100)
+    labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
   }
   
-  breaks <- c(0.001,0.01,0.1, 1, 10, 100)
-  labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
+  xbreaks <- c(0.001,0.01,0.1, 1, 10, 100)
   
+  spp <- mutate(spp, 
+    `2.5%`=ifelse(`2.5%` < ylim[1], ylim[1], `2.5%`),
+    `97.5%`=ifelse(`97.5%` > ylim[2], ylim[2], `97.5%`)
+  )
+
   p1 <- ggplot(spp, aes_string(x = covariate,y = "mean")) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.1, shape= 16) +
     geom_point(shape= 21, fill='red', size=0.6) +
@@ -188,7 +196,7 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
   
   if(covariate =="dbh_95") {
    fit <- data.frame(r2 = summary(lm(log10(mean)~log10(get(covariate)), data = data[[focal_param]]))$r.squared)
-    p1 + scale_x_log10(breaks= breaks) +
+    p1 + scale_x_log10(breaks= xbreaks) +
       annotate('text',x=Inf,y=0, label=paste("r2 =", signif(fit$r2,1)), vjust=-0.7, hjust=1, size=2)
   }
   else {
@@ -401,7 +409,7 @@ p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = express
 p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = NULL, xlab =NULL) + ggtitle('Maximum size') 
 p3 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline mortality"~(gamma)), xlab =NULL)
 p4 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = NULL, xlab = NULL)
-p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","mean_gap_index",ylab = expression("Low growth mortality"~(alpha+gamma)), xlab ='Gap index')
+p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","mean_gap_index",ylab = expression("Low growth mortality"~(alpha+gamma)), xlab = NULL)
 p6 <- plot_spp_param_by_covariate(data, "alpha_gamma", "dbh_95",ylab = NULL, xlab = NULL)
 p7 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Exponential decay"~(beta)), xlab ='Gap index')
 p8 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = NULL, xlab =expression('DBH'['max']~(cm)))
