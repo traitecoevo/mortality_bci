@@ -34,8 +34,11 @@ plot_options:
   single_col_portrait:
     width: 3.46
     height: 4.5
-    onefile: FALSE
-    
+
+  single_col_portrait_long:
+    width: 3.46
+    height: 6.5
+
   single_col_rectangle:
     width: 3.46
     height: 2.5
@@ -239,7 +242,7 @@ targets:
 
   ms/figures/fig1.pdf:
     command: plot_fig1("ms/figures/fig1_tree.png", "ms/dead_tree.png", "ms/Fig1c.png")
-    plot: single_col_portrait
+    plot: single_col_portrait_long
     cleanup_level: tidy
     packages:
       - png

@@ -143,6 +143,8 @@ logloss_curve <- function() {
 # Map of plot gap index with recruits overlayed for 1985 to 1990 and 1990 to 1995
 plot_recruits_gapindex <- function(gap_index_raster, recruit_gap_conditions) {
   #pdf(f <- tempfile(fileext = '.pdf'), 4.5, 4.5)
+  greys <- grey.colors(20, start =0.1, end=1.0)
+
   print(rasterVis::levelplot(raster::stack(gap_index_raster), 
                        names.attr=paste("Recruits from", names(gap_index_raster)),
                        layout=c(1, 2), 
@@ -150,13 +152,13 @@ plot_recruits_gapindex <- function(gap_index_raster, recruit_gap_conditions) {
                        scales=list(alternating=FALSE, tck=c(0.5, 0.5), 
                                    x=list(at=seq(0, 1000, 200)),
                                    y=list(at=seq(0, 400, 100))),
-                       col.regions=viridisLite::viridis(100),
-                       at=seq(0,1,0.1), 
+                       col.regions= greys[c(1,1, seq_along(greys), 20, 20)],
+                       at=seq(0,1,0.05),
                        par.settings = list(fontsize = list(text = 7), 
                                            strip.background=list(col='white'),
                                            strip.border=list(col='transparent'))) +
           latticeExtra::layer(sp::sp.points(SpatialPoints(recruit_gap_conditions[[panel.number()]]), 
-                                        pch='.', col='black', alpha=0.4), 
+                                        pch='+', col='red', alpha=0.4, cex=0.1),
                               data=list(recruit_gap_conditions=recruit_gap_conditions)))
   
 }
@@ -218,7 +220,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   
   my_label <- function(text, x=-0.1) label(x, 1.3, text, cex=1.5)
   
-  layout(matrix(c(1,1,1,2,3,4,5,5,5), byrow=TRUE, ncol=3))
+  layout(matrix(c(1,1,1,2,3,4,5,5,5,6,6,6), byrow=TRUE, ncol=3))
   par(mar=c(2,2,3,1), oma=c(1,1,1,1))
   
   # Tree growth diagram
@@ -255,9 +257,18 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   mtext("Growth rate", 1, line =1, cex=0.75)
   # Example full baseline + growth-dependent hazard
   hazard_plot(base_growth_haz, expression(alpha*"e"^{-beta~"X"}+gamma))
-  
+
+  par(mar=c(3,3,3,2))
+  plot(NA, xlim = c(0, 1), ylim= c(0, 5), ann = FALSE, las=1)
+  p <- seq(0,1, length.out=200)
+  lines(p, -log(1-p), type='l', lwd=2, col="red")
+  my_label("C) Penalty for incorrect prediction", x=-0.18)
+  mtext("Probability of outcome, p", 1, line=2.1, cex=0.75)
+  mtext("log loss, L", 2, line=2.1, cex=0.75)
+
+  par(mar=c(2,2,3,1))
   plot(NA, xlim = c(0, 1), ylim= c(0, 1), ann = FALSE, axes=FALSE)
-  my_label("C) 10-fold cross validation")
+  my_label("D) 10-fold cross validation")
   
   vps <- baseViewports()
   pushViewport(vps$inner, vps$figure, vps$plot)
