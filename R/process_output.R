@@ -195,6 +195,8 @@ summarise_spp_params <- function(model, data) {
   dat <- prep_full_data_for_stan(data)
   samples <- rstan::extract(fit, pars=c("alpha","beta","gamma"))
   
+  samples[["alpha_gamma"]] <- samples$alpha + samples$gamma
+  
   lapply(samples, function(x) {
     cbind.data.frame(
       sp = dat$sp,

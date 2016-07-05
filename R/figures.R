@@ -374,10 +374,10 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
 }
 
 plot_fig4 <- function(model, data) {
-  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE, xlab=NULL, ylab="Instantaneous mortality rate")
+  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE, xlab=NULL, ylab="Mortality rate")
   p2 <- plot_mu_curves(model, hazard_curve= TRUE, ylab=NULL, xlab=NULL) +
     theme(legend.position= c(0.8,0.8),
-          legend.key.size =unit(0.3, "cm"), 
+          legend.key.size =unit(0.25, "cm"), 
           legend.title=element_text(size=4),
           legend.text = element_text(size=4),
           legend.title.align =0.75)
@@ -397,11 +397,13 @@ plot_fig5 <- function(param_prop_explained) {
 
 # params vs other covariates
 plot_fig6 <- function(data) {
-p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + ggtitle('Shade intolerance') 
+p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + ggtitle('Light requirement') 
 p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = NULL, xlab =NULL) + ggtitle('Maximum size') 
-p3 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Expontential decay rate"~(beta)), xlab =NULL)
-p4 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = NULL, xlab =NULL)
-p5 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline hazard"~(gamma)), xlab ='Gap index')
-p6 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = NULL, xlab = expression('DBH'['max']))
-plot_grid(p1,p2,p3,p4,p5,p6, ncol=2, labels=LETTERS[1:6], label_size = 7)
+p3 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline mortality"~(gamma)), xlab =NULL)
+p4 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = NULL, xlab = NULL)
+p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","mean_gap_index",ylab = expression("Low growth mortality"~(alpha+gamma)), xlab ='Gap index')
+p6 <- plot_spp_param_by_covariate(data, "alpha_gamma", "dbh_95",ylab = NULL, xlab = NULL)
+p7 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Exponential decay"~(beta)), xlab ='Gap index')
+p8 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = NULL, xlab =expression('DBH'['max']~(cm)))
+plot_grid(p1,p2,p3,p4,p5,p6,p7,p8, ncol=2, labels=LETTERS[1:8], label_size = 7)
 }

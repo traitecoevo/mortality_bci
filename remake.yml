@@ -24,7 +24,13 @@ plot_options:
   double_col_rectangle:
     width: 6.6
     height: 3
-
+    onefile: FALSE
+    
+  single_col_portrait_large:
+    width: 3.46
+    height: 5.5
+    onefile: FALSE   
+    
   single_col_portrait:
     width: 3.46
     height: 4.5
@@ -32,11 +38,18 @@ plot_options:
     
   single_col_rectangle:
     width: 3.46
-    height: 2
+    height: 2.5
+    onefile: FALSE
+    
+  single_col_rectangle_narrow:
+    width: 3.46
+    height: 1.5
+    onefile: FALSE
     
   single_col_square:
     width: 3.46
     height: 3.46
+    onefile: FALSE
 
 targets:
   all:
@@ -246,17 +259,17 @@ targets:
 
   ms/figures/fig4.pdf:
     command: plot_fig4(final_model, BCI_training_full)
-    plot: single_col_portrait
+    plot: single_col_square
     cleanup_level: tidy
     
   ms/figures/fig5.pdf:
     command: plot_fig5(param_variance_explained)
-    plot: single_col_rectangle
+    plot: single_col_rectangle_narrow
     cleanup_level: tidy
     
   ms/figures/fig6.pdf:
     command: plot_fig6(spp_params_and_covs)
-    plot: single_col_portrait
+    plot: single_col_portrait_large
     cleanup_level: tidy
     
   ms/figures/supp_fig1.png:
