@@ -1,37 +1,59 @@
+# Manuscript functions
 
-logloss_comparisons <- function(logloss_summary) {
-  logloss_summary %>%
-    filter(model_type %in% c("function_growth_comparison_base_growth_hazard_none", 
-                             "rho_combinations_base_growth_hazard_c",
-                             "species_random_effects_base_growth_hazard_none") & growth_measure=='true_dbh_dt') %>%
-    select(model_type, mean) %>%
-    mutate(model_type = factor(model_type, labels =c('base_growth','base_growth_rho','base_growth_re'))) %>%
-    spread(model_type, mean) %>%
-    mutate(rho_v_base = round((1-base_growth_rho/base_growth)*100,2),
-           re_v_base = round((1-base_growth_re/base_growth)*100,2),
-           rho_v_re = round((rho_v_base/re_v_base)*100,2))
+# Number of individuals used
+n_inds <- function(data) {
+  as.character(round(nrow(data),-2))
 }
 
+# Number of species used in study
+n_spp <- function(data) {
+  length(unique(data$sp))
+}
+
+# Proportion of negative observations
+prop_neg_growth <- function(data) {
+  round(nrow(subset(data, obs_dbh_dt<0))/nrow(data)*100)
+}
+
+# Number of observations in remeasurement error data
+nobs_meas_err_data <- function(data) {
+  nrow(data$discrep)
+}
+
+# Observed standard deviation of measurement error
+obs_error_sigma <- function(data) {
+  round(sd(data$discrep),2)
+}
+
+# Number of heldout observations
+n_heldout <- function(data) {
+  as.character(nrow(data[[1]]$heldout))
+}
+  
+# Proportion of deaths by census
+prop_deaths <- function(data, census) {
+res <-data %>%
+  group_by(censusid) %>%
+  summarise(deaths = sum(dead_next_census),
+            survivors = sum(dead_next_census==0)) %>%
+    ungroup() %>%
+  mutate(
+    total = survivors + deaths,
+    prop_died = deaths/total,
+    census = factor(censusid, labels=c('1995to2000','2000to2005','2005to2010'))) %>%
+  select(census,censusid, total, deaths, survivors, prop_died)
+return(signif(res[res$censusid==census,"prop_died"],2)*100)
+}
+
+# Extract census scaling factor
 census_effects <- function(model,census) {
-  model <- model$fits[[1]]
-  get_posterior_mean(model, 'census_err')[census,4]
+  res <- model$fits[[1]]
+  abs(1-signif(rstan::get_posterior_mean(res, 'census_err')[census,4],2))*100
 }
 
-# Predict median baseline hazard
-predict_point_mu_baseline_hazard <- function(model,data, wood_density) {
-  fit <- model$fits[[1]]
-  samples <- rstan::extract(fit, pars=c("mu_log_gamma","c1"))
-  samples <- as.data.frame(lapply(samples, as.vector)) 
-  covariates <- data.frame(wood_density = wood_density,
-                           wood_density_centered = wood_density/0.6)
-  samples %>%
-    merge(covariates) %>%
-    mutate(inst_hazard = exp(mu_log_gamma) * wood_density_centered^c1,
-           annual_mort = 1-exp(-exp(mu_log_gamma) * wood_density_centered^c1)) %>%
-    gather('prediction','estimate', -mu_log_gamma,-c1,-wood_density,-wood_density_centered) %>%
-    group_by(prediction) %>%
-    summarise(mean = mean(estimate),
-              `2.5%` = quantile(estimate,0.025),
-              `97.5%` = quantile(estimate, 0.975)) %>%
-    ungroup()
+# Extract proportion explained.
+extract_prop_explained <- function(data, param) {
+  signif(data[data$param==param,'proportion'],2)*100
 }
+
+
