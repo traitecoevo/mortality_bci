@@ -210,23 +210,25 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
 # Manuscript figures
 
 plot_fig1 <- function(tree1, tree2, panelc) {
+  # Example growth hazard function
   growth_haz <- function(x) {
     1-exp(-0.15 * exp(-10 * x))
   }
   
+  # Example base-growth hazard function
   base_growth_haz <- function(x) {
     1-exp(-(0.13 * exp(-10 * x) + 0.03))
   }
+  # Function to add labels to panels
+  my_label <- function(text, x=-0.1) label(x, 1.3, text)
   
-  my_label <- function(text, x=-0.1) label(x, 1.3, text, cex=1.5)
-  
+  # Plot layout
   layout(matrix(c(1,1,1,2,3,4,5,5,5,6,6,6), byrow=TRUE, ncol=3))
-  par(mar=c(2,2,3,1), oma=c(1,1,1,1))
+  par(mar=c(1,1,2.5,1), oma=c(1,1,1,1), cex=0.5)
   
   # Tree growth diagram
-  
   plot(1:2, type='n', ann=FALSE, axes=FALSE, xlim=c(-1,1), ylim=c(-1,1))
-  my_label("A) Repeat census data")
+  my_label("A) Repeat census data", x=-0.06)
   
   # note we are only plotting to last viewport, but calls to other two needed to make figure work.
   vps <- baseViewports()
@@ -234,41 +236,47 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   fig.tree(tree1, tree2)
   popViewport(3)
   
-  # Example baseline hazard
+  # Produce empty plot
   empty_plot <- function(){
+    par(mar=c(2,2,3,1))
     plot(NA, ylim = c(0,0.14),  xlim=c(0,1), xaxs='i', axes=FALSE, ann=FALSE)
-    axis(1, at = c(-1, 2), labels=NA, lwd=1.5)
-    axis(2, at = c(-1, 2),labels=NA, lwd=1.5)
+    axis(1, at = c(-1, 2), labels=NA)
+    axis(2, at = c(-1, 2),labels=NA)
   }
   
+  # Plot hazard curves
   hazard_plot <- function(f, text){
     x <- seq(0,1,length.out = 50)
     empty_plot()
-    lines(x, f(x), type='l', lwd=2, col="red")
-    text(0.1, 0.12, text, cex=1.5, pos=4, xpd=NA)
+    lines(x, f(x), type='l', col="red")
+    text(0.1, 0.12, text, pos=4, xpd=NA)
   }
   
+  # Plot base hazard
   hazard_plot(function(x) 0*x +0.03, expression(gamma))
-  my_label("B) Alternative mortality functions", x=-0.45)
-  mtext("Mortality rate", 2, line=1, cex=0.75)
+  my_label("B) Alternative mortality functions", x=-0.36)
+  mtext("Mortality rate", 2, line=1, cex=0.5)
   
-  # Example growth-dependent hazard
+  # Plot growth-dependent hazard
   hazard_plot(growth_haz, expression(alpha*"e"^{-beta~"X"}))
-  mtext("Growth rate", 1, line =1, cex=0.75)
+  mtext("Growth rate", 1, line =1, cex=0.5)
+  
   # Example full baseline + growth-dependent hazard
   hazard_plot(base_growth_haz, expression(alpha*"e"^{-beta~"X"}+gamma))
-
-  par(mar=c(3,3,3,2))
+  
+  # Plot logloss curve
+  par(mar=c(2.5,3,2,1))
   plot(NA, xlim = c(0, 1), ylim= c(0, 5), ann = FALSE, las=1)
   p <- seq(0,1, length.out=200)
-  lines(p, -log(1-p), type='l', lwd=2, col="red")
-  my_label("C) Penalty for incorrect prediction", x=-0.18)
-  mtext("Probability of outcome, p", 1, line=2.1, cex=0.75)
-  mtext("log loss, L", 2, line=2.1, cex=0.75)
+  lines(p, -log(1-p), type='l', col="red")
+  my_label("C) Penalty for incorrect prediction", x=-0.137)
+  mtext("Probability of outcome, p", 1, line=2.1, cex=0.5)
+  mtext("log loss", 2, line=2.1, cex=0.5)
 
-  par(mar=c(2,2,3,1))
+  # Plot cross validation proceedure
+  par(mar=c(0.1,0.1,3,0.1))
   plot(NA, xlim = c(0, 1), ylim= c(0, 1), ann = FALSE, axes=FALSE)
-  my_label("D) 10-fold cross validation")
+  my_label("D) 10-fold cross validation", x =-0.03)
   
   vps <- baseViewports()
   pushViewport(vps$inner, vps$figure, vps$plot)
@@ -278,8 +286,8 @@ plot_fig1 <- function(tree1, tree2, panelc) {
               just=c("bottom"), height=unit(1, "npc"))
   
   popViewport(3)
-  text(1, 0.65,  expression(paste(bar("L"), "=")), cex=1.25, xpd=NA)
-  text(1, 0.35,  expression(sum("L"[i])/10), cex=1.25, xpd=NA)
+  text(0.85, 0.45,  expression(paste(bar("logloss"), " =", sum("logloss"[i])/10)), xpd=NA)
+  #text(1, 0.35,  expression(sum("L"[i])/10), xpd=NA)
   
 }
 
@@ -327,10 +335,10 @@ plot_fig2a <- function(logloss_summaries) {
              comparison %in% c("null_model","function_growth_comparison","species_random_effects")) %>%
     mutate(comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
       comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','rho_combinations','species_random_effects'),
-                               labels = c('null','census','function form','wd','species')))
+                               labels = c('Null','Census','Growth rate','WD','Species')))
   
   ggplot(dat, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(1), stroke = 0.5, size=0.4) +
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
     ylab('Logarithmic Loss') + 
     xlab('Model') +
     scale_shape_manual(values = c(21, 24, 22)) +
@@ -385,7 +393,7 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
     geom_ribbon(data = pred_mu_basehaz, aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.5, colour=NA) +
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), size=0.25, shape= 16) +
     geom_point(shape= 21, fill='red') +
-    geom_line(data = pred_mu_basehaz, aes(x = wood_density, y= mean), col='lightgrey') +
+    geom_line(data = pred_mu_basehaz, aes(x = wood_density, y= mean), col='blue') +
     partial_plot_theme() +
     scale_y_log10(breaks= breaks, labels = labels) +
     ylab(expression("Baseline mortality rate"~(gamma))) +
