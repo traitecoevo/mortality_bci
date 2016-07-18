@@ -53,7 +53,27 @@ census_effects <- function(model,census) {
 
 # Extract proportion explained.
 extract_prop_explained <- function(data, param) {
+  if(param == "species") {
+    signif(data[data$param=='species','proportion'] + data[data$param=='wood_density','proportion'],2)*100
+  }
+  else {
   signif(data[data$param==param,'proportion'],2)*100
+  }
 }
 
-
+# Prop change in logloss.
+pred_gain_wd <- function(data) {
+  
+  df <- data %>%
+    filter(growth_measure=='true_dbh_dt' &
+             model_type %in% c('function_growth_comparison_base_growth_hazard_none',
+                               'rho_combinations_base_growth_hazard_c',
+                               'species_random_effects_base_growth_hazard_none')) %>%
+    select(comparison, mean) %>%
+    spread(comparison, mean) %>%
+    mutate(rho_diff = function_growth_comparison - rho_combinations,
+           spp_diff = function_growth_comparison - species_random_effects,
+           prop_spp_gain = rho_diff/spp_diff)
+  
+  return(signif(df$prop_spp_gain,2)*100)
+}
