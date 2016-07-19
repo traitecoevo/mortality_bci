@@ -10,7 +10,8 @@
 
 % Enable cross referencing to Evidence document
 \usepackage{xr}
-\externaldocument{ms-suppinfo}
+\externaldocument{supp}
+
 \title{Unifying intra- and inter-specific variation in tropical tree mortality: towards a mechanistic framework}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
@@ -24,7 +25,7 @@
 \affil[b]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
 
 % Please give the surname of the lead author for the running footer
-\leadauthor{Camac} 
+\leadauthor{Camac}
 
 % Please add here a significance statement to explain the relevance of your work
 % 120 words
@@ -177,6 +178,8 @@ Future research should also focus on examining how climate variables influence b
 Here we showcase a new framework for modelling tropical tree mortality that attempts to unifies empirical evidence from within and between species studies. This framework also provides an approach for partitioning mortality rates into growth-dependent and growth-independent hazards. Our findings reveal that while wood density is an important trait affecting mortality rates, we are still only capturing a fraction of the overall species variability in mortality rates.
 
 
+Example referencing suppmat figure (Fig. \ref{figS1}).
+
 \matmethods{
 \subsection*{Data}
 We parametrized plant mortality models using individual growth and survival data\cite{Condit:2012nz} collected from a relatively undisturbed 50-ha tropical rainforest plot on Barro Colorado Island (BCI), Panama (9.15\textdegree;N, 79.85\textdegree;W). The climate on the island is warm throughout the year with a mean annual temperature of 26.1\textdegree and rainfall is seasonal with most of the 2500 mm falling between April and November. BCI is managed exclusively for field research by the Smithsonian Tropical Research Institute (STRI) and the permanent plot was established in 1980.
@@ -211,7 +214,7 @@ where $N_k$ refers to the number of observations in fold.
 \showmatmethods % Display the Materials and Methods section
 
 \acknow{
-J.C was supported by the Science and Industry Endowment Fund (SIEF; RP04-174). M.W was supported by a fellowship from the Australian Research Council (ARC). D.F. was supported by an ARC discovery grant. We thank Lachlan McCalman and Daniel Steinberg for statistical advice; Anias Gibert etc etc.  Fig. 1a uses images by Tracey Saxby, IAN Image Library (http://ian.umces.edu/imagelibrary)}
+J.C was supported by the Science and Industry Endowment Fund (SIEF; RP04-174). M.W was supported by a fellowship from the Australian Research Council (ARC). D.F. was supported by an ARC discovery grant. We thank Rich FitzJohn, Lachlan McCalman and Daniel Steinberg for computational advice; Anias Gibert etc etc.  Fig. 1a uses images by Tracey Saxby, IAN Image Library (http://ian.umces.edu/imagelibrary)}
 
 
 \showacknow % Display the acknowledgements section

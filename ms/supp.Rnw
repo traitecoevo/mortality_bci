@@ -1,18 +1,19 @@
-\documentclass[9pt,twocolumn,twoside]{pnas-new}
+\documentclass[9pt,onecolumn,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
 % Note that the use of elements such as single-column equations
 % may affect the guide line number alignment. 
 
-\templatetype{pnasresearcharticle} % Choose template 
-% {pnasresearcharticle} = Template for a two-column research article
-% {pnasmathematics} = Template for a one-column mathematics article
-% {pnasinvited} = Template for a PNAS invited submission
+\templatetype{pnasresearcharticle}
 
-\title{Unifying intraspecific and interspecific variation in tropical tree mortality}
+\title{
+{\normalfont \fontsize{12pt}{16pt}
+{\color{black50} Supporting information for:}\\} \vskip6pt
+\fontsize{16pt}{20pt} Unifying intraspecific and interspecific variation in tropical tree mortality
+}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \author[a,1]{James S Camac}
-\author[a]{Mark Westoby} 
+\author[a]{Mark Westoby}
 \author[b]{S Joseph Wright}
 \author[a]{Daniel S Falster}
 
@@ -20,24 +21,28 @@
 \affil[a]{Department of Biological Sciences, Macquarie University NSW 2109, Australia}
 \affil[b]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
 
-% Please give the surname of the lead author for the running footer
-\leadauthor{Camac} 
-
-% Please add here a significance statement to explain the relevance of your work
-\significancestatement{Add something significant here}
-
-% Please include corresponding author, author contribution and author declaration information
-\authorcontributions{J.C. designed and performed the analysis; D.F. conceived the idea, supervized the development of this work; S.J.W \& M.W. provided biological insight. All authors contributed to the writing of this manuscript.}
-
-\authordeclaration{The authors declare that they have no competing financial interests.}
-\correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: james.camac@gmail.com}
-
-% Keywords are not mandatory, but authors are strongly encouraged to provide them. If provided, please include two to five keywords, separated by the pipe symbol, e.g:
-\keywords{Tropical trees $|$ wood density $|$ growth $|$ mortality $|$ interspecific} 
-
-\dates{This manuscript was compiled on \today}
+\dates{This supplement was compiled on \today}
 \doi{\url{www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX}}
 
+\hypersetup{
+     linkcolor=pnasbluetext
+}
+
+\RequirePackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{secnumdepth}{0}
+
+\section{Appendix A - Supplementary text}
+
+Example reference \cite{Johnson-2016}.
 
 <<preload, echo=FALSE>>=
 n_inds <- as.character(round(nrow(BCI_model_dataset_true_unique),-2))
@@ -46,12 +51,10 @@ proportion_negative <- round(nrow(subset(BCI_model_dataset_true_unique, obs_dbh_
 n_obs_errors <- nrow(BCI_dbh_error_data$discrep)
 obs_error_sigma <- round(sd(BCI_dbh_error_data$discrep),2)
 n_heldout <- as.character(nrow(BCI_training_sets[[1]]$heldout))
-
 @
 
-\begin{document}
-\section*{Supplementary}
-\subsection*{Modelling true growth}
+\subsection{Modelling true growth}
+
 
 We did this by first modelling the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma} (i.e. the observed measurement error):
 
@@ -77,7 +80,7 @@ where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and 
 Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis.
 
 
-\subsection*{Mortality model}
+\subsection{Mortality model}
 Our observations are for survival outcomes $S_{i, t_2\rightarrow t_3}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_2$ and $t_3$. We model these observations as random realizations from a Bernoulli distribution
 \begin{equation}
 S_{i,t_2\rightarrow t_3} \sim \textrm{Bernoulli}(p_{i,t_2\rightarrow t_3}),
@@ -130,4 +133,35 @@ We accounted for possible variation in mortality rates across different census p
 \sigma_{\delta} \sim \textrm{Cauchy+}\left(0, 2.5\right).
 \end{equation}
 
+\clearpage
+\section{Appendix 2 - Example stan code}
+
+Include example model here
+
+Describe how to get other models?
+
+
+\clearpage
+\section{Supplementary Figures}
+
+\begin{figure}[!hb]
+\centering
+\includegraphics[width=15cm,height=20cm,keepaspectratio]{figures/supp_fig1}
+\caption{ About this figure}
+\label{figS1}
+\end{figure}
+
+\clearpage
+\begin{figure}[!hb]
+\centering
+\includegraphics[width=15cm,height=20cm,keepaspectratio]{figures/supp_fig2}
+\caption{ About this figure}
+\label{figS2}
+\end{figure}
+
+\clearpage
+
+\section{References}
+
+\bibliography{refs.bib}
 \end{document}
