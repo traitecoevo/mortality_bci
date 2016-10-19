@@ -117,6 +117,8 @@ BCI_clean <- function(BCI_data, spp_table) {
         # Remove observations without a species code
         !is.na(sp)
     ) %>%
+    # fix missing species name.
+    mutate(species = replace(species, sp == "swars2", "Swartzia simplex2")) %>%
     # For each individual..
     group_by(treeid) %>%
     # Filter plants with multiple stems
@@ -161,7 +163,7 @@ BCI_clean <- function(BCI_data, spp_table) {
     # ensures at least 1 individual is in the heldout dataset
     filter(n_ind >=10) %>%
     ungroup() %>%
-    select(gx,gy,sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
+    select(gx,gy,species,sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
            dbh_prev,dbh,dead_next_census)
   
 }
@@ -250,7 +252,7 @@ reduce_to_single_ind_obs <- function(data) {
     filter(keep) %>%
     select(-keep) %>%
     ungroup() %>%
-    select(gx, gy,sp, sp_id, censusid, dead_next_census,
+    select(gx, gy,species,sp, sp_id, censusid, dead_next_census,
            census_interval, rho, dbh_prev, dbh)
 }
 

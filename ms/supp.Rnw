@@ -44,19 +44,12 @@
 
 Example reference \cite{Johnson-2016}.
 
-<<preload, echo=FALSE>>=
-n_inds <- as.character(round(nrow(BCI_model_dataset_true_unique),-2))
-n_spp <- length(unique(BCI_model_dataset_true_unique$sp))
-proportion_negative <- round(nrow(subset(BCI_model_dataset_true_unique, obs_dbh_dt<0))/nrow(BCI_model_dataset_true_unique)*100)
-n_obs_errors <- nrow(BCI_dbh_error_data$discrep)
-obs_error_sigma <- round(sd(BCI_dbh_error_data$discrep),2)
-n_heldout <- as.character(nrow(BCI_training_sets[[1]]$heldout))
-@
-
 \subsection{Modelling true growth}
 
+Field measurements of diameter inevitably include observation error, errors that may ultimately bias conclusions. In our dataset, \Sexpr{prop_neg_growth(BCI_model_dataset_true_unique)}\% of observed growth rates were negative. While there are physiological processes (e.g. water depletion and bark drop) that can lead to trunk shrinkages overtime\cite{Pastur:2007kl}, it is biologically impossible for growth (i.e. the creation of new biomass) to be negative\cite{Clark:2007ve}. To ensure our model was not biased by these implausible values we estimated \textit{``true growth''}(i.e. observed growth minus observation error) by first using another BCI dataset collected explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
 
-We did this by first modelling the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma} (i.e. the observed measurement error):
+
+We modelled true growth by first estimating the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma(BCI_dbh_error_data)} (i.e. the observed measurement error):
 
 \begin{equation}\label{eq:true_growth_obs} 
 \begin{aligned}
@@ -81,7 +74,7 @@ Using this model we then used \texttt{rstan}'s \textit{optimizing} function to m
 
 
 \subsection{Mortality model}
-Our observations are for survival outcomes $S_{i, t_2\rightarrow t_3}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_2$ and $t_3$. We model these observations as random realizations from a Bernoulli distribution
+We modelled tree mortality using survival outcomes $S_{i, t_2\rightarrow t_3}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_2$ and $t_3$. We model these observations as random realizations from a Bernoulli distribution
 \begin{equation}
 S_{i,t_2\rightarrow t_3} \sim \textrm{Bernoulli}(p_{i,t_2\rightarrow t_3}),
 \end{equation}
@@ -134,30 +127,54 @@ We accounted for possible variation in mortality rates across different census p
 \end{equation}
 
 \clearpage
-\section{Appendix 2 - Example stan code}
+\section{Appendix 2 - Stan code for final model fit with species random effects}
 
-Include example model here
-
-Describe how to get other models?
-
+<<echo=FALSE>>=
+fullmodelcode()
+@
 
 \clearpage
 \section{Supplementary Figures}
 
 \begin{figure}[!hb]
 \centering
-\includegraphics[width=15cm,height=20cm,keepaspectratio]{figures/supp_fig1}
-\caption{ About this figure}
+\includegraphics{figures/supp_fig1.png}
+\caption{Observed vs predicted individual growth rates and stem diameters}
 \label{figS1}
 \end{figure}
 
 \clearpage
 \begin{figure}[!hb]
 \centering
-\includegraphics[width=15cm,height=20cm,keepaspectratio]{figures/supp_fig2}
-\caption{ About this figure}
+\includegraphics{figures/supp_fig2}
+\caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicates the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
 \label{figS2}
 \end{figure}
+
+\clearpage
+\begin{figure}[!hb]
+\centering
+\includegraphics{figures/supp_fig3}
+\caption{alpha}
+\label{figS3}
+\end{figure}
+
+\clearpage
+\begin{figure}[!hb]
+\centering
+\includegraphics{figures/supp_fig4}
+\caption{alpha}
+\label{figS4}
+\end{figure}
+
+\clearpage
+\begin{figure}[!hb]
+\centering
+\includegraphics{figures/supp_fig5}
+\caption{alpha}
+\label{figS5}
+\end{figure}
+
 
 \clearpage
 

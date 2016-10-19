@@ -39,6 +39,10 @@ plot_options:
   single_col_portrait_long:
     width: 3.46
     height: 6.5
+    
+  single_col_portrait_extralong:
+    width: 3.46
+    height: 8
 
   single_col_rectangle:
     width: 3.46
@@ -290,6 +294,21 @@ targets:
     plot: single_col_square
     cleanup_level: tidy
     
+  ms/figures/supp_fig3.pdf:
+    command: plot_spp_params(final_model, BCI_training_full, I("alpha"), I(expression(log(alpha))))
+    plot: single_col_portrait_extralong
+    cleanup_level: tidy
+
+  ms/figures/supp_fig4.pdf:
+    command: plot_spp_params(final_model, BCI_training_full, I("beta"),I(expression(log(beta))))
+    plot: single_col_portrait_extralong
+    cleanup_level: tidy
+    
+  ms/figures/supp_fig5.pdf:
+    command: plot_spp_params(final_model, BCI_training_full, I("gamma"), I(expression(log(gamma))))
+    plot: single_col_portrait_extralong
+    cleanup_level: tidy
+    
   
   #------------- Manuscript ---------------------------
 
@@ -337,3 +356,6 @@ targets:
       - ms/widetext.sty
       - ms/figures/supp_fig1.png
       - ms/figures/supp_fig2.pdf
+      - ms/figures/supp_fig3.pdf
+      - ms/figures/supp_fig4.pdf
+      - ms/figures/supp_fig5.pdf

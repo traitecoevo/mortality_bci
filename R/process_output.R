@@ -189,23 +189,55 @@ summarise_times <- function(times) {
   return(res)
 }
 
-# Summarise posteriors of species level parameters
-summarise_spp_params <- function(model, data) {
+# Summarise hyper parameters
+summarise_hyper_params <- function(model, data) {
   fit <- model$fits[[1]]
   dat <- prep_full_data_for_stan(data)
-  samples <- rstan::extract(fit, pars=c("alpha","beta","gamma"))
-  
-  samples[["alpha_gamma"]] <- samples$alpha + samples$gamma
+  samples <- rstan::extract(fit, pars=c("mu_log_alpha","mu_log_beta","mu_log_gamma",
+                                        "sigma_log_alpha", "sigma_log_beta", "sigma_log_gamma"))
   
   lapply(samples, function(x) {
     cbind.data.frame(
-      sp = dat$sp,
-      wood_density = dat$raw_rho,
-      mean = apply(x,2, mean),
-      median = apply(x,2, median),
-      sd = apply(x,2,sd),
-      aperm(apply(x,2, quantile, c(0.025,0.975)), c(2,1)))
+      mean = mean(x),
+      median = median(x),
+      sd = sd(x),
+      t(quantile(x, c(0.025,0.975))))
   })
+}
+
+# Summarise posteriors of species level parameters
+summarise_spp_params <- function(model, data, logscale=FALSE) {
+  fit <- model$fits[[1]]
+  dat <- prep_full_data_for_stan(data)
+  samples <- rstan::extract(fit, pars=c("alpha","beta","gamma"))
+  samples[["alpha_gamma"]] <- samples$alpha + samples$gamma
+  
+  if(logscale==TRUE) {
+    res <-lapply(samples, function(x) {
+      cbind.data.frame(
+        species = dat$species,
+        sp = dat$sp,
+        wood_density = dat$raw_rho,
+        mean = apply(log(x),2, mean),
+        median = apply(log(x),2, median),
+        sd = apply(log(x),2,sd),
+        aperm(apply(log(x),2, quantile, c(0.025,0.975)), c(2,1)))
+    })
+    names(res) <- paste0('log_', names(res))
+    return(res)
+  }
+  else {
+    lapply(samples, function(x) {
+      cbind.data.frame(
+        species = dat$species,
+        sp = dat$sp,
+        wood_density = dat$raw_rho,
+        mean = apply(x,2, mean),
+        median = apply(x,2, median),
+        sd = apply(x,2,sd),
+        aperm(apply(x,2, quantile, c(0.025,0.975)), c(2,1)))
+    })
+  }
 }
 
 # Predict hazard rates/ annual mortality rates for each species
@@ -352,6 +384,6 @@ merge_spp_params_covs <- function(spp_params,recruit_gap_conditions, raw_plot_da
   suppressWarnings(lapply(spp_params, function(x) {
     left_join(x, get_spp_dbh95(raw_plot_data), by ='sp') %>%
       left_join(get_mean_spp_gap_index(recruit_gap_conditions), by = 'sp') %>%
-      select(sp,wood_density, dbh_95, mean_gap_index, mean, median, sd, `2.5%`,`97.5%`)
+      select(species,sp,wood_density, dbh_95, mean_gap_index, mean, median, sd, `2.5%`,`97.5%`)
   }))
 }

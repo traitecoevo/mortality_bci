@@ -205,6 +205,7 @@ prep_full_data_for_stan <- function(data) {
     growth_dt = data$true_dbh_dt - 0.172,
     rho_c  = unique(data$rho)/0.6,
     y = as.integer(data$dead_next_census),
+    species = unique(data$species),
     sp = unique(data$sp),
     raw_rho = unique(data$rho))
 }

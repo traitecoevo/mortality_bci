@@ -77,3 +77,11 @@ pred_gain_wd <- function(data) {
   
   return(signif(df$prop_spp_gain,2)*100)
 }
+
+# Extract code for full model
+fullmodelcode <- function() {
+  task <- tasks_2_run("final_model")[1,]
+  chunks <- get_final_model_chunks(task)
+  model <- make_stan_model(chunks)
+  writeLines(model$model_code)
+}

@@ -42,7 +42,7 @@ plot_obs_v_pred_growth <- function(data) {
 
 # Plot species predicted mortality v growth curves
 plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FALSE, 
-                            ylab="Annual mortality probability", xlab="Annual mortality probability") {
+                            ylab="Annual mortality probability", xlab="Annual dbh growth (cm)") {
   preds <- predict_spp_hazard(model, data, growth_range)
   
   breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
@@ -161,6 +161,47 @@ plot_recruits_gapindex <- function(gap_index_raster, recruit_gap_conditions) {
                                         pch='+', col='red', alpha=0.4, cex=0.1),
                               data=list(recruit_gap_conditions=recruit_gap_conditions)))
   
+}
+
+# Plot species parameters
+
+plot_spp_params <- function(model, data, parameter,xlab ='Log effect size', title=NULL) {
+  # Extract hyper distribution summary
+  hyper <- summarise_hyper_params(model,data) %>%
+    subset(., grepl(parameter, names(.))) %>%
+    {
+      hyper_param <- as.character(TRUE)
+      species <- as.character('Hyper distribution')
+      mean <- .[[paste0('mu_log_',parameter)]]$mean
+      sd <- .[[paste0('sigma_log_',parameter)]]$mean
+      `2.5%` <- qnorm(0.025,mean,sd)
+      `97.5%` <- qnorm(0.975,mean,sd)
+      cbind.data.frame(hyper_param,species,mean,sd,`2.5%`,`97.5%`, stringsAsFactors=FALSE)
+    }
+  # Extract species param summaries
+  spp <- summarise_spp_params(model,data, TRUE) %>% 
+    .[[paste0('log_',parameter)]] %>%
+    mutate(hyper_param = as.character(FALSE),
+           sp = as.character(sp),
+           species = as.character(species))
+  
+  # Merge dataframes and prep for plotting
+  dat <-bind_rows(hyper, spp) %>%
+    mutate(
+      species = as.factor(species)) %>%
+    mutate(species = factor(species, levels=species[order(hyper_param,mean)], ordered=TRUE))
+  
+  #Plot 
+  ggplot(dat, aes(x = mean,y = species, col=hyper_param)) + 
+    geom_segment(aes(x=`2.5%`,y=species, xend=`97.5%`, yend=species), size=0.3) +
+    geom_point(aes(x=mean, y=species), size=0.3) +
+    scale_colour_manual(values = c("TRUE" ="red","FALSE" ="black")) +
+    xlab(xlab) +
+    ylab(NULL) +
+    labs(title=title) +
+    partial_plot_theme() +
+    theme(axis.text.y=element_text(size=3),
+          axis.ticks = element_line(size= 0.3))
 }
 
 # Plot other covariates by parameter
