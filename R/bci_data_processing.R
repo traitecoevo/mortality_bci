@@ -317,7 +317,7 @@ gap_data <- function(canopy_data) {
 
 # get dataframe of recruits in years 1985 to 1995
 # where recruit is a presence in a later census that wasn't there prior to 1985.
-recruits_8595 <- function(raw_BCI_data, fitted_data) {
+recruits_8595 <- function(raw_BCI_data) {
   
   raw_BCI_data %>%
     filter(censusid >1 & censusid < 5) %>% # Only using recruit data from 1985 to 1995 as this uses only vertical line approach
