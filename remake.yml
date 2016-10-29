@@ -59,6 +59,11 @@ plot_options:
     height: 3.46
     onefile: FALSE
 
+  double_col_square:
+    width: 6
+    height: 6
+    onefile: FALSE
+
 targets:
   all:
     depends:
@@ -285,13 +290,13 @@ targets:
     plot:
       width: 3.46
       height: 3.46
-      units: "in"
+      units: 'in'
       res: 300
     cleanup_level: tidy
     
   ms/figures/supp_fig2.pdf:
     command: plot_recruits_gapindex(gap_index_raster, recruit_gap_conditions)
-    plot: single_col_square
+    plot: double_col_square
     cleanup_level: tidy
     
   ms/figures/supp_fig3.pdf:

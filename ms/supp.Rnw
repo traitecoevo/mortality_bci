@@ -127,7 +127,7 @@ We accounted for possible variation in mortality rates across different census p
 \end{equation}
 
 \clearpage
-\section{Appendix 2 - Stan code for final model fit with species random effects}
+\section{Appendix 2 - Stan code for final model fit with species random effects and wood density effect}
 
 <<echo=FALSE>>=
 fullmodelcode()
@@ -138,7 +138,7 @@ fullmodelcode()
 
 \begin{figure}[!hb]
 \centering
-\includegraphics{figures/supp_fig1.png}
+\includegraphics[width=\textwidth]{figures/supp_fig1.png}
 \caption{Observed vs predicted individual growth rates and stem diameters}
 \label{figS1}
 \end{figure}
@@ -155,7 +155,7 @@ fullmodelcode()
 \begin{figure}[!hb]
 \centering
 \includegraphics{figures/supp_fig3}
-\caption{alpha}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
 \label{figS3}
 \end{figure}
 
@@ -163,7 +163,7 @@ fullmodelcode()
 \begin{figure}[!hb]
 \centering
 \includegraphics{figures/supp_fig4}
-\caption{alpha}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
 \label{figS4}
 \end{figure}
 
@@ -171,7 +171,7 @@ fullmodelcode()
 \begin{figure}[!hb]
 \centering
 \includegraphics{figures/supp_fig5}
-\caption{alpha}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
 \label{figS5}
 \end{figure}
 
