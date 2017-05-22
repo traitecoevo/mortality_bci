@@ -1,15 +1,13 @@
 
-## We can rely on callr and system git as both are installed by the
-## dockertest bootstrap.
 update_git_repo <- function(url, dest) {
-  git <- callr::Sys_which("git")
+  git <- Sys_which("git")
   if (file.exists(dest)) {
     args <- c("-C", dest, "pull")
   } else {
     args <- c("clone", url, dest)
   }
-  callr::call_system(git, args)
-  sha <- callr::call_system(git, c("-C", dest, "rev-parse", "HEAD"))
+  call_system(git, args)
+  sha <- call_system(git, c("-C", dest, "rev-parse", "HEAD"))
   sha
 }
 
