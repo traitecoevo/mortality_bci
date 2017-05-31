@@ -220,7 +220,7 @@ FUNCTION {format.names}
 		'skip$
 	      if$
 	      t "others" =
-		{ " et~al." * }
+		{ ", et~al." * }
 		{ t * }
 	      if$
 	    }
@@ -231,7 +231,7 @@ FUNCTION {format.names}
       nameptr #1 + 'nameptr :=
       namesleft #1 - 'namesleft :=
       namesleft #4 >
-      { " et~al." *
+      { ", et~al." *
         #0 'namesleft :=
       }
       'skip$
@@ -542,11 +542,11 @@ FUNCTION {format.crossref.editor}
 { editor #1 "{vv~}{ll}" format.name$
   editor num.names$ duplicate$
   #2 >
-    { pop$ " et~al." * }
+    { pop$ ", et~al." * }
     { #2 <
 	'skip$
 	{ editor #2 "{vv }{ll}{ jj}{, f}" format.name$ "others" =
-	    { " et~al." * }
+	    { ", et~al." * }
 	    { " and " * editor #2 "{vv~}{ll}" format.name$ * }
 	  if$
 	}

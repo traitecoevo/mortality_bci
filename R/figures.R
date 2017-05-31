@@ -24,8 +24,8 @@ plot_obs_v_pred_growth <- function(data) {
     geom_abline(intercept = 0, slope = 1, col='red', size= 0.2) +
     scale_x_continuous(expand=c(0,0), limit=c(NA, 5)) +
     scale_y_continuous(expand=c(0,0), limit=c(0, 5)) +
-    ylab(expression(widehat("DBH growth")~(cm/yr))) + 
-    xlab('DBH growth (cm/yr)') +
+    ylab(expression(widehat("DBH growth")~("cm yr"^-1))) +
+    xlab(expression("DBH growth"~("cm yr"^-1))) +
     partial_plot_theme()
   
   p4 <- ggplot(data = data,  aes(x = obs_basal_area_dt, y = true_basal_area_dt)) + 
@@ -33,8 +33,8 @@ plot_obs_v_pred_growth <- function(data) {
     geom_abline(intercept = 0, slope = 1, col='red', size= 0.2) +
     scale_x_continuous(expand=c(0,0), limit=c(NA, 300)) +
     scale_y_continuous(expand=c(0,0), limit=c(0, 300)) +
-    ylab(expression(widehat("Basal area growth")~(cm^2/yr))) + 
-    xlab(expression("Basal area growth"~(cm^2/yr))) +
+    ylab(expression(widehat("Basal area growth")~("cm"^2~"yr"^-1))) +
+    xlab(expression("Basal area growth"~("cm"^2~"yr"^-1))) +
     partial_plot_theme()
   
   plot_grid(p1, p2, p3, p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
@@ -42,7 +42,9 @@ plot_obs_v_pred_growth <- function(data) {
 
 # Plot species predicted mortality v growth curves
 plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FALSE, 
-                            ylab="Annual mortality probability", xlab="Annual dbh growth (cm)") {
+                            ylab="Annual mortality probability", xlab=expression("Annual dbh growth"~("cm yr"^-1))) {
+
+
   preds <- predict_spp_hazard(model, data, growth_range)
   
   breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
@@ -55,7 +57,7 @@ plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve
       scale_y_continuous(expand=c(0,0), limits = c(0, NA)) +
       ylab(ylab) +
       xlab(xlab) +
-      scale_colour_gradient(expression("wood density"~("g/cm"^3)),low="blue", high="red") +
+      scale_colour_gradient(expression("Wood density"~("g cm"^-3)),low="blue", high="red") +
       partial_plot_theme()
   }
   else {
@@ -65,14 +67,14 @@ plot_spp_curves <- function(model, data, growth_range= c(0.03,0.5), hazard_curve
       scale_y_log10(breaks= breaks, labels = labels, limits=c(0.001,100)) +
       ylab(ylab) +
       xlab(xlab) +
-      scale_colour_gradient(expression("wood density"~(g/cm^3)),low="blue", high="red") +
+      scale_colour_gradient(expression("Wood density"~("g cm"^-3)),low="blue", high="red") +
       partial_plot_theme()
   }
 }
 
 # Plot average species curve
 plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = FALSE, 
-                           ylab="Annual mortality probability", xlab="Annual dbh growth (cm)") {
+                           ylab="Annual mortality probability", xlab=expression("Annual dbh growth"~("cm yr"^-1))) {
   preds <- predict_mu_hazards(model,wood_density, growth_range, hazard_curve)
   
   breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
@@ -80,9 +82,9 @@ plot_mu_curves <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,
   
   p1 <- ggplot(preds, aes(x = dbh_growth,y = mean, group = type, colour = wood_density, fill=wood_density)) + 
     geom_line(size=0.3) +
-    scale_color_gradient(name=expression("wood density"~(g/cm^3)),limits=c(0.197,NA),low='blue',high='red') +
+    scale_color_gradient(name=expression("Wood density"~("g cm"^-3)),limits=c(0.197,NA),low='blue',high='red') +
     geom_ribbon(aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.4, colour=NA) +
-    scale_fill_gradient(expression("wood density"~(g/cm^3)),limits=c(0.197,NA),low='blue',high='red') +
+    scale_fill_gradient(expression("Wood density"~("g cm"^-3)),limits=c(0.197,NA),low='blue',high='red') +
     scale_x_continuous(expand=c(0,0)) +
     xlab(xlab)
   
@@ -438,7 +440,7 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
     partial_plot_theme() +
     scale_y_log10(breaks= breaks, labels = labels) +
     ylab(expression("Baseline mortality rate"~(gamma))) +
-    xlab(expression("wood density"~("g/cm"^3)))
+    xlab(expression("Wood density"~("g cm"^-3)))
 }
 
 plot_fig4 <- function(model, data) {

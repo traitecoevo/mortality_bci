@@ -1,4 +1,4 @@
-\documentclass[9pt,onecolumn,twoside]{pnas-new}
+\documentclass[9pt,twocolumn,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
 % Note that the use of elements such as single-column equations
 % may affect the guide line number alignment. 
@@ -15,11 +15,15 @@
 \author[a,1]{James S Camac}
 \author[a]{Mark Westoby}
 \author[b]{S Joseph Wright}
-\author[a]{Daniel S Falster}
+\author[a,c]{Daniel S Falster}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \affil[a]{Department of Biological Sciences, Macquarie University NSW 2109, Australia}
 \affil[b]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
+\affil[c]{Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales}
+
+% Please give the surname of the lead author for the running footer
+\leadauthor{Camac}
 
 \dates{This supplement was compiled on \today}
 \doi{\url{www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX}}
@@ -34,15 +38,17 @@
 
 \maketitle
 
-\tableofcontents
-
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\thetable}{S\arabic{table}}
-\setcounter{secnumdepth}{0}
+\renewcommand{\theequation}{S\arabic{equation}}
+\renewcommand{\thesection}{S\arabic{section}}
 
-\section{Appendix A - Supplementary text}
+% \setcounter{secnumdepth}{0}
 
-\subsection{Modelling true growth}
+
+Our model is presented in detail in ...... Some intro text.
+
+\section{Estimating True Growth}
 
 To ensure our model was not biased by these implausible values we estimated \textit{``true growth''}(i.e. observed growth minus observation error) by first using another BCI dataset collected explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
 
@@ -66,12 +72,13 @@ The final diameter measurement for each individual $i$, $D_{i,2}$ was estimated 
 \begin{equation}\label{eq:true_dbh2}
 \widehat{D}_{i,2} = \widehat{D}_{i,1} + \Delta D_{i,2} \, (t_2-t_1),
 \end{equation}
-where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centerd on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm/yr.
+where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centered on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm yr$^{-1}$.
 
 Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis.
 
 
-\subsection{Mortality model}
+\section{Mortality model}
+
 We modelled tree mortality using survival outcomes $S_{i, t_2\rightarrow t_3}$ (0 = alive, 1 = died) for each individual $i$ between censuses at time $t_2$ and $t_3$. We model these observations as random realizations from a Bernoulli distribution
 \begin{equation}
 S_{i,t_2\rightarrow t_3} \sim \textrm{Bernoulli}(p_{i,t_2\rightarrow t_3}),
@@ -90,9 +97,12 @@ In this model, $\alpha_s$, $\beta_s$ and $\gamma_s$ are allowed to vary by speci
 \begin{equation}\label{eq:submodels}
 \alpha_s = \alpha_{0,s} \, \left(\frac{\rho}{\rho_c}\right)^{\alpha_{1}},
 \end{equation}
-with similar formulations for $\beta_s$ and $\gamma_s$. Here $\alpha_{1}$ captures the effect of wood density $\rho$ on $\alpha_s$, while $\alpha_{0,s}$ captures any other species-level residual error not explained by wood density for species $s$ within which individual $i$ belongs. The form of sub-model in eq. \ref{eq:submodels} ensures that parameters $\alpha_s$, $\beta_s$ and $\gamma_s$ remain positive. On a log scale this model equates to an additive linear model , e.g. $\log \alpha_s = \log \alpha_{0,s} + (\alpha_{1} - \log \rho_c) \, \log \rho$.
+with similar formulations for $\beta_s$ and $\gamma_s$. Here $\alpha_{1}$ captures the effect of wood density $\rho$ on $\alpha_s$, while $\alpha_{0,s}$ captures any other species-level residual error not explained by wood density for species $s$ within which individual $i$ belongs. The form of sub-model in eq. \ref{eq:submodels} ensures that parameters $\alpha_s$, $\beta_s$ and $\gamma_s$ remain positive. On a log scale this model equates to an additive linear model , i.e.
+\begin{equation}\label{eq:submodels_log}
+\log \alpha_s = \log \alpha_{0,s} + (\alpha_{1} - \log \rho_c) \, \log \rho.
+\end{equation}
 
-We standardized wood density via the transformation: $\frac{\rho}{\rho_c}$, where $\rho_c=0.6$ g cm${^-3}$. This operation is equivalent to centering a log-transformed $\rho$ around $\rho_c$ and enables mean hyper-parameters  to be interpreted as the value for a species with average wood density of 0.6 cm${^-3}$. Similarly, we also centered $X_i$ at the lower 5\% quantile for both diameter increment and area growth (0.172 and 0.338, respectively), meaning $\alpha_s$ should be interpreted as the hazard rate when growth rate was very low.
+We standardized wood density via the transformation: $\frac{\rho}{\rho_c}$, where $\rho_c=0.6$ g cm$^{-3}$. This operation is equivalent to centering a log-transformed $\rho$ around $\rho_c$ and enables mean hyper-parameters  to be interpreted as the value for a species with average wood density of 0.6 cm$^{-3}$. Similarly, we also centered $X_i$ at the lower 5\% quantile for both diameter increment and area growth (0.172 and 0.338, respectively), meaning $\alpha_s$ should be interpreted as the hazard rate when growth rate was very low.
 
 We modelled species random effects as random realisations from log-normal distributions:
 \begin{equation}
@@ -124,59 +134,63 @@ We accounted for possible variation in mortality rates across different census p
 \sigma_{\delta} \sim \textrm{Cauchy+}\left(0, 2.5\right).
 \end{equation}
 
-\clearpage
-\section{Appendix 2 - Stan code for final model fit with species random effects and wood density effect}
+\section{Numerical optimisation}
 
-<<echo=FALSE>>=
-fullmodelcode()
+\section{Example Stan code}
+
+Models were implemented in the `Stan` framework, which uses a specific language to encode model structure \cite{StanDevelopmentTeam:2015uz}.  Code for all models implemented are available in the supplied source code. As an example, we include here the code for the final model fit, including with species random effects, wood density effect and census effect.
+
+<<echo=FALSE, highlight=TRUE, comment = ''>>=
+task <- tasks_2_run("final_model")[1, ]
+chunks <- get_final_model_chunks(task)
+model <- make_stan_model(chunks)
+code <- gsub("\n      ", "\n", model$model_code)
+code <- strsplit(code, "\n")[[1]]
+writeLines(strwrap(code, width = 50, exdent = 10))
 @
 
-\clearpage
-\section{Supplementary Figures}
+\section{References}
+\bibliography{refs.bib}
 
-\begin{figure}[!hb]
+\clearpage
+\begin{figure*}[!hb]
 \centering
-\includegraphics[width=\textwidth]{figures/supp_fig1.png}
+\includegraphics[width=0.6\textheight]{figures/supp_fig1.png}
 \caption{Observed vs predicted individual growth rates and stem diameters}
 \label{figS1}
-\end{figure}
+\end{figure*}
 
 \clearpage
-\begin{figure}[!hb]
+\begin{figure*}[!hb]
 \centering
-\includegraphics{figures/supp_fig2}
+\includegraphics[width=\textwidth]{figures/supp_fig2}
 \caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicates the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
 \label{figS2}
-\end{figure}
+\end{figure*}
 
 \clearpage
-\begin{figure}[!hb]
+\begin{figure*}[!hb]
 \centering
-\includegraphics{figures/supp_fig3}
+\includegraphics[height=0.8\textheight]{figures/supp_fig3}
 \caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
 \label{figS3}
-\end{figure}
+\end{figure*}
 
 \clearpage
-\begin{figure}[!hb]
+\begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig4}
 \caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
 \label{figS4}
-\end{figure}
+\end{figure*}
 
 \clearpage
-\begin{figure}[!hb]
+\begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig5}
 \caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
 \label{figS5}
-\end{figure}
+\end{figure*}
 
 
-\clearpage
-
-\section{References}
-
-\bibliography{refs.bib}
 \end{document}

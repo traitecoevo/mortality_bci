@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% pnas-new.cls, v1.2, 2016/02/28 
+% pnas-new.cls, v1.4, 2016/09/19
 %
 % This class file enables authors to prepare research 
 % articles for submission to PNAS.
@@ -23,7 +23,7 @@
 % to produce the PDF, not dvis -> ps -> pdf nor dvipdf
 % 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{pnas-new}[28/02/2015, v1.2]
+\ProvidesClass{pnas-new}[19/09/2016, v1.4]
 \AtEndOfClass{\RequirePackage{microtype}}
 % Option for line numbers
 \newif\if@pnaslineno
@@ -99,8 +99,10 @@
 \usepackage[printwatermark]{xwatermark}
 \newboolean{displaywatermark}
 \setboolean{displaywatermark}{true} % Set to false to remove the watermark
-\ifthenelse{\boolean{displaywatermark}}{%
-\newwatermark[allpages,color=gray!20,angle=45,scale=3,xpos=0,ypos=0]{DRAFT}}{}
+\AtBeginDocument{%
+  \ifthenelse{\boolean{displaywatermark}}{%
+  \newwatermark[allpages,color=gray!20,angle=45,scale=3,xpos=0,ypos=0]{DRAFT}}{}
+}
 
 %% Copyright statement (not used)
 \newboolean{displaycopyright}
@@ -145,7 +147,7 @@
 %\definecolor{pnasblueback}{RGB}{210,230,247} % Not used
 
 %% Bibliography    
-\RequirePackage[numbers,sort&compress]{natbib}
+\RequirePackage[numbers,sort&compress,merge]{natbib}
 \setlength{\bibsep}{0.0pt}
 \bibliographystyle{pnas2011}
 \renewcommand{\bibsection}{} % Remove header
@@ -159,11 +161,11 @@
 
 %% Figure caption style
 \DeclareCaptionFormat{pnasformat}{\normalfont\sffamily\fontsize{7}{9}\selectfont#1#2#3}
-\captionsetup{format=pnasformat}
+\captionsetup*{format=pnasformat}
 
 %% Table style
 \RequirePackage{etoolbox}
-\captionsetup[table]{labelfont+={small},textfont+={small,sf,bf},skip=10pt,position=above}
+\captionsetup*[table]{labelfont+={small},textfont+={small,sf,bf},skip=10pt,position=above}
 % booktabs provide nice spacing, but rule widths and distances need fixing
 \setlength{\heavyrulewidth}{0.5pt}
 \setlength{\lightrulewidth}{0.5pt}
@@ -364,7 +366,7 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 }%
 
 %% Footnotes set up
-\RequirePackage[flushmargin,ragged]{footmisc}
+\RequirePackage[flushmargin,ragged,symbol*]{footmisc}
 \renewcommand*{\footnotelayout}{\normalfont\sffamily\fontsize{6}{8}\selectfont} % set the footnote font
 \renewcommand{\footnoterule}{% Set the footnote hrule style
   \kern -3pt
@@ -387,9 +389,15 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 	{0pt}
 	{3.25ex plus 1ex minus .2ex}
 	{1.5ex plus .2ex}
+
+
 \newcommand{\showacknow}{% Display acknowledgments section
-\@ifundefined{@acknow}{}{\acknow@section{ACKNOWLEDGMENTS}\small\@acknow}
+\@ifundefined{@acknow}{}{
+\vskip 3.25ex plus 1ex minus .2ex
+\noindent{\sffamily\normalsize\bfseries ACKNOWLEDGMENTS.\hspace{1.5ex plus .2ex}}
+\small\@acknow}
 }
+
 
 %% Set up the materials&methods field
 \titleclass{\matmethods@section}{straight}[\part]
@@ -412,3 +420,6 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 
 %% Other packages
 \RequirePackage{enumitem} % For reducing bullet list item separation
+
+%% For sidecaptions
+\RequirePackage[rightcaption]{sidecap}
