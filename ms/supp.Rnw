@@ -8,16 +8,15 @@
 \title{
 {\normalfont \fontsize{12pt}{16pt}
 {\color{black50} Supporting information for:}\\} \vskip6pt
-\fontsize{16pt}{20pt} Unifying intraspecific and interspecific variation in tropical tree mortality
+\fontsize{16pt}{20pt} Unifying intra- and inter-specific variation in tropical tree mortality
 }
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \author[a,1]{James S Camac}
 \author[a]{Mark Westoby}
 \author[b]{S Joseph Wright}
-\author[a,c]{Daniel S Falster}
+\author[c]{Daniel S Falster}
 
-% Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \affil[a]{Department of Biological Sciences, Macquarie University NSW 2109, Australia}
 \affil[b]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
 \affil[c]{Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales}
@@ -72,8 +71,7 @@ The final diameter measurement for each individual $i$, $D_{i,2}$ was estimated 
 \end{equation}
 where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centered on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm yr$^{-1}$.
 
-Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis.
-
+Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis. Fig. \ref{figS1} illustrates observed and estimated diameters, and growth rate estimated from raw data including measurement error and from the probabilistic model.
 
 \section{Parameter distributions}
 
@@ -149,7 +147,7 @@ writeLines(strwrap(code, width = 50, exdent = 10))
 \begin{figure*}[!hb]
 \centering
 \includegraphics[width=\textwidth]{figures/supp_fig2}
-\caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicates the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
+\caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicate the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
 \label{figS2}
 \end{figure*}
 
@@ -157,7 +155,7 @@ writeLines(strwrap(code, width = 50, exdent = 10))
 \begin{figure*}[!hb]
 \centering
 \includegraphics[height=0.8\textheight]{figures/supp_fig3}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS3}
 \end{figure*}
 
@@ -165,7 +163,7 @@ writeLines(strwrap(code, width = 50, exdent = 10))
 \begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig4}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS4}
 \end{figure*}
 
@@ -173,7 +171,7 @@ writeLines(strwrap(code, width = 50, exdent = 10))
 \begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig5}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS5}
 \end{figure*}
 

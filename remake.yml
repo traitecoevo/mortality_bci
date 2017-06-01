@@ -66,6 +66,7 @@ targets:
   all:
     depends:
       - ms/ms.pdf
+      - ms/supp.pdf
 
   process_crossval:
     depends:
@@ -339,7 +340,6 @@ targets:
   ms/ms.pdf:
     command: latex_build("ms/ms.tex", "ms/refs.bib", clean=TRUE)
     depends:
-      - ms/supp.pdf
       - ms/pnas-new.cls
       - ms/pnasresearcharticle.sty
       - ms/widetext.sty
