@@ -8,14 +8,22 @@
 
 \title{Unifying intra- and inter-specific variation in tropical tree mortality}
 
-\author[a,1]{James S Camac}
+\author[a,b,1]{James S Camac}
+\author[c]{Richard Condit}
+\author[d]{Richard G FitzJohn}
+\author[e]{Lachlan McCalman}
+\author[e]{Daniel Steinberg}
 \author[a]{Mark Westoby}
-\author[b]{S Joseph Wright}
-\author[a,c]{Daniel S Falster}
+\author[f]{S Joseph Wright}
+\author[a,g]{Daniel S Falster}
 
-\affil[a]{Department of Biological Sciences, Macquarie University NSW 2109, Australia}
-\affil[b]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
-\affil[c]{Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales}
+\affil[a]{Department of Biological Sciences, Macquarie University, New South Wales, Australia}
+\affil[b]{Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Victoria, Australia}
+\affil[c]{Field Museum of Natural History and Morton Arboretum, Chicago, Illinois, USA}
+\affil[d]{Imperial College, London, United Kingdom}
+\affil[e]{Data61, CSIRO, Australia}
+\affil[f]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
+\affil[g]{Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, NSW 2052, Australia}
 
 \leadauthor{Camac}
 
@@ -24,7 +32,7 @@
 \significancestatement{Tree mortality is a fundamental demographic process affecting forest dynamics and carbon cycling. Here, for the first time, we use observed survival records over a 15 year period from more than 180,000 individuals, to simultaneously estimate growth-dependent and growth-independent (i.e. stochastic) mortality across 203 tropical forest tree species. We found that growth-dependent mortality was the predominate factor influencing tree mortality rates at Barro Colorado Island. Furthermore, we found that wood density most strongly influenced mortality rates by decreasing growth-independent mortality. However, wood density only accounted for a small fraction of the overall species variability observed in growth-independent mortality rates, suggesting that there must be other species traits that strongly affect mortality. Which traits and how many of them, however, remains unknown.}
 
 % Please include corresponding author, author contribution and author declaration information
-\authorcontributions{J.C. performed research; D.S.F. conceived the idea; S.J.W. collected data. All authors contributed to the writing of this manuscript.}
+\authorcontributions{D.F. conceived idea; all authors designed research; J.C. \& R.F. performed analysis; R.C. \& S.J.W. collected data. J.C \& D.F. wrote the manuscript}
 
 \authordeclaration{The authors declare that they have no competing financial interests.\\
 
@@ -83,7 +91,7 @@ A further challenge in developing hazard functions for plants is to integrate th
 \caption{Outline of methodology.
 A) Our data consist of repeat measures of stem diameter ($D$) and status ($S$, alive or dead) for individual trees at specific census dates ($t_1$, $t_2$, $t_3$).
 B) We consider three alternative hazard functions: 1) a baseline hazard, 2) a growth-dependent hazard; and 3) a function that combines both baseline and growth-dependent hazards. The parameters of the models are biologically interpretable: $\alpha$ defines the instantaneous mortality rate at low growth rate; $\beta$ reflects the sensitivity of mortality rate to changes in growth rate; and $\gamma$ is the asymptote, or baseline hazard. Combined $\alpha$ and $\beta$ capture growth-dependent mortality, while $\gamma$ captures growth-independent mortality (e.g. windfall, fire) that kill a plant, irrespective of its growth rate. For each model form, we consider two alternative predictors of growth, $X$ (basal area and stem diameter growth), as well as allowing for species-level effects on the parameters $\alpha$, $\beta$ and $\gamma$.
-C) Log-loss function highlighting that the further the predicted probability is from truth the higher the logloss.
+C) Predictions for plant survival and death are compared to observed outcomes. Incorrect predictions are penalised via the log-loss function.
 D) The predictive skill of alternative models is evaluated via 10-fold cross validation. The entire dataset is split into 10 folds ($F_1$, ..., $F_{10}$). Alternative models were fit 10 times ($M_1$, ..., $M_{10}$), using different combinations of testing and training data. We then average the estimated log loss for each of these 10 model fits.}
 \label{fig1}
 \end{figure}
@@ -98,7 +106,7 @@ To validate this model, we fit a series of models with increasing complexity, wi
 
 In stage 1 we ask whether mortality rates vary substantially between censuses to establish whether a census effect is required. The null model is simply a constant, invariant with respect to species, growth rate, or year.
 In stage 2 we assess whether a hazard function including both growth-dependent and independent terms outperform a function including only one of these? Species effects were excluded, so we are simply asking which of three functional forms for $\lambda_i(t)$ (Fig. \ref{fig1}B) best represents the data. The simplest form (Fig. \ref{fig1}B, left) assumes a constant growth-independent hazard rate. The second form (Fig. \ref{fig1}B, middle) assumes the risk of dying eventually declines towards an asymptote of zero as growth increases. The third form (eq. Fig. \ref{fig1}B, right) is the summation of the two previous models, which allows $\lambda_i(t)$ to decrease exponentially with increasing growth rate, but, unlike a standard negative exponential, asymptoting at some baseline hazard $\textgreater 0$. Combined, these three models capture a variety of functional responses previously proposed, including effects represented in current vegetation models \cite{Moorcroft:2001ws,McDowell:2011dr}, which have not previously been systematically compared. We also investigate which growth measure (stem diameter or stem area increment) more skilfully predicts growth-dependent mortality.
-In stage 3, we examined whether including wood density (a species-level trait) improved model skill, and if so, whether the effect of wood density was primarily on growth-dependent or growth-independent hazards, or both? Finally, we fit a model which allowed parameters to vary by species-level variation that was otherwise not captured by wood density. This allowed us to ask what proportion of inter-specific hazard variability is explained by wood density. Using the final 'best' model we also conducted some posthoc tests, to determine how species-level parameters were associated with their maximum size and light requirement.
+In stage 3, we examined whether including wood density (a species-level trait) improved model skill, and if so, whether the effect of wood density was primarily on growth-dependent or growth-independent hazards, or both? Finally, we fit a model which allowed parameters to vary by species-level variation that was otherwise not captured by wood density. This allowed us to ask what proportion of inter-specific hazard variability is explained by wood density. Using the final `best' model we also conducted some posthoc tests, to determine how species-level parameters were associated with their maximum size and light requirement.
 
 \section*{Results}
 
