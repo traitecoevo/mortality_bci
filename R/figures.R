@@ -108,7 +108,7 @@ plot_param_prop_explained <- function(param_prop_explained, ylab=NULL, xlab=NULL
            level = factor(level, levels=c("species","census")))
   ggplot(dat, aes(x=level, y=proportion)) +
     geom_bar(stat='identity', aes(fill=param), width=0.5) +
-    scale_x_discrete(labels=c('species','census')) +
+    scale_x_discrete(labels=c('species\n','census\n')) +
     scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
     scale_fill_manual(values = c("wood_density" ="darkgrey","species" ="black", "census"="black")) + 
     ylab(ylab) +
@@ -121,7 +121,7 @@ plot_base_v_growth_prop_explained <- function(param_prop_explained, ylab=NULL, x
   dat <- filter(param_prop_explained, param %in% c("baseline", "growth_dependent")) %>% droplevels()
   ggplot(dat, aes(x=param, y=proportion)) +
     geom_bar(stat='identity', fill='black', width=0.5) +
-    scale_x_discrete(labels=c('growth dependent','baseline')) +
+    scale_x_discrete(labels=c('growth-\ndependent','growth-\nindependent')) +
     scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
     ylab(ylab) +
     xlab(xlab) +
@@ -313,7 +313,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   p <- seq(0,1, length.out=200)
   lines(p, -log(1-p), type='l', col="red")
   my_label("C) Penalty for incorrect prediction", x=-0.137)
-  mtext("Probability of outcome, p", 1, line=2.1, cex=0.5)
+  mtext("Probability of outcome", 1, line=2.1, cex=0.5)
   mtext("log loss", 2, line=2.1, cex=0.5)
 
   # Plot cross validation proceedure
@@ -378,12 +378,12 @@ plot_fig2a <- function(logloss_summaries) {
              comparison %in% c("null_model","function_growth_comparison","species_random_effects")) %>%
     mutate(comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
       comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','rho_combinations','species_random_effects'),
-                               labels = c('Null','Census','Growth rate','WD','Species')))
+                               labels = c('Null','+ Census','+ Growth rate','+ WD','+ Species')))
   
   ggplot(dat, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
-    ylab('Logarithmic Loss') + 
-    xlab('Model') +
+    ylab('Logarithmic loss') +
+    xlab('Hazard function') +
     scale_shape_manual(values = c(21, 24, 22)) +
     scale_fill_manual(values =c('white','grey80','black')) +
     scale_y_continuous(breaks= scales::pretty_breaks(5)) +
@@ -406,8 +406,8 @@ plot_fig2b <- function(logloss_summaries) {
   
   ggplot(dat, aes(x = model_type,y = mean)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black', stroke = 0.5,size=0.4) +
-    ylab('Logarithmic Loss') + 
-    xlab(expression('Wood density effects on'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"])) +
+    ylab('Logarithmic loss') +
+    xlab(expression('Wood density effects in the model '~(alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"])) +
     scale_x_discrete(labels=c("function_growth_comparison_base_growth_hazard_none" = "none",
                               "rho_combinations_base_growth_hazard_a" = expression(alpha),
                               "rho_combinations_base_growth_hazard_b" = expression(beta),
@@ -439,12 +439,12 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
     geom_line(data = pred_mu_basehaz, aes(x = wood_density, y= mean), col='blue') +
     partial_plot_theme() +
     scale_y_log10(breaks= breaks, labels = labels) +
-    ylab(expression("Baseline mortality rate"~(gamma))) +
+    ylab(expression("Growth-independent mortality rate,"~gamma~("yr"^-1))) +
     xlab(expression("Wood density"~("g cm"^-3)))
 }
 
 plot_fig4 <- function(model, data) {
-  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE, xlab=NULL, ylab="Mortality rate")
+  p1 <- plot_spp_curves(model, data, hazard_curve = TRUE, xlab=NULL, ylab=expression("Mortality rate"~("yr"^-1)))
   p2 <- plot_mu_curves(model, hazard_curve= TRUE, ylab=NULL, xlab=NULL) +
     theme(legend.position= c(0.8,0.8),
           legend.key.size =unit(0.25, "cm"), 
@@ -460,20 +460,20 @@ plot_fig4 <- function(model, data) {
 
 # Proportion of variance explained
 plot_fig5 <- function(param_prop_explained) {
-  p1 <- plot_param_prop_explained(param_prop_explained, ylab="Proportion of variation explained")
+  p1 <- plot_param_prop_explained(param_prop_explained, ylab="Proportion of variation")
   p2 <- plot_base_v_growth_prop_explained(param_prop_explained)
   plot_grid(p1,p2, ncol=2, labels=LETTERS[1:2], label_size = 7)
 }
 
 # params vs other covariates
 plot_fig6 <- function(data) {
-p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + ggtitle('Light requirement') 
+p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect,"~alpha), xlab =NULL) + ggtitle('Light requirement')
 p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = NULL, xlab =NULL) + ggtitle('Maximum size') 
-p3 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline mortality"~(gamma)), xlab =NULL)
+p3 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline mortality,"~gamma), xlab =NULL)
 p4 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = NULL, xlab = NULL)
-p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","mean_gap_index",ylab = expression("Low growth mortality"~(alpha+gamma)), xlab = NULL)
+p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","mean_gap_index",ylab = expression("Low growth mortality,"~alpha+gamma), xlab = NULL)
 p6 <- plot_spp_param_by_covariate(data, "alpha_gamma", "dbh_95",ylab = NULL, xlab = NULL)
-p7 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Exponential decay"~(beta)), xlab ='Gap index')
+p7 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Exponential decay,"~beta), xlab ='Gap index')
 p8 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = NULL, xlab =expression('DBH'['max']~(cm)))
 plot_grid(p1,p2,p3,p4,p5,p6,p7,p8, ncol=2, labels=LETTERS[1:8], label_size = 7)
 }
