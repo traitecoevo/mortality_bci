@@ -48,7 +48,7 @@ latex_build <- function(filename, bibliography=NULL,
 latex_clean <- function(filename) {
   filebase <- sub(".tex$", "", filename)
   exts <- c(".log", ".aux", ".bbl", ".blg", ".fls", ".out", ".snm",
-            ".nav", ".tdo", ".toc", ".fdb_latexmk")
+            ".nav", ".tdo", ".toc", ".fdb_latexmk",".xwm")
   aux <- paste0(filebase, exts)
   file.remove(aux[file.exists(aux)])
 }
