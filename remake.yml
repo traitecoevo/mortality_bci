@@ -128,20 +128,16 @@ targets:
     command: BCI_clean(BCI_50haplot, BCI_nomenclature)
     cleanup_level: purge
 
-  BCI_model_dataset_full:
+  BCI_model_dataset:
     command: merge_BCI_data(BCI_cleaned, BCI_traits)
     cleanup_level: purge
     
-  BCI_model_dataset_unique:
-    command: reduce_to_single_ind_obs(BCI_model_dataset_full)
-    cleanup_level: purge
-    
-  BCI_model_dataset_true_unique:
-    command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
+  BCI_model_dataset_true_dbh:
+    command: add_true_growth(BCI_model_dataset, BCI_true_dbh_model)
     cleanup_level: purge
     
   BCI_model_dataset_folds:
-    command: split_into_kfolds(BCI_model_dataset_true_unique)
+    command: split_into_kfolds(BCI_model_dataset_true_dbh)
     cleanup_level: purge
     
   BCI_training_full:
@@ -165,7 +161,7 @@ targets:
 
   #------------- Models ---------------------------
   BCI_true_dbh_model:
-    command: run_true_dbh_model(BCI_model_dataset_unique)
+    command: run_true_dbh_model(BCI_model_dataset)
     cleanup_level: purge
     check: exists  
 
@@ -285,7 +281,7 @@ targets:
     cleanup_level: tidy
     
   ms/figures/supp_fig1.png:
-    command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
+    command: plot_obs_v_pred_growth(BCI_model_dataset_true_dbh)
     plot:
       width: 3.46
       height: 3.46
@@ -318,7 +314,7 @@ targets:
 
   ms/ms.tex:
     depends:
-      - BCI_model_dataset_true_unique
+      - BCI_model_dataset_true_dbh
       - BCI_dbh_error_data
       - BCI_training_sets
       - BCI_training_full
@@ -329,7 +325,7 @@ targets:
     
   ms/supp.tex:
     depends:
-      - BCI_model_dataset_true_unique
+      - BCI_model_dataset_true_dbh
       - BCI_dbh_error_data
       - BCI_training_sets
       - BCI_training_full

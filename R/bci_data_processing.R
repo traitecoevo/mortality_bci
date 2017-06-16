@@ -258,29 +258,6 @@ add_true_growth <- function(data, true_dbh_mod) {
 
 # CROSS VALIDATION FUNCTIONS
 
-# Randomly sample one observation for each individual
-reduce_to_single_ind_obs <- function(data) {
-  # set seed so that same subsetting is implemented on all machines
-  set.seed(523)
-  
-  # returns vector of same length which is all FALSE except
-  # for a single, randomly placed TRUE
-  sample_one <- function(x) {
-    seq_along(x) == sample(length(x), 1)
-  }
-  
-  ret <-
-    data %>%
-    group_by(treeid) %>%
-    mutate(keep = sample_one(treeid)) %>%
-    filter(keep) %>%
-    select(-keep) %>%
-    ungroup() %>%
-    select(gx, gy,species,sp, sp_id, censusid, dead_next_census,
-           census_interval, rho, dbh_prev, dbh)
-}
-
-
 # Split into k equally sized datasets
 split_into_kfolds <- function(data, k=10) {
   # make dataset an even multiple of 10
