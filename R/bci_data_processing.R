@@ -3,7 +3,7 @@
 
 # DOWNLOADING FUNCTIONS
 
-#Download BCI data
+# Download BCI data
 BCI_download_50ha_plot_full<- function(dest) {
   url <-"https://repository.si.edu/bitstream/handle/10088/20925/bci.full.Rdata31Aug2012.zip"
   download(url, dest, mode="wb")
@@ -21,10 +21,27 @@ BCI_download_species_table <- function(dest) {
   download(url, dest, mode="wb")
 }
 
-# LOADING FUNCTIONS
+# REMAKE EXPORT FUNCTION
+## Required for remake (1 function -> n file outputs)
+export_data <- function(data, filename) {
+  filename_fmt <- sub("\\.rds$", "_%s.rds", filename)
+  filename_sub <- sprintf(filename_fmt, seq_along(data))
+  for (i in seq_along(data)) {
+    saveRDS(data[[i]], filename_sub[[i]])
+  }
+}
 
-#Load 50ha census data
+# GENERIC LOADING FUNCTION
+# loads an RData file, and returns it
+load_rdata <- function(file) {
+  v <- load(file)
+  get(v)
+}
+
+# SPECIFIC LOADING FUNCTIONS
+# Load 50ha census data
 BCI_load_50ha_plot <- function(path_to_zip) {
+  
   
   tmp <- tempfile()
   unzip(path_to_zip, exdir=tmp)
@@ -54,7 +71,7 @@ BCI_load_dbh_error_data <- function(file) {
   data
 }
 
-#Load BCI canopy data
+# Load BCI canopy data
 BCI_load_canopy <- function(path_to_zip) {
   
   tmp <- tempfile()
@@ -88,9 +105,56 @@ BCI_load_nomenclature <- function(file){
 }
 
 # DATA PROCESSING FUNCTION
-# Note all sub functions are used here are at the bottom
 
 BCI_clean <- function(BCI_data, spp_table) {
+  # NESTED FUNCTIONS
+  # Drop last observation
+  drop_last <- function(x) {
+    if(length(x) > 0)
+      x[seq_len(length(x)-1)]
+    else
+      NULL
+  }
+
+  # SUB FUNCTIONS USED TO PROCESS DATA
+  #Look up family
+  lookup_family <- function(tag, spp_table){
+    i <- match(tag, tolower(spp_table[['sp']]))
+    spp_table$family[i]
+  }
+  
+  #Look up species code
+  lookup_latin <- function(tag, spp_table){
+    spp_table$latin <- paste(spp_table$genus, spp_table$species)
+    i <- match(tag, tolower(spp_table[['sp']]))
+    spp_table[['latin']][i]
+  }
+  
+  # Identifies individuals that return from the dead or are supposably refound
+  # i.e. Individuals given dbh=NA and then later given numeric value
+  # Note this function must be used prior to subsetting only observations with pom=1.3
+  is_zombie <- function(dbh) {
+    any(diff(is.na(dbh)) == -1)
+  }
+  
+  # Calculates growth rate as a function of past size
+  calculate_growth_rate <- function(x, t, f=function(y) y){
+    dt = diff(t)/365.25
+    if(any(dt < 0, na.rm=TRUE)){
+      stop("time must be sorted")
+    }
+    c(NA, diff(f(x))/dt)
+  }
+  
+  # Check if individual died next census
+  mortality_in_next_census <- function(status){
+    if(length(status) > 1){
+      i <- 1:(length(status)-1)} # if more than 1 obs
+    else{
+      i <- 0
+    }
+    as.numeric(c(status[i] == 'alive' & status[i+1] == 'dead', NA))
+  }
   
   #Add taxonomic information
   BCI_data$species = lookup_latin(BCI_data$sp, spp_table)
@@ -190,46 +254,6 @@ add_true_growth <- function(data, true_dbh_mod) {
   data$true_basal_area_dt <- ((0.25 * pi * data$true_dbh2^2) -  (0.25 * pi * data$true_dbh1^2))/data$census_interval
   data$true_basal_area_dt_rel <- (log(0.25 * pi * data$true_dbh2^2) -  log(0.25 * pi * data$true_dbh1^2))/data$census_interval
   data
-}
-
-# SUB FUNCTIONS USED TO PROCESS DATA
-#Look up family
-lookup_family <- function(tag, spp_table){
-  i <- match(tag, tolower(spp_table[['sp']]))
-  spp_table$family[i]
-}
-
-#Look up species code
-lookup_latin <- function(tag, spp_table){
-  spp_table$latin <- paste(spp_table$genus, spp_table$species)
-  i <- match(tag, tolower(spp_table[['sp']]))
-  spp_table[['latin']][i]
-}
-
-# Identifies individuals that return from the dead or are supposably refound
-# i.e. Individuals given dbh=NA and then later given numeric value
-# Note this function must be used prior to subsetting only observations with pom=1.3
-is_zombie <- function(dbh) {
-  any(diff(is.na(dbh)) == -1)
-}
-
-# Calculates growth rate as a function of past size
-calculate_growth_rate <- function(x, t, f=function(y) y){
-  dt = diff(t)/365.25
-  if(any(dt < 0, na.rm=TRUE)){
-    stop("time must be sorted")
-  }
-  c(NA, diff(f(x))/dt)
-}
-
-# Check if individual died next census
-mortality_in_next_census <- function(status){
-  if(length(status) > 1){
-    i <- 1:(length(status)-1)} # if more than 1 obs
-  else{
-    i <- 0
-  }
-  as.numeric(c(status[i] == 'alive' & status[i+1] == 'dead', NA))
 }
 
 # CROSS VALIDATION FUNCTIONS

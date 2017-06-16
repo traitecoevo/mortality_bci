@@ -1,4 +1,7 @@
-# Extracts optimization estimates
+## Process output functions
+# Note most of these functions require stan_functions.R to be sourced
+
+# Extracts optimization estimates for dbh at each time
 extract_true_dbh_estimates <- function(optimization_results) {
   fit <- optimization_results$par
   data.frame(fit, nm=names(fit)) %>%
@@ -8,24 +11,6 @@ extract_true_dbh_estimates <- function(optimization_results) {
     spread(variable, fit) %>%
     mutate(ind = as.integer(ind)) %>%
     arrange(ind)
-}
-
-# rstan's chain merger
-combine_stan_chains <- function(files) {
-  rstan::sflist2stanfit(lapply(files, readRDS))
-}
-
-# Sub-function to compile chains for our workflow
-compile_chains <- function(comparison) {
-  if(!comparison %in% c("null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model","final_base_growth_hazard_re")) {
-    stop('comparison can only be one of the following: 
-                      "null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model", "final_base_growth_hazard_re"')
-  }
-  tasks <- tasks_2_run(comparison)
-  sets <- split(tasks,  list(tasks$comparison,tasks$model,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
-  pars <- lapply(sets,  function(s) s[1, c("comparison","model","growth_measure","rho_combo","kfold")])
-  fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
-  list(model_info=pars, fits=fits)
 }
 
 # Compile chains for multiple model comparisons
@@ -38,7 +23,39 @@ compile_models <- function(comparison) {
   }
 }
 
-# Diagnostic summary function
+# Sub-function to compile_models for our workflow
+compile_chains <- function(comparison) {
+  if(!comparison %in% c("null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model","final_base_growth_hazard_re")) {
+    stop('comparison can only be one of the following: 
+         "null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model", "final_base_growth_hazard_re"')
+  }
+  tasks <- tasks_2_run(comparison)
+  sets <- split(tasks,  list(tasks$comparison,tasks$model,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
+  pars <- lapply(sets,  function(s) s[1, c("comparison","model","growth_measure","rho_combo","kfold")])
+  fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
+  list(model_info=pars, fits=fits)
+}
+
+# sub function for compile_chains combines chains for a given model
+combine_stan_chains <- function(files) {
+  rstan::sflist2stanfit(lapply(files, readRDS))
+}
+
+# Diagnostics summary function for multiple model comparisons
+model_diagnostics <- function(comparison) {
+  model <- compile_models(comparison)
+  if(is.null(model$fits)) { #Check to see if object is multi model 
+    out <- suppressWarnings(bind_rows(lapply(model, function(x) {
+      diagnose(x)})))
+    row.names(out) <- NULL
+  }
+  else {
+    out <- diagnose(model)
+  }
+  return(out)
+}
+
+# Sub function for model diagnostics
 diagnose <- function(model) {
   fits <- model$fits
   info <- model$model_info
@@ -69,64 +86,6 @@ diagnose <- function(model) {
   return(res)
 }
 
-# Diagnostics summary function for multiple model comparisons
-model_diagnostics <- function(comparison) {
-  model <- compile_models(comparison)
-  if(is.null(model$fits)) { #Check to see if object is multi model 
-    out <- suppressWarnings(bind_rows(lapply(model, function(x) {
-      diagnose(x)})))
-    row.names(out) <- NULL
-  }
-  else {
-    out <- diagnose(model)
-  }
-  return(out)
-}
-
-# Extract logloss for single model
-logloss_samples <- function(model) {
-  fits <- model$fits
-  info <- plyr::ldply(model$model_info, .id='modelid')
-  samples <- lapply(fits, function(x) 
-    rstan::extract(x, pars = grep('logloss', slot(x, 'model_pars'), value=TRUE)))
-  
-  res <- plyr::ldply(lapply(samples, function(x) {
-    tidyr::gather(data.frame(x),'logloss','estimate')}), .id='modelid')
-  
-  left_join(info, res, 'modelid') %>%
-    select(-modelid)
-}
-
-# Extract log loss samples for multiple model comparisons.
-extract_logloss_samples <- function(model) {
-  if(is.null(model$fits)) { #Check to see if object is multi model 
-    samples <- lapply(model, logloss_samples)
-    plyr::ldply(samples, .id='modelid') %>%
-      select(-modelid)
-  }
-  else { 
-    logloss_samples(model)
-  }
-}
-
-# Summarise log loss samples
-summarise_crossval_logloss <- function(comparison) {
-  models <- compile_models(comparison)
-  # We don't make an explict target of compiled models because of
-  # a lack of support for long vectors in digest (remake issue #76)
-  samples <- extract_logloss_samples(models)
-  samples %>%
-    group_by(comparison, model, growth_measure, rho_combo, kfold, logloss) %>%
-    summarise(kfold_logloss = mean(estimate)) %>%
-    ungroup() %>%
-    group_by(comparison, model, growth_measure, rho_combo, logloss) %>%
-    summarise(mean = mean(kfold_logloss),
-              st_err = sd(kfold_logloss)/sqrt(n())) %>%
-    mutate(ci = 1.96 * st_err,
-           `2.5%` = mean - ci,
-           `97.5%` = mean + ci) %>%
-    ungroup()
-}
 
 # Combines all cross val logloss outputs.
 combine_logloss_summaries <- function() {
@@ -165,8 +124,52 @@ combine_logloss_summaries <- function() {
 }
 
 
+# Summarise log loss samples
+summarise_crossval_logloss <- function(comparison) {
+  models <- compile_models(comparison)
+  # We don't make an explict target of compiled models because of
+  # a lack of support for long vectors in digest (remake issue #76)
+  samples <- extract_logloss_samples(models)
+  samples %>%
+    group_by(comparison, model, growth_measure, rho_combo, kfold, logloss) %>%
+    summarise(kfold_logloss = mean(estimate)) %>%
+    ungroup() %>%
+    group_by(comparison, model, growth_measure, rho_combo, logloss) %>%
+    summarise(mean = mean(kfold_logloss),
+              st_err = sd(kfold_logloss)/sqrt(n())) %>%
+    mutate(ci = 1.96 * st_err,
+           `2.5%` = mean - ci,
+           `97.5%` = mean + ci) %>%
+    ungroup()
+}
 
-#
+# Extract log loss samples for multiple model comparisons.
+extract_logloss_samples <- function(model) {
+  if(is.null(model$fits)) { #Check to see if object is multi model 
+    samples <- lapply(model, logloss_samples)
+    plyr::ldply(samples, .id='modelid') %>%
+      select(-modelid)
+  }
+  else { 
+    logloss_samples(model)
+  }
+}
+
+# sub function for extract_logloss_samples
+logloss_samples <- function(model) {
+  fits <- model$fits
+  info <- plyr::ldply(model$model_info, .id='modelid')
+  samples <- lapply(fits, function(x) 
+    rstan::extract(x, pars = grep('logloss', slot(x, 'model_pars'), value=TRUE)))
+  
+  res <- plyr::ldply(lapply(samples, function(x) {
+    tidyr::gather(data.frame(x),'logloss','estimate')}), .id='modelid')
+  
+  left_join(info, res, 'modelid') %>%
+    select(-modelid)
+}
+
+# get times of chain runs
 get_times <- function(comparison) {
   fits <- comparison$fits
   info <- plyr::ldply(comparison$model_info, .id='modelid')
@@ -181,7 +184,7 @@ get_times <- function(comparison) {
     mutate(total_hours = ((warmup + sample)/3600))
 }
 
-
+# summarise chain times by model group
 summarise_times <- function(times) {
   res <- times %>%
     group_by(comparison, model, growth_measure, rho_combo) %>%
@@ -336,8 +339,12 @@ predict_observations <- function(model, data) {
     mutate(logloss = logloss(dead_next_census,prob_death))
 }
 
-
+# Calculate proportion of model variance explained by each parameter
 get_param_variance_explained <- function(model, data) {
+  # Sum of squares
+  sum_squares <- function(x) {
+    sum((x-mean(x))^2)
+  }
   # Extract species random effects
   spp_effects <- summarise_spp_params(model, data)
   # Extract wood density effect

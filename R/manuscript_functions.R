@@ -42,7 +42,7 @@ res <-data %>%
     prop_died = deaths/total,
     census = factor(censusid, labels=c('1995to2000','2000to2005','2005to2010'))) %>%
   select(census,censusid, total, deaths, survivors, prop_died)
-return(signif(res[res$censusid==census,"prop_died"],2)*100)
+signif(res[res$censusid==census,"prop_died"],2)*100
 }
 
 # Extract census scaling factor
@@ -84,4 +84,29 @@ fullmodelcode <- function() {
   chunks <- get_final_model_chunks(task)
   model <- make_stan_model(chunks)
   writeLines(model$model_code)
+}
+
+# Extract baseline mortality estimate (prob death or hazard values) for different wood density
+extract_baseline_estimate <- function(model, hazard=FALSE, wood_density) {
+  fit <- model$fits[[1]]
+  samples <- rstan::extract(fit, pars=c("mu_log_gamma","c1"))
+  samples <- as.data.frame(lapply(samples, as.vector)) 
+  
+  
+  output <-samples %>%
+    mutate(wood_density_centered = wood_density/0.6,
+           inst_hazard = exp(mu_log_gamma) * wood_density_centered^c1,
+           prob_death = 1 - exp(-exp(mu_log_gamma) * wood_density_centered^c1))
+  
+  if(hazard==FALSE) {
+    output %>%
+      summarise(mean = mean(prob_death),
+                `2.5%` = quantile(prob_death,0.025),
+                `97.5%` = quantile(prob_death, 0.975))
+  } else {
+    output %>%
+      summarise(mean = mean(inst_hazard),
+                `2.5%` = quantile(inst_hazard,0.025),
+                `97.5%` = quantile(inst_hazard, 0.975))
+  }
 }
