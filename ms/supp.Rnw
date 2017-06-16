@@ -11,15 +11,22 @@
 \fontsize{16pt}{20pt} Unifying intra- and inter-specific variation in tropical tree mortality
 }
 
-% Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
-\author[a,1]{James S Camac}
+\author[a,b,1]{James S Camac}
+\author[c]{Richard Condit}
+\author[d]{Richard G FitzJohn}
+\author[e]{Lachlan McCalman}
+\author[e]{Daniel Steinberg}
 \author[a]{Mark Westoby}
-\author[b]{S Joseph Wright}
-\author[c]{Daniel S Falster}
+\author[f]{S Joseph Wright}
+\author[a,g]{Daniel S Falster}
 
-\affil[a]{Department of Biological Sciences, Macquarie University NSW 2109, Australia}
-\affil[b]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
-\affil[c]{Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales}
+\affil[a]{Department of Biological Sciences, Macquarie University, New South Wales, Australia}
+\affil[b]{Current Address: Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Victoria, Australia}
+\affil[c]{Field Museum of Natural History and Morton Arboretum, Chicago, Illinois, USA}
+\affil[d]{Imperial College, London, United Kingdom}
+\affil[e]{Data61, CSIRO, Australia}
+\affil[f]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
+\affil[g]{Current Address: Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, NSW 2052, Australia}
 
 % Please give the surname of the lead author for the running footer
 \leadauthor{Camac}
