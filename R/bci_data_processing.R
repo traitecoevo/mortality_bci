@@ -42,7 +42,6 @@ load_rdata <- function(file) {
 # Load 50ha census data
 BCI_load_50ha_plot <- function(path_to_zip) {
   
-  
   tmp <- tempfile()
   unzip(path_to_zip, exdir=tmp)
   on.exit(unlink(tmp, recursive=TRUE))
@@ -115,7 +114,7 @@ BCI_clean <- function(BCI_data, spp_table) {
     else
       NULL
   }
-
+  
   # SUB FUNCTIONS USED TO PROCESS DATA
   #Look up family
   lookup_family <- function(tag, spp_table){

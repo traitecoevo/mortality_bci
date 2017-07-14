@@ -1,9 +1,16 @@
-FROM r-base:3.4.0
+FROM rocker/tidyverse:3.3.2
+MAINTAINER James Camac <james.camac@gmail.com>
 
 # Install latex, git and clang then clean up tmp files
 RUN    apt-get update \
     && apt-get install -y --no-install-recommends \
          libcurl4-openssl-dev \
+         texlive-latex-recommended \
+         texlive-latex-extra \
+         texlive-humanities \
+         texlive-fonts-recommended \
+         texlive-science \
+         lmodern \
          git \
          clang \
     && apt-get clean \
@@ -19,7 +26,7 @@ RUN mkdir -p $HOME/.R/ \
 # Install other dependent R packages
 RUN install2.r -r "https://mran.revolutionanalytics.com/snapshot/2017-01-01/" --error \
     --deps "TRUE" \
-    readr RCurl downloader rmarkdown sp viridisLite raster rasterVis latticeExtra dplyr tidyr rstan knitr ggplot2 cowplot
+    cowplot downloadr rmarkdown rstan viridisLite raster rasterVis latticeExtra knitr sp
 
 # Install remake
 RUN installGithub.r \
@@ -29,14 +36,11 @@ RUN installGithub.r \
 # Remove unnecesarry tmp files
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-# Install remake on command line
-RUN r -e 'remake:::install_remake("/usr/local/bin")'
+# Clone shrub repository
+RUN git clone https://github.com/traitecoevo/mortality_bci /home/mortality_bci
 
-RUN mkdir /home/data \
-  && echo "clone.sh /home/data" >> /root/.bashrc \
-  && echo "system('clone.sh /home/data')" > /root/.Rprofile \
-  && echo "system('clone.sh /home/data')" > /root/.littler.r
+# Set working directory
+WORKDIR /home/mortality_bci
 
-WORKDIR /home/data
-
-CMD ["bash"]
+# Open R
+CMD ["R"]
