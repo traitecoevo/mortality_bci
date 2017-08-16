@@ -34,7 +34,7 @@ run_true_dbh_model <- function(data) {
       
       for (i in 1:n_obs) {
         // Calculating true growth for fitted data
-        true_dbh2[i] <- true_dbh1[i] + (true_growth_rate[i] * census_length[i]);
+        true_dbh2[i] = true_dbh1[i] + (true_growth_rate[i] * census_length[i]);
       }
       
       // Observation error
@@ -51,7 +51,7 @@ run_true_dbh_model <- function(data) {
       
       // Recalculate true_dbh2
       for (i in 1:n_obs) {
-        true_dbh2[i] <- true_dbh1[i] + (true_growth_rate[i] * census_length[i]);
+        true_dbh2[i] = true_dbh1[i] + (true_growth_rate[i] * census_length[i]);
       }
     }'
   
@@ -86,15 +86,15 @@ get_model_chunks_null <- function(tasks) {
       real gamma;
       
       // Put gamma on normal scale
-      gamma <- exp(log_gamma);
+      gamma = exp(log_gamma);
 
       for (i in 1:n_obs) {
-        cumulative_hazard <- -census_length[i] * gamma;
+        cumulative_hazard = -census_length[i] * gamma;
         
         if (y[i] == 0) {
-          increment_log_prob(cumulative_hazard);
+          target += (cumulative_hazard);
         } else {
-          increment_log_prob(log1m_exp(cumulative_hazard));
+          target += (log1m_exp(cumulative_hazard));
         }
       }
       // Priors
@@ -109,25 +109,25 @@ get_model_chunks_null <- function(tasks) {
       real logloss_heldout;
 
       // Initialization of summed parameter
-      sum_loglik_heldout <- 0;
+      sum_loglik_heldout = 0;
 
       // Put normal on normal scale;
-      gamma <- exp(log_gamma);
+      gamma = exp(log_gamma);
       
       // Calculate log likelihood for heldout data
       for (j in 1:n_obs_heldout) {
-        cumulative_hazard_heldout <- -census_length_heldout[j] * gamma;
+        cumulative_hazard_heldout = -census_length_heldout[j] * gamma;
         
         if (y_heldout[j] == 0) {
-          loglik_heldout <- cumulative_hazard_heldout;
+          loglik_heldout = cumulative_hazard_heldout;
         }
         else {
-          loglik_heldout <- log1m_exp(cumulative_hazard_heldout);
+          loglik_heldout = log1m_exp(cumulative_hazard_heldout);
         }
-        sum_loglik_heldout <- sum_loglik_heldout + loglik_heldout;
+        sum_loglik_heldout = sum_loglik_heldout + loglik_heldout;
       }
         // Calculation of average negative log likelihood
-        logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;"
+        logloss_heldout = -sum_loglik_heldout/n_obs_heldout;"
   )
 }
 
@@ -164,21 +164,21 @@ get_model_chunks_base_haz <- function(tasks) {
       real gamma;
       
       // Put gamma on normal scale
-      gamma <- exp(log_gamma);
+      gamma = exp(log_gamma);
 
       // Calculate census random effects
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err); 
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err); 
       // non-centered parameterisation implies lognormal(0, sigma_log_alpha);
       }
 
       for (i in 1:n_obs) {
-        cumulative_hazard <- -census_length[i] * (gamma * census_err[census[i]]);
+        cumulative_hazard = -census_length[i] * (gamma * census_err[census[i]]);
         
         if (y[i] == 0) {
-          increment_log_prob(cumulative_hazard);
+          target += (cumulative_hazard);
         } else {
-          increment_log_prob(log1m_exp(cumulative_hazard));
+          target += (log1m_exp(cumulative_hazard));
         }
       }
       // Priors
@@ -196,30 +196,30 @@ get_model_chunks_base_haz <- function(tasks) {
       real logloss_heldout;
 
       // Initialization of summed parameter
-      sum_loglik_heldout <- 0;
+      sum_loglik_heldout = 0;
 
       // Put normal on normal scale;
-      gamma <- exp(log_gamma);
+      gamma = exp(log_gamma);
 
       // Recalculate census random effects      
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       
       // Calculate log likelihood for heldout data
       for (j in 1:n_obs_heldout) {
-        cumulative_hazard_heldout <- -census_length_heldout[j] * (gamma * census_err[census_heldout[j]]);
+        cumulative_hazard_heldout = -census_length_heldout[j] * (gamma * census_err[census_heldout[j]]);
         
         if (y_heldout[j] == 0) {
-          loglik_heldout <- cumulative_hazard_heldout;
+          loglik_heldout = cumulative_hazard_heldout;
         }
         else {
-          loglik_heldout <- log1m_exp(cumulative_hazard_heldout);
+          loglik_heldout = log1m_exp(cumulative_hazard_heldout);
         }
-        sum_loglik_heldout <- sum_loglik_heldout + loglik_heldout;
+        sum_loglik_heldout = sum_loglik_heldout + loglik_heldout;
       }
         // Calculation of average negative log likelihood
-        logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;"
+        logloss_heldout = -sum_loglik_heldout/n_obs_heldout;"
   )
 }
 
@@ -260,21 +260,21 @@ get_model_chunks_growth_haz <- function(tasks) {
       real cumulative_hazard;
       
       // Put alpha and beta on normal scale
-      alpha <- exp(log_alpha);
-      beta <- exp(log_beta);
+      alpha = exp(log_alpha);
+      beta = exp(log_beta);
 
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
 
       for (i in 1:n_obs) {
         // Likelihood for hazard model
-        cumulative_hazard <- -census_length[i] * ((alpha * exp(-beta * growth_dt[i])) * census_err[census[i]]);
+        cumulative_hazard = -census_length[i] * ((alpha * exp(-beta * growth_dt[i])) * census_err[census[i]]);
         
         if (y[i] == 0) {
-          increment_log_prob(cumulative_hazard);
+          target += (cumulative_hazard);
         } else {
-          increment_log_prob(log1m_exp(cumulative_hazard));
+          target += (log1m_exp(cumulative_hazard));
         }
       }
       
@@ -295,32 +295,32 @@ get_model_chunks_growth_haz <- function(tasks) {
       real logloss_heldout;
 
       // Initialization of summed parameter
-      sum_loglik_heldout <- 0;
+      sum_loglik_heldout = 0;
       
       // Put alpha and beta on normal scale
-      alpha <- exp(log_alpha);
-      beta <- exp(log_beta);
+      alpha = exp(log_alpha);
+      beta = exp(log_beta);
 
       // Recalculating census random effects
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       
       // Calculating log likelihood for heldout data
       for (j in 1:n_obs_heldout) {
         
-        cumulative_hazard_heldout <- -census_length_heldout[j] * ((alpha * exp(-beta * growth_dt_heldout[j])) * census_err[census_heldout[j]]);
+        cumulative_hazard_heldout = -census_length_heldout[j] * ((alpha * exp(-beta * growth_dt_heldout[j])) * census_err[census_heldout[j]]);
         
         if (y_heldout[j] == 0) {
-          loglik_heldout <- cumulative_hazard_heldout;
+          loglik_heldout = cumulative_hazard_heldout;
         }
         else {
-          loglik_heldout <- log1m_exp(cumulative_hazard_heldout);
+          loglik_heldout = log1m_exp(cumulative_hazard_heldout);
         }
-        sum_loglik_heldout <- sum_loglik_heldout + loglik_heldout;
+        sum_loglik_heldout = sum_loglik_heldout + loglik_heldout;
     }
         // Calculation of average negative log likelihood
-        logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;"
+        logloss_heldout = -sum_loglik_heldout/n_obs_heldout;"
     )
 }
 
@@ -381,21 +381,21 @@ get_model_chunks_base_growth_haz <- function(tasks) {
       real cumulative_hazard;
 
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
 
       for (s in 1:n_spp) {
-        alpha[s] <- exp(log_a0)%s; 
-        beta[s] <- exp(log_b0)%s; 
-        gamma[s] <- exp(log_c0)%s;
+        alpha[s] = exp(log_a0)%s; 
+        beta[s] = exp(log_b0)%s; 
+        gamma[s] = exp(log_c0)%s;
       }
       for (i in 1:n_obs) {
-        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
+        cumulative_hazard = -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
         
         if (y[i] == 0) {
-          increment_log_prob(cumulative_hazard);
+          target += (cumulative_hazard);
         } else {
-          increment_log_prob(log1m_exp(cumulative_hazard));
+          target += (log1m_exp(cumulative_hazard));
         }
       }
       
@@ -429,36 +429,36 @@ get_model_chunks_base_growth_haz <- function(tasks) {
       real logloss_heldout;
       
       // Initialization of summed parameter
-      sum_loglik_heldout <- 0;
+      sum_loglik_heldout = 0;
 
 
       // Recalculating census random effects
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
 
       // Recalculating parameters
       for (s in 1:n_spp) {
-        alpha[s] <- exp(log_a0)%s; 
-        beta[s] <- exp(log_b0)%s; 
-        gamma[s] <- exp(log_c0)%s;
+        alpha[s] = exp(log_a0)%s; 
+        beta[s] = exp(log_b0)%s; 
+        gamma[s] = exp(log_c0)%s;
       }
       
       // Calculate log likelihood for heldout data
       for (j in 1:n_obs_heldout) {
         
-        cumulative_hazard_heldout <- -census_length_heldout[j] * ((alpha[spp_heldout[j]] * exp(-beta[spp_heldout[j]] * growth_dt_heldout[j]) + gamma[spp_heldout[j]]) * census_err[census_heldout[j]]);
+        cumulative_hazard_heldout = -census_length_heldout[j] * ((alpha[spp_heldout[j]] * exp(-beta[spp_heldout[j]] * growth_dt_heldout[j]) + gamma[spp_heldout[j]]) * census_err[census_heldout[j]]);
         
         if (y_heldout[j] == 0) {
-          loglik_heldout <- cumulative_hazard_heldout;
+          loglik_heldout = cumulative_hazard_heldout;
         }
         else {
-          loglik_heldout <- log1m_exp(cumulative_hazard_heldout);
+          loglik_heldout = log1m_exp(cumulative_hazard_heldout);
         }
-        sum_loglik_heldout <- sum_loglik_heldout + loglik_heldout;
+        sum_loglik_heldout = sum_loglik_heldout + loglik_heldout;
       }
         // Calculation of average negative log likelihood
-        logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;",
+        logloss_heldout = -sum_loglik_heldout/n_obs_heldout;",
       ifelse("a" %in% rho_combo, " * pow(rho_c[s], a1)", ""),
       ifelse("b" %in% rho_combo, " * pow(rho_c[s], b1)", ""),
       ifelse("c" %in% rho_combo, " * pow(rho_c[s], c1)", ""))
@@ -544,23 +544,23 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
 
       // Calculating census random effects      
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       // Calculating species random effects
       for (s in 1:n_spp) {
-        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha); // e.g. implies lognormal(mu_log_alpha, sigma_log_alpha)
-        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
-        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma);
+        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha); // e.g. implies lognormal(mu_log_alpha, sigma_log_alpha)
+        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma);
       }
       
       for (i in 1:n_obs) {
         // Likelihood for hazard model
-        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
+        cumulative_hazard = -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
         
         if (y[i] == 0) {
-          increment_log_prob(cumulative_hazard);
+          target += (cumulative_hazard);
         } else {
-          increment_log_prob(log1m_exp(cumulative_hazard));
+          target += (log1m_exp(cumulative_hazard));
         }
       }
       
@@ -595,34 +595,34 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
       real logloss_heldout;
       
       // Initialization of summed parameter
-      sum_loglik_heldout <- 0;
+      sum_loglik_heldout = 0;
 
       // Recalulate species random effects
       for (s in 1:n_spp) {
-        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
-        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
-        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma);
+        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
+        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma);
       }
 
       // Recalculate census random effects      
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       
       // Calculate log likelihood for heldout data
       for (j in 1:n_obs_heldout) {
-        cumulative_hazard_heldout <- -census_length_heldout[j] * ((alpha[spp_heldout[j]] * exp(-beta[spp_heldout[j]] * growth_dt_heldout[j]) + gamma[spp_heldout[j]]) * census_err[census_heldout[j]]);
+        cumulative_hazard_heldout = -census_length_heldout[j] * ((alpha[spp_heldout[j]] * exp(-beta[spp_heldout[j]] * growth_dt_heldout[j]) + gamma[spp_heldout[j]]) * census_err[census_heldout[j]]);
         
         if (y_heldout[j] == 0) {
-          loglik_heldout <- cumulative_hazard_heldout;
+          loglik_heldout = cumulative_hazard_heldout;
         }
         else {
-          loglik_heldout <- log1m_exp(cumulative_hazard_heldout);
+          loglik_heldout = log1m_exp(cumulative_hazard_heldout);
         }
-        sum_loglik_heldout <- sum_loglik_heldout + loglik_heldout;
+        sum_loglik_heldout = sum_loglik_heldout + loglik_heldout;
     }
         // Calculation of average negative log likelihoods
-        logloss_heldout <- -sum_loglik_heldout/n_obs_heldout;"
+        logloss_heldout = -sum_loglik_heldout/n_obs_heldout;"
     }
     else {"
       real alpha[n_spp];
@@ -635,34 +635,34 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
       real logloss;
       
       // Initialization of summed parameter
-      sum_loglik <- 0;
+      sum_loglik = 0;
 
       // Recalulate species random effects
       for (s in 1:n_spp) {
-        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
-        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
-        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma);
+        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
+        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma);
       }
 
       // Recalculate census random effects      
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       
       // Calculate log likelihood
       for (i in 1:n_obs) {
-        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
+        cumulative_hazard = -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
         
         if (y[i] == 0) {
-          loglik <- cumulative_hazard;
+          loglik = cumulative_hazard;
         }
         else {
-          loglik <- log1m_exp(cumulative_hazard);
+          loglik = log1m_exp(cumulative_hazard);
         }
-        sum_loglik <- sum_loglik + loglik;
+        sum_loglik = sum_loglik + loglik;
     }
         // Calculation of average negative log likelihoods
-        logloss <- -sum_loglik/n_obs;"
+        logloss = -sum_loglik/n_obs;"
     }
   )
 }
@@ -716,23 +716,23 @@ get_final_model_chunks <- function(tasks) {
 
       // Calculating census random effects      
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       // Calculating species random effects
       for (s in 1:n_spp) {
-        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha); // e.g. implies lognormal(mu_log_alpha, sigma_log_alpha)
-        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
-        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
+        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha); // e.g. implies lognormal(mu_log_alpha, sigma_log_alpha)
+        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
       }
       
       for (i in 1:n_obs) {
         // Likelihood for hazard model
-        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
+        cumulative_hazard = -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
         
         if (y[i] == 0) {
-          increment_log_prob(cumulative_hazard);
+          target += (cumulative_hazard);
         } else {
-          increment_log_prob(log1m_exp(cumulative_hazard));
+          target += (log1m_exp(cumulative_hazard));
         }
       }
       
@@ -765,33 +765,33 @@ get_final_model_chunks <- function(tasks) {
       real logloss;
       
       // Initialization of summed parameter
-      sum_loglik <- 0;
+      sum_loglik = 0;
 
       // Recalulate species random effects
       for (s in 1:n_spp) {
-        alpha[s] <- exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
-        beta[s] <- exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
-        gamma[s] <- exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
+        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
+        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
+        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
       }
 
       // Recalculate census random effects      
       for (t in 1:n_census) {
-      census_err[t] <- exp(raw_log_census_err[t] * sigma_log_census_err);
+      census_err[t] = exp(raw_log_census_err[t] * sigma_log_census_err);
       }
       
       // Calculate log likelihood
       for (i in 1:n_obs) {
-        cumulative_hazard <- -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
+        cumulative_hazard = -census_length[i] * ((alpha[spp[i]] * exp(-beta[spp[i]] * growth_dt[i]) + gamma[spp[i]]) * census_err[census[i]]);
         
         if (y[i] == 0) {
-          loglik <- cumulative_hazard;
+          loglik = cumulative_hazard;
         }
         else {
-          loglik <- log1m_exp(cumulative_hazard);
+          loglik = log1m_exp(cumulative_hazard);
         }
-        sum_loglik <- sum_loglik + loglik;
+        sum_loglik = sum_loglik + loglik;
     }
         // Calculation of average negative log likelihoods
-        logloss <- -sum_loglik/n_obs;"
+        logloss = -sum_loglik/n_obs;"
     )
 }
