@@ -14,6 +14,12 @@ packages:
   - knitr
   - ggplot2
   - cowplot
+  - pbmcapply
+  - R6
+  - yaml
+  - digest
+  - crayon
+  - optparse
 
 sources:
   - R
@@ -261,7 +267,7 @@ targets:
     download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png
 
   ms/figures/fig1.pdf:
-    command: plot_fig1("ms/figures/fig1_tree.png", "ms/dead_tree.png", "ms/Fig1c.png")
+    command: plot_fig1(I("ms/figures/fig1_tree.png"), I("ms/dead_tree.png"), I("ms/Fig1c.png"))
     plot: single_col_portrait
     cleanup_level: tidy
     packages:
