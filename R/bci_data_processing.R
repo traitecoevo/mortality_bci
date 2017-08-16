@@ -92,7 +92,7 @@ BCI_load_canopy <- function(path_to_zip) {
       ht30_ = "d")) %>% 
       mutate_(year = gsub('^.*_|\\D', '', basename(x))) %>%
       mutate_each(funs(replace(.,.==100,1)), -x,-y,-year)) %>%
-      rbind_all) %>%
+      bind_rows) %>%
     select(x,y,year,ht0_1,ht0_2,ht1_2,ht2_5,ht5_10,ht10_20,ht20_30,ht30_)
 }
 
