@@ -47,7 +47,7 @@ BCI_load_50ha_plot <- function(path_to_zip) {
   on.exit(unlink(tmp, recursive=TRUE))
   
   files <- list.files(tmp, pattern=".rdata", full.names=TRUE)
-  data <- tbl_df(lapply(list.files(tmp, pattern=".rdata", full.names=TRUE), function(x) load_rdata(x)) %>% rbind_all)
+  data <- tbl_df(lapply(list.files(tmp, pattern=".rdata", full.names=TRUE), function(x) load_rdata(x)) %>% bind_rows)
   names(data) <- tolower(names(data)) # lower case for all column names
   data
 }
