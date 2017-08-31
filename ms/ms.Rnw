@@ -23,7 +23,7 @@
 \affil[d]{Imperial College, London, United Kingdom}
 \affil[e]{Data61, CSIRO, Australia}
 \affil[f]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
-\affil[g]{Current Address: Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, NSW 2052, Australia}
+\affil[g]{Current Address: Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, Sydney NSW 2052, Australia}
 
 \leadauthor{Camac}
 
