@@ -66,7 +66,7 @@ diagnose <- function(model) {
       min_n_eff = min(summary_model[, 'n_eff']),
       max_rhat = max(summary_model[, 'Rhat']),
       n_bad_rhat = length(which(summary_model[, 'Rhat'] > 1.1)),
-      n_divergent = sum(sapply(sampler_params, function(y) y[,'n_divergent__'])),
+      n_divergent = sum(sapply(sampler_params, function(y) y[,'divergent__'])),
       max_treedepth = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
   }))
   
