@@ -24,9 +24,9 @@ kfold_tasks <- function(comparison,iter=2000,path='.') {
   n_chains = 3
   switch(comparison,
          "null_model" = {
-           growth_measure <- "true_dbh_dt"
+           growth_measure <- "NA"
            rho_combo <- "none"
-           model  <- "base_hazard"
+           model  <- "null_model"
          }, 
          "function_growth_comparison" = {
            growth_measure <- c("true_dbh_dt",'true_basal_area_dt')
