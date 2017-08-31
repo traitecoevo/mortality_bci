@@ -29,6 +29,7 @@ export_data <- function(data, filename) {
   for (i in seq_along(data)) {
     saveRDS(data[[i]], filename_sub[[i]])
   }
+  saveRDS(data, filename)
 }
 
 # GENERIC LOADING FUNCTION

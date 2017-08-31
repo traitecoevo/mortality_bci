@@ -13,3 +13,5 @@ scripts
 precompile
 self
 docker/mortality_bci
+data/kfold_data/
+data/bci_data_full.rds
