@@ -24,7 +24,7 @@ kfold_tasks <- function(comparison,iter=2000,path='.') {
   n_chains = 3
   switch(comparison,
          "null_model" = {
-           growth_measure <- "NA"
+           growth_measure <- "true_dbh_dt"
            rho_combo <- "none"
            model  <- "null_model"
          }, 
@@ -46,7 +46,7 @@ kfold_tasks <- function(comparison,iter=2000,path='.') {
            model <- "base_growth_hazard"
          },
          stop('comparison can only be one of the following: 
-                      "function_growth_comparison","species_random_effects","rho_combinations"')
+                      "null_model", function_growth_comparison","species_random_effects","rho_combinations"')
   )
   ret <- expand.grid(comparison=comparison,
                      model = model,
