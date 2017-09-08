@@ -1,0 +1,23 @@
+#!/bin/bash
+
+### Set the number of cores (cpus) and memory needed for job
+#PBS -l nodes=1:ppn=1,vmem=3gb
+#PBS -l walltime=200:00:00
+
+### Specify notifications
+#PBS -M daniel.falster@unsw.edu.au
+#PBS -m abe
+
+## location for output and error files
+#PBS -j oe
+#PBS -o /home/z2209343/mortality_bci/results/pbs/function_growth_comparison/output_{{{id}}}
+##PBS -d /home/z2209343/mortality_bci/
+##PBS -w /home/z2209343/mortality_bci/
+
+cd /home/z2209343/mortality_bci
+
+module add R/3.3.1
+module add clang/3.5.0
+module add gcc
+
+./run_fg.R {{{id}}}
