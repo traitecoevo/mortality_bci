@@ -275,14 +275,14 @@ extract_trainheldout_set <- function(data, k=NA) {
   i_train <- seq_len(length(data))
   if (is.na(k)) {
     i_heldout <- NA
-    res <- rbind_all(data[i_train])
+    res <- bind_rows(data[i_train])
   } else {
     i_train <- setdiff(i_train, k)
     i_heldout <- k
     
     res <- list(
-      train = rbind_all(data[i_train]),
-      heldout  = rbind_all(data[i_heldout]))
+      train = bind_rows(data[i_train]),
+      heldout  = bind_rows(data[i_heldout]))
   }
   return(res)
 }
