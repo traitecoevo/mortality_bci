@@ -183,10 +183,12 @@ targets:
     
   final_model_tasks:
     command: full_data_tasks(I("final_model"))
+    depends: data/bci_data_full.rds
     cleanup_level: tidy
 
   final_model_re_tasks:
     command: full_data_tasks(I("final_base_growth_hazard_re"))
+    depends: data/bci_data_full.rds
     cleanup_level: tidy
   #------------- Models ---------------------------
   BCI_true_dbh_model:
