@@ -93,7 +93,7 @@ full_data_tasks <- function(model, iter=2000,path='.') {
   ret <- ret %>%
     mutate(jobid = seq_len(n()),
            filename = sprintf("%s/results/chain_fits/%s/%d.rds", path, model, jobid),
-           fold_data = sprintf("%s/precompile/bci_data_full.rds", path))
+           fold_data = sprintf("%s/data/bci_data_full.rds", path))
   return(ret)
 }
 
