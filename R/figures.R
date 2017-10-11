@@ -180,7 +180,7 @@ plot_fig2a <- function(logloss_summaries) {
     ylab('Logarithmic loss') + 
     xlab('Hazard function') +
     scale_shape_manual(values = c(23,21, 24, 22)) +
-    scale_fill_manual(values =c('white','white','grey80','black')) +
+    scale_fill_manual(values =c('white','grey80','black')) +
     scale_y_continuous(breaks= scales::pretty_breaks(5)) +
     scale_x_discrete(labels=c("null_model_null_model_none" = expression(gamma),
                               "function_growth_comparison_base_hazard_none" =  expression(gamma~delta["t"]),
