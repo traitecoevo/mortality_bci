@@ -304,7 +304,7 @@ targets:
     cleanup_level: tidy
     
   ms/figures/supp_fig1.png:
-    command: plot_obs_v_pred_growth(BCI_model_dataset_true_dbh)
+    command: plot_figS1(BCI_model_dataset_true_dbh)
     plot:
       width: 3.46
       height: 3.46
@@ -313,7 +313,7 @@ targets:
     cleanup_level: tidy
     
   ms/figures/supp_fig2.pdf:
-    command: plot_recruits_gapindex(gap_index_raster, recruit_gap_conditions)
+    command: plot_figS2(gap_index_raster, recruit_gap_conditions)
     plot: double_col_square
     cleanup_level: tidy
     
