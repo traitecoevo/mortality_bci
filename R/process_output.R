@@ -323,7 +323,7 @@ predict_observations <- function(model, data) {
   spp_effects <- summarise_spp_params(model, data)
   wd_effects <- median(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
   census_error <- as.data.frame(rstan::extract(model$fits[[1]], pars=c('census_err'))$census_err) %>%
-    summarise_each(funs(median)) %>%
+    summarise_all(funs(median)) %>%
     gather('censusid','census_err') %>%
     mutate(censusid =c(1,2,3))
   
@@ -351,14 +351,13 @@ get_param_variance_explained <- function(model, data) {
   wd_effect <- mean(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
   # Extract hyper parameters
   mu_effects <- rstan::extract(model$fits[[1]], pars=c('mu_log_alpha', 'mu_log_beta','mu_log_gamma'))
-  mu_effects <- as.data.frame(lapply(mu_effects,as.vector)) %>% summarise_each(funs(mean))
+  mu_effects <- as.data.frame(lapply(mu_effects,as.vector)) %>% summarise_all(funs(mean))
   
   # Extract census effects
   census_error <- as.data.frame(rstan::extract(model$fits[[1]], pars=c('census_err'))$census_err) %>%
-    summarise_each(funs(mean)) %>%
+    summarise_all(funs(mean)) %>%
     tidyr::gather('censusid','census_err') %>%
     mutate(censusid =c(1,2,3)) # To match with data
-  
   
   plyr::ldply(spp_effects, .id='parameter') %>%
     select(parameter,sp, wood_density, mean) %>%
@@ -380,7 +379,7 @@ get_param_variance_explained <- function(model, data) {
            full_minus_growthdep = 1-exp(-1 * (gamma)*census_err),
            full_minus_baseline =  1-exp(-1 * (alpha * exp(-beta * true_dbh_dt_c))*census_err)) %>%
     select(full_model, census = full_minus_census, wood_density = full_minus_rho, species = full_minus_spp, growth_dependent = full_minus_growthdep, baseline = full_minus_baseline)  %>%
-    summarise_each(funs(sum_squares)) %>%
+    summarise_all(funs(sum_squares)) %>%
     tidyr::gather(param,SS, - full_model) %>%
     mutate(proportion = 1- (SS/full_model),
            param = factor(param, levels=c("species","census","wood_density","growth_dependent","baseline")))
