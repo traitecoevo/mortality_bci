@@ -29,6 +29,7 @@ export_data <- function(data, filename) {
   for (i in seq_along(data)) {
     saveRDS(data[[i]], filename_sub[[i]])
   }
+  saveRDS(data, filename)
 }
 
 # GENERIC LOADING FUNCTION
@@ -42,13 +43,12 @@ load_rdata <- function(file) {
 # Load 50ha census data
 BCI_load_50ha_plot <- function(path_to_zip) {
   
-  
   tmp <- tempfile()
   unzip(path_to_zip, exdir=tmp)
   on.exit(unlink(tmp, recursive=TRUE))
   
   files <- list.files(tmp, pattern=".rdata", full.names=TRUE)
-  data <- tbl_df(lapply(list.files(tmp, pattern=".rdata", full.names=TRUE), function(x) load_rdata(x)) %>% rbind_all)
+  data <- tbl_df(lapply(list.files(tmp, pattern=".rdata", full.names=TRUE), function(x) load_rdata(x)) %>% bind_rows)
   names(data) <- tolower(names(data)) # lower case for all column names
   data
 }
@@ -93,7 +93,7 @@ BCI_load_canopy <- function(path_to_zip) {
       ht30_ = "d")) %>% 
       mutate_(year = gsub('^.*_|\\D', '', basename(x))) %>%
       mutate_each(funs(replace(.,.==100,1)), -x,-y,-year)) %>%
-      rbind_all) %>%
+      bind_rows) %>%
     select(x,y,year,ht0_1,ht0_2,ht1_2,ht2_5,ht5_10,ht10_20,ht20_30,ht30_)
 }
 
@@ -115,7 +115,7 @@ BCI_clean <- function(BCI_data, spp_table) {
     else
       NULL
   }
-
+  
   # SUB FUNCTIONS USED TO PROCESS DATA
   #Look up family
   lookup_family <- function(tag, spp_table){
@@ -258,29 +258,6 @@ add_true_growth <- function(data, true_dbh_mod) {
 
 # CROSS VALIDATION FUNCTIONS
 
-# Randomly sample one observation for each individual
-reduce_to_single_ind_obs <- function(data) {
-  # set seed so that same subsetting is implemented on all machines
-  set.seed(523)
-  
-  # returns vector of same length which is all FALSE except
-  # for a single, randomly placed TRUE
-  sample_one <- function(x) {
-    seq_along(x) == sample(length(x), 1)
-  }
-  
-  ret <-
-    data %>%
-    group_by(treeid) %>%
-    mutate(keep = sample_one(treeid)) %>%
-    filter(keep) %>%
-    select(-keep) %>%
-    ungroup() %>%
-    select(gx, gy,species,sp, sp_id, censusid, dead_next_census,
-           census_interval, rho, dbh_prev, dbh)
-}
-
-
 # Split into k equally sized datasets
 split_into_kfolds <- function(data, k=10) {
   # make dataset an even multiple of 10
@@ -298,14 +275,14 @@ extract_trainheldout_set <- function(data, k=NA) {
   i_train <- seq_len(length(data))
   if (is.na(k)) {
     i_heldout <- NA
-    res <- rbind_all(data[i_train])
+    res <- bind_rows(data[i_train])
   } else {
     i_train <- setdiff(i_train, k)
     i_heldout <- k
     
     res <- list(
-      train = rbind_all(data[i_train]),
-      heldout  = rbind_all(data[i_heldout]))
+      train = bind_rows(data[i_train]),
+      heldout  = bind_rows(data[i_heldout]))
   }
   return(res)
 }

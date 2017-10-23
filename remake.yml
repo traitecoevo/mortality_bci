@@ -14,6 +14,12 @@ packages:
   - knitr
   - ggplot2
   - cowplot
+  - pbmcapply
+  - R6
+  - yaml
+  - digest
+  - crayon
+  - optparse
 
 sources:
   - R
@@ -128,20 +134,16 @@ targets:
     command: BCI_clean(BCI_50haplot, BCI_nomenclature)
     cleanup_level: purge
 
-  BCI_model_dataset_full:
+  BCI_model_dataset:
     command: merge_BCI_data(BCI_cleaned, BCI_traits)
     cleanup_level: purge
     
-  BCI_model_dataset_unique:
-    command: reduce_to_single_ind_obs(BCI_model_dataset_full)
-    cleanup_level: purge
-    
-  BCI_model_dataset_true_unique:
-    command: add_true_growth(BCI_model_dataset_unique, BCI_true_dbh_model)
+  BCI_model_dataset_true_dbh:
+    command: add_true_growth(BCI_model_dataset, BCI_true_dbh_model)
     cleanup_level: purge
     
   BCI_model_dataset_folds:
-    command: split_into_kfolds(BCI_model_dataset_true_unique)
+    command: split_into_kfolds(BCI_model_dataset_true_dbh)
     cleanup_level: purge
     
   BCI_training_full:
@@ -154,28 +156,45 @@ targets:
 
   #------------- data export ---------------------------
 
-  precompile/kfold_data/bci_data.rds:
+  data/kfold_data/bci_data.rds:
     command: export_data(BCI_training_sets, target_name)
     cleanup_level: purge
 
-  precompile/bci_data_full.rds:
+  data/bci_data_full.rds:
     command: saveRDS(BCI_training_full, target_name)
     cleanup_level: purge
 
+  #------------- Set up tasks ---------------------
+  null_model_tasks:
+    command: tasks_2_run(I("null_model"))
+    cleanup_level: tidy
+    
+  function_growth_tasks:
+    command: tasks_2_run(I("function_growth_comparison"))
+    cleanup_level: tidy
+    
+  species_re_tasks:
+    command: tasks_2_run(I("species_random_effects"))
+    cleanup_level: tidy
+    
+  rho_tasks:
+    command: tasks_2_run(I("rho_combinations"))
+    cleanup_level: tidy
+    
+  final_model_tasks:
+    command: full_data_tasks(I("final_model"))
+    depends: data/bci_data_full.rds
+    cleanup_level: tidy
 
+  final_model_re_tasks:
+    command: full_data_tasks(I("final_base_growth_hazard_re"))
+    depends: data/bci_data_full.rds
+    cleanup_level: tidy
   #------------- Models ---------------------------
   BCI_true_dbh_model:
-    command: run_true_dbh_model(BCI_model_dataset_unique)
+    command: run_true_dbh_model(BCI_model_dataset)
     cleanup_level: purge
     check: exists  
-
-  crossval_models_precompiled_docker:
-    command: precompile_docker(I("traitecoevo/mortality_bci"))
-    cleanup_level: purge
-    
-  fulldata_models_precompiled_docker:
-    command: precompile_docker(I("traitecoevo/mortality_bci"), FALSE)
-    cleanup_level: purge
     
   #------------- Process outputs -------------------
   
@@ -250,7 +269,7 @@ targets:
     download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png
 
   ms/figures/fig1.pdf:
-    command: plot_fig1("ms/figures/fig1_tree.png", "ms/dead_tree.png", "ms/Fig1c.png")
+    command: plot_fig1(I("ms/figures/fig1_tree.png"), I("ms/dead_tree.png"), I("ms/Fig1c.png"))
     plot: single_col_portrait
     cleanup_level: tidy
     packages:
@@ -285,7 +304,7 @@ targets:
     cleanup_level: tidy
     
   ms/figures/supp_fig1.png:
-    command: plot_obs_v_pred_growth(BCI_model_dataset_true_unique)
+    command: plot_figS1(BCI_model_dataset_true_dbh)
     plot:
       width: 3.46
       height: 3.46
@@ -294,7 +313,7 @@ targets:
     cleanup_level: tidy
     
   ms/figures/supp_fig2.pdf:
-    command: plot_recruits_gapindex(gap_index_raster, recruit_gap_conditions)
+    command: plot_figS2(gap_index_raster, recruit_gap_conditions)
     plot: double_col_square
     cleanup_level: tidy
     
@@ -318,7 +337,7 @@ targets:
 
   ms/ms.tex:
     depends:
-      - BCI_model_dataset_true_unique
+      - BCI_model_dataset_true_dbh
       - BCI_dbh_error_data
       - BCI_training_sets
       - BCI_training_full
@@ -329,7 +348,7 @@ targets:
     
   ms/supp.tex:
     depends:
-      - BCI_model_dataset_true_unique
+      - BCI_model_dataset_true_dbh
       - BCI_dbh_error_data
       - BCI_training_sets
       - BCI_training_full

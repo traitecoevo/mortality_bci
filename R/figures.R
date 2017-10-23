@@ -179,10 +179,10 @@ plot_fig2a <- function(logloss_summaries) {
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
     ylab('Logarithmic loss') + 
     xlab('Hazard function') +
-    scale_shape_manual(values = c(21, 24, 22)) +
+    scale_shape_manual(values = c(23,21, 24, 22)) +
     scale_fill_manual(values =c('white','grey80','black')) +
     scale_y_continuous(breaks= scales::pretty_breaks(5)) +
-    scale_x_discrete(labels=c("null_model_base_hazard_none" = expression(gamma),
+    scale_x_discrete(labels=c("null_model_null_model_none" = expression(gamma),
                               "function_growth_comparison_base_hazard_none" =  expression(gamma~delta["t"]),
                               "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~delta["t"]),
                               "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"]),
