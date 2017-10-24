@@ -1,13 +1,16 @@
 # Manuscript functions
 
+n_obs <- function(data) {
+  prettyNum(nrow(data), big.mark = ",")
+}
 # Number of individuals used
 n_inds <- function(data) {
-  as.character(round(nrow(data),-2))
+  prettyNum(length(unique(data$treeid)), big.mark = ",")
 }
-
+prettyNum(sum(c(199630,211350,722040,15274700,13019600)),big.mark=",")
 # Number of species used in study
 n_spp <- function(data) {
-  length(unique(data$sp))
+  prettyNum(length(unique(data$sp)),big.mark = ",")
 }
 
 # Proportion of negative observations
@@ -17,7 +20,7 @@ prop_neg_growth <- function(data) {
 
 # Number of observations in remeasurement error data
 nobs_meas_err_data <- function(data) {
-  nrow(data$discrep)
+  prettyNum(nrow(data),big.mark = ",")
 }
 
 # Observed standard deviation of measurement error
@@ -27,7 +30,7 @@ obs_error_sigma <- function(data) {
 
 # Number of heldout observations
 n_heldout <- function(data) {
-  as.character(nrow(data[[1]]$heldout))
+ prettyNum(nrow(data[[1]]$heldout), big.mark = ",")
 }
   
 # Proportion of deaths by census
