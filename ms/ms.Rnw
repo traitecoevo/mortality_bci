@@ -147,7 +147,7 @@ To determine whether species-level parameters were associated with their maximum
 
 \begin{figure}[t]
 \includegraphics{figures/fig5.pdf}
-\caption{Proportional reduction in predicted 1-year survival from removing different effects. Effects are not mutually exclusive so sum to more than 1.0. Note also that the effect of "wood density" is nested within the effect of "species".}  
+\caption{Proportional reduction in predicted 1-year survival across all individuals from removing different effects. Effects are not mutually exclusive so sum to more than 1.0. Note also that the effect of "wood density" is a subset of the overall "species" effect.}  
 \label{fig5}
 \end{figure}
 
