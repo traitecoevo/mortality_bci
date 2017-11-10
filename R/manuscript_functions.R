@@ -56,12 +56,7 @@ census_effects <- function(model,census) {
 
 # Extract proportion explained.
 extract_prop_explained <- function(data, param) {
-  if(param == "species") {
-    signif(data[data$param=='species','proportion'] + data[data$param=='wood_density','proportion'],2)*100
-  }
-  else {
   signif(data[data$param==param,'proportion'],2)*100
-  }
 }
 
 # Prop change in logloss.

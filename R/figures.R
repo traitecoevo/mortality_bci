@@ -313,39 +313,22 @@ plot_fig4b <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5)
 
 #### FIGURE 5 ######
 # Proportion of variance explained
-plot_fig5 <- function(param_prop_explained) {
-  p1 <- plot_fig5a(param_prop_explained, ylab="Proportion of variation")
-  p2 <- plot_fig5b(param_prop_explained)
-  plot_grid(p1,p2, ncol=2, labels=LETTERS[1:2], label_size = 7)
-}
+plot_fig5 <- function(param_variance_explained) {
 
-# FIG 5 PANEL FUNCTIONS #
-# Plot proportions of predicted variance explained by wood density, species and census (fig5a)
-plot_fig5a <- function(param_prop_explained, ylab=NULL, xlab=NULL) {
-  dat <- filter(param_prop_explained, !param %in% c("baseline", "growth_dependent")) %>% droplevels() %>%
-    mutate(param = factor(param, levels=c("wood_density","species","census")),
-           level = ifelse(param %in% c("wood_density","species"), "species","census"),
-           level = factor(level, levels=c("species","census")))
-  ggplot(dat, aes(x=level, y=proportion)) +
+  dat <- param_variance_explained %>%
+  # Force order of levels in factor param, otherwise makes alphabetical
+    transform(param = factor(param, levels = param))
+
+  p1 <- ggplot(dat, aes(x=param, y=proportion)) +
     geom_bar(stat='identity', aes(fill=param), width=0.5) +
-    scale_x_discrete(labels=c('species\n','census\n')) +
-    scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
-    scale_fill_manual(values = c("wood_density" ="darkgrey","species" ="black", "census"="black")) + 
-    ylab(ylab) +
-    xlab(xlab) +
-    plot_theme(legend.position="none") 
-}
-
-# Plot proportions of predicted variance explained by baseline and growth dependent hazards
-plot_fig5b <- function(param_prop_explained, ylab=NULL, xlab=NULL) {
-  dat <- filter(param_prop_explained, param %in% c("baseline", "growth_dependent")) %>% droplevels()
-  ggplot(dat, aes(x=param, y=proportion)) +
     geom_bar(stat='identity', fill='black', width=0.5) +
-    scale_x_discrete(labels=c('growth-\ndependent','growth-\nindependent')) +
-    scale_y_continuous(expand=c(0,0), limits=c(0,1)) +
-    ylab(ylab) +
-    xlab(xlab) +
-    plot_theme() 
+    scale_x_discrete(labels=gsub("_", "\n", dat$param)) +
+    scale_y_continuous(expand=c(0,0), limits=c(0,1))   +
+    ylab("Proportion of variation\nin 1-yr survival") +
+    xlab("Effect") +
+    plot_theme(legend.position="none")
+
+  p1 
 }
 
 # params vs other covariates

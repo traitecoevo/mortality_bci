@@ -55,7 +55,7 @@ plot_options:
     
   single_col_rectangle_narrow:
     width: 3.46
-    height: 1.5
+    height: 1.25
     onefile: FALSE
     
   single_col_square:
@@ -267,9 +267,10 @@ targets:
   #------------- Figures ---------------------------
   ms/figures/fig1_tree.png:
     download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png
+    check: exists
 
   ms/figures/fig1.pdf:
-    command: plot_fig1("ms/figures/fig1_tree.png", I("ms/dead_tree.png"), I("ms/Fig1c.png"))
+    command: plot_fig1("ms/figures/fig1_tree.png", "ms/dead_tree.png", "ms/Fig1c.png")
     plot: single_col_portrait
     cleanup_level: tidy
     packages:

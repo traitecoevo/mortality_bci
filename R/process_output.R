@@ -127,7 +127,7 @@ combine_logloss_summaries <- function() {
 # Summarise log loss samples
 summarise_crossval_logloss <- function(comparison) {
   models <- compile_models(comparison)
-  # We don't make an explict target of compiled models because of
+  # We don't make an explicit target of compiled models because of
   # a lack of support for long vectors in digest (remake issue #76)
   samples <- extract_logloss_samples(models)
   samples %>%
@@ -149,6 +149,7 @@ extract_logloss_samples <- function(model) {
     samples <- lapply(model, logloss_samples)
     plyr::ldply(samples, .id='modelid') %>%
       select(-modelid)
+
   }
   else { 
     logloss_samples(model)
@@ -341,14 +342,16 @@ predict_observations <- function(model, data) {
 
 # Calculate proportion of model variance explained by each parameter
 get_param_variance_explained <- function(model, data) {
+
   # Sum of squares
   sum_squares <- function(x) {
     sum((x-mean(x))^2)
   }
   # Extract species random effects
   spp_effects <- summarise_spp_params(model, data)
+
   # Extract wood density effect
-  wd_effect <- mean(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
+  c1 <- mean(rstan::extract(model$fits[[1]], pars=c('c1'))$c1)
   # Extract hyper parameters
   mu_effects <- rstan::extract(model$fits[[1]], pars=c('mu_log_alpha', 'mu_log_beta','mu_log_gamma'))
   mu_effects <- as.data.frame(lapply(mu_effects,as.vector)) %>% summarise_all(funs(mean))
@@ -359,30 +362,45 @@ get_param_variance_explained <- function(model, data) {
     tidyr::gather('censusid','census_err') %>%
     mutate(censusid =c(1,2,3)) # To match with data
   
-  plyr::ldply(spp_effects, .id='parameter') %>%
+
+  # function to predict survival for different levels of effects and time interval dt
+  surv <- function(growth_indepenent, growth_depenent, census, dt = 1) {
+    1-exp(-dt * ((growth_indepenent + growth_depenent)*census))
+  }
+
+  effects <- plyr::ldply(spp_effects, .id='parameter') %>%
     select(parameter,sp, wood_density, mean) %>%
     tidyr::spread(parameter, mean) %>%
     merge(data, by.all=sp) %>%
     merge(census_error, by.all=censusid) %>%
-    mutate(
-      rho_c = rho/0.6, # centers mean to what models used
-      true_dbh_dt_c = true_dbh_dt - 0.172, # centers growth to what models used
-      wd_effect = wd_effect, # add effect of wood density
-      gamma_re = gamma/((rho/0.6)^wd_effect) # Remove wood density effect from predicted gamma
-    ) %>%
     merge(mu_effects) %>%
-    ungroup() %>%
-    mutate(full_model = 1-exp(-1 * (alpha * exp(-beta * true_dbh_dt_c) + gamma)*census_err),
-           full_minus_census = 1-exp(-1 * (alpha * exp(-beta * true_dbh_dt_c) + gamma)*1),
-           full_minus_rho = 1-exp(-1 * (alpha * exp(-beta * true_dbh_dt_c) + gamma_re)*census_err),
-           full_minus_spp =  1-exp(-1 * (median(alpha) * exp(-median(beta) * true_dbh_dt_c) + median(gamma_re)*rho_c^wd_effect)*census_err),
-           full_minus_growthdep = 1-exp(-1 * (gamma)*census_err),
-           full_minus_baseline =  1-exp(-1 * (alpha * exp(-beta * true_dbh_dt_c))*census_err)) %>%
-    select(full_model, census = full_minus_census, wood_density = full_minus_rho, species = full_minus_spp, growth_dependent = full_minus_growthdep, baseline = full_minus_baseline)  %>%
+    mutate(
+      c1 = c1,
+      rho_c = rho/0.6, # centers mean to what models used
+      true_dbh_dt_c = true_dbh_dt - 0.172 # centers growth to what models used
+      ) %>%
+    # Now calculate predicted 1-yr removing different effects including 
+    mutate(
+      full_model = surv( alpha * exp(-beta * true_dbh_dt_c), gamma, census_err ),
+      full_minus_census = surv( alpha * exp(-beta * true_dbh_dt_c), gamma, mean(census_err) ),
+      full_minus_rho = surv( alpha * exp(-beta * true_dbh_dt_c), gamma/(rho_c^c1), census_err ),
+      full_minus_spp = surv( median( alpha) * exp(-median(beta) * true_dbh_dt_c), median(gamma), census_err ),
+      full_minus_growthdep = surv(median( alpha * exp(-beta * true_dbh_dt_c)), gamma, census_err),
+      full_minus_growthindep =  surv( alpha * exp(-beta * true_dbh_dt_c), median(gamma), census_err )
+      ) %>%
+    select(
+      full_model, 
+      census = full_minus_census, 
+      wood_density = full_minus_rho, 
+      species = full_minus_spp, 
+      growth_dependent = full_minus_growthdep, 
+      growth_independent = full_minus_growthindep
+      ) %>%
+    # sum of squares & proportion variance explained for each model
     summarise_all(funs(sum_squares)) %>%
-    tidyr::gather(param,SS, - full_model) %>%
-    mutate(proportion = 1- (SS/full_model),
-           param = factor(param, levels=c("species","census","wood_density","growth_dependent","baseline")))
+    tidyr::gather(param, SS, - full_model) %>%
+    mutate(proportion = 1- (SS/full_model))
+
 }
 
 # Merge estimated model parameters with other covariates
