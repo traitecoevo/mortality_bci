@@ -13,7 +13,7 @@ This repository contains the data and code required to reproduce our entire work
 
 ## Dataset
 This paper uses data from  Barro Colorado Island (BCI) Panama. 
-Condit, R., Lao, S., Pérez, R., Dolins, S.B., Foster, R.B. Hubbell, S.P. 2012. Barro Colorado Forest Census Plot Data, 2012 Version. DOI \url{http://dx.doi.org/10.5479/data.bci.20130603}
+Condit, R., Lao, S., Pérez, R., Dolins, S.B., Foster, R.B. Hubbell, S.P. 2012. Barro Colorado Forest Census Plot Data, 2012 Version. DOI http://dx.doi.org/10.5479/data.bci.20130603
 
 ## Preprint
 A preprint of this project has been released on BioRxiv: 
