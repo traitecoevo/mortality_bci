@@ -1,5 +1,7 @@
 .remake
 .Rproj.user
+.Rhistory
+.DS_Store
 *.Rproj
 *.csl
 *.pdf
