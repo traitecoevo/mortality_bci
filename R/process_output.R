@@ -414,7 +414,7 @@ merge_spp_params_covs <- function(spp_params,recruit_gap_conditions, raw_plot_da
 
 
 # Create table of hyper parameter estimates
-param_table <- function(model) {
+hyperparam_table <- function(model) {
   
   param1 <- as.data.frame(
     summary(model$fits[[1]], 
@@ -429,15 +429,25 @@ param_table <- function(model) {
     mutate(Parameter = row.names(.)) %>%
     select(Parameter, mean, `2.5%`, `97.5%`)
   
-  x <- bind_rows(param1,param2) %>%
+  param3 <- as.data.frame(summary(model$fits[[1]], 'census_err')$summary) %>%
+    mutate(Parameter = row.names(.)) %>%
+    select(Parameter, mean, `2.5%`, `97.5%`)
+  
+  x <- bind_rows(param1,param2, param3) %>%
     select(Parameter, "Geometric mean" = mean, `2.5%`, `97.5%`) %>%
     mutate_at(vars(-Parameter), funs(round(.,4))) %>%
     mutate(Parameter = factor(Parameter, 
-                              levels = c("c1",
+                              levels = c("census_err[3]",
+                                         "census_err[2]",
+                                         "census_err[1]",
+                                         "c1",
                                          "mu_log_gamma",
                                          "mu_log_beta",
                                          "mu_log_alpha"),
-                              labels = c("Wood density ($\\rho$)",
+                              labels = c("$\\delta_3$",
+                                         "$\\delta_2$",
+                                         "$\\delta_1$",
+                                         "Wood density ($\\rho$)",
                                          "$\\gamma$",
                                          "$\\beta$",
                                          "$\\alpha$")))
@@ -446,5 +456,5 @@ param_table <- function(model) {
                colnamesTexCmd="bfseries",
                col.just = c(rep("c", 4)), label = "table:1",
                where = "!h",
-               caption ="Hyper parameters estimated from full model")
+               caption ="Hyper parameters and census effects estimated from full model")
 }

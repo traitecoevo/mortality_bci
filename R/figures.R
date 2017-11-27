@@ -324,7 +324,7 @@ plot_fig5 <- function(param_variance_explained) {
     geom_bar(stat='identity', fill='black', width=0.5) +
     scale_x_discrete(labels=gsub("_", "\n", dat$param)) +
     scale_y_continuous(expand=c(0,0), limits=c(0,1))   +
-    ylab("Proportion of variation\nin 1-yr survival") +
+    ylab("Variation captured\nin 1-yr survival") +
     xlab("Effect") +
     plot_theme(legend.position="none")
 
@@ -458,7 +458,7 @@ plot_figS2 <- function(gap_index_raster, recruit_gap_conditions) {
                                                  strip.background=list(col='white'),
                                                  strip.border=list(col='transparent'))) +
           latticeExtra::layer(sp::sp.points(SpatialPoints(recruit_gap_conditions[[panel.number()]]), 
-                                            pch='+', col='red', alpha=0.4, cex=0.1),
+                                            pch='+', col='red', alpha=0.6, cex=0.1),
                               data=list(recruit_gap_conditions=recruit_gap_conditions)))
   
 }

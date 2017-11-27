@@ -72,8 +72,8 @@ plot_options:
 targets:
   all:
     depends:
-      - ms/ms.pdf
-      - ms/supp.pdf
+      - ms/manuscript.pdf
+      - ms/supplementary.pdf
 
   process_crossval:
     depends:
@@ -271,7 +271,7 @@ targets:
     check: exists
 
   ms/figures/fig1.pdf:
-    command: plot_fig1("ms/figures/fig1_tree.png", "ms/dead_tree.png", "ms/Fig1c.png")
+    command: plot_fig1("ms/figures/fig1_tree.png", "ms/figures/dead_tree.png", "ms/figures/Fig1c.png")
     plot: single_col_portrait
     cleanup_level: tidy
     packages:
@@ -337,7 +337,7 @@ targets:
   
   #------------- Manuscript ---------------------------
 
-  ms/ms.tex:
+  ms/manuscript.tex:
     depends:
       - BCI_model_dataset_true_dbh
       - BCI_dbh_error_data
@@ -348,7 +348,7 @@ targets:
       - param_variance_explained
     knitr: TRUE
     
-  ms/supp.tex:
+  ms/supplementary.tex:
     depends:
       - BCI_model_dataset_true_dbh
       - BCI_dbh_error_data
@@ -358,8 +358,8 @@ targets:
       - final_model
     knitr: TRUE
 
-  ms/ms.pdf:
-    command: latex_build("ms/ms.tex", "ms/refs.bib", clean=TRUE)
+  ms/manuscript.pdf:
+    command: latex_build("ms/manuscript.tex", "ms/refs.bib", clean=TRUE)
     depends:
       - ms/pnas-new.cls
       - ms/pnasresearcharticle.sty
@@ -372,8 +372,8 @@ targets:
       - ms/figures/fig6.pdf
 
       
-  ms/supp.pdf:
-    command: latex_build("ms/supp.tex", "ms/refs.bib", clean=TRUE)
+  ms/supplementary.pdf:
+    command: latex_build("ms/supplementary.tex", "ms/refs.bib", clean=TRUE)
     depends:
       - ms/pnas-new.cls
       - ms/pnasresearcharticle.sty
