@@ -84,14 +84,13 @@ A specific challenge in developing hazard functions for plants is to estimate th
 
 A further challenge in developing hazard functions for plants is to integrate the conflicting relationships observed within and across species between mortality and growth. Within species, mortality rates are lower for fast-growing individuals, presumably because those individuals have superior carbon budgets and are thus able to tolerate or repair diverse stresses \cite{Kobe:1995tw, Hawkes:2000ib, Keane:2001db}. Empirical studies broadly support this theory, with many indicating exponential declines in mortality with increased growth rate, $X_i(t)$ \cite{Kobe:1995tw, Wyckoff:2000un, Kunstler:2005bn, Vieilledent:2010fv}. By contrast, across species, there is a strong trade-off between growth and survival, with individuals from faster-growing species  exhibiting higher mortality rates than individuals from slower-growing species \cite{Poorter:2008iu, Wright:2010fl}. This trade-off may arise via traits with antagonistic effects, such as wood density. Denser wood -- which is expensive to build and thus slows growth --  reduces stem breakage \cite{vanGelder:2006exa,Chave:2009iy}, embolism \cite{Hacke:2001kj, Jacobsen:2005fx}, pathogen attack \cite{Augspurger:1984wx}, and thereby mortality \cite{Poorter:2008iu, Chave:2009iy, Kraft:2010kq, Wright:2010fl}.
 
-
 \begin{figure}[!hb]
 \centering
 \includegraphics{figures/fig1.pdf}
 \caption{Outline of methodology.
-A) Our data consist of repeat measures of stem diameter ($D$) and status ($S$, alive or dead) for individual trees at specific census dates ($t_1$, $t_2$, $t_3$).
+A) Our data consist of repeat measures of stem diameter ($D$) and status ($S$, 0 = alive or 1 = dead) for individual trees at specific census dates ($t_1$, $t_2$, $t_3$).
 B) We consider three alternative hazard functions: 1) a baseline hazard, 2) a growth-dependent hazard; and 3) a function that combines both baseline and growth-dependent hazards. The parameters of the models are biologically interpretable: $\alpha$ defines the instantaneous mortality rate at low growth rate; $\beta$ reflects the sensitivity of mortality rate to changes in growth rate; and $\gamma$ is the asymptote, or baseline hazard. Combined $\alpha$ and $\beta$ capture growth-dependent mortality, while $\gamma$ captures growth-independent mortality (e.g. windfall, fire) that kill a plant, irrespective of its growth rate. For each model form, we consider two alternative predictors of growth, $X$ (basal area and stem diameter growth), as well as allowing for species-level effects on the parameters $\alpha$, $\beta$ and $\gamma$.
-C) Predictions for plant survival and death are compared to observed outcomes. Incorrect predictions are penalised via the log-loss function.
+C) Each model's skill in predicting observed outcomes ($S$) is quantified via the log-loss function (eq. \ref{eq:logloss}).
 D) The predictive skill of alternative models is evaluated via 10-fold cross validation. The entire dataset is split into 10 folds ($F_1$, ..., $F_{10}$). Alternative models were fit 10 times ($M_1$, ..., $M_{10}$), using different combinations of testing and training data. We then average the estimated log loss for each of these 10 model fits.}
 \label{fig1}
 \end{figure}

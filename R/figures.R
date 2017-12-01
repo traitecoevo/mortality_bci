@@ -62,7 +62,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   hazard_plot <- function(f, text){
     x <- seq(0,1,length.out = 50)
     empty_plot()
-    lines(x, f(x), type='l', col="red")
+    lines(x, f(x), type='l', col="orange")
     text(0.1, 0.12, text, pos=4, xpd=NA)
   }
   
@@ -82,9 +82,13 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   par(mar=c(2.5,3,2,1))
   plot(NA, xlim = c(0, 1), ylim= c(0, 5), ann = FALSE, las=1)
   p <- seq(0,1, length.out=200)
-  lines(p, -log(1-p), type='l', col="red")
+  lines(p, -log(1-p), type='l', col="blue")
+  text(0.9, 3, expression(paste(S[i],"=0")), col="blue", pos=3, xpd=NA)
+  lines(p, -log(p), type='l', col="red")
+  text(0.1, 3, expression(paste(S[i],"=1")), col="red", pos=3, xpd=NA)
+
   my_label("C) Penalty for incorrect prediction", x=-0.137)
-  mtext("Probability of outcome", 1, line=2.1, cex=0.5)
+  mtext(expression(paste("Probability of death, ", p[i])), 1, line=2.1, cex=0.5)
   mtext("log loss", 2, line=2.1, cex=0.5)
   
   # Plot cross validation procedure
