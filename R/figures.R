@@ -233,7 +233,7 @@ plot_fig3 <- function(spp_params_covs, pred_mu_basehaz) {
     geom_line(data = pred_mu_basehaz, aes(x = wood_density, y= mean), col='blue') +
     plot_theme() +
     scale_y_log10(breaks= breaks, labels = labels) +
-    ylab(expression("Growth-independent mortality rate,"~(gamma))) +
+    ylab(expression("Growth-independent mortality rate,"~gamma~("yr"^-1))) +
     xlab(expression("Wood density"~("g cm"^-3)))
 }
 #### FIGURE 4 ######
@@ -247,7 +247,7 @@ plot_fig4 <- function(model, data) {
           legend.text = element_text(size=4),
           legend.title.align =0.75)
   
-  p3 <- plot_fig4a(model, data, hazard_curve = FALSE)
+  p3 <- plot_fig4a(model, data, hazard_curve = FALSE, ylab = "Probability 1-yr mortality")
   p4 <- plot_fig4b(model, hazard_curve= FALSE, ylab=NULL)
   
   plot_grid(p1,p2,p3,p4, ncol=2, labels=LETTERS[1:4], label_size = 7)
@@ -257,7 +257,7 @@ plot_fig4 <- function(model, data) {
 
 # Plot species predicted mortality v growth curves (Fig4a)
 plot_fig4a <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FALSE, 
-                       ylab="Annual mortality probability", xlab=expression("Annual dbh growth"~("cm yr"^-1))) {
+                       ylab="", xlab=expression("Annual dbh growth"~("cm yr"^-1))) {
   
   
   preds <- predict_spp_hazard(model, data, growth_range)
@@ -289,7 +289,7 @@ plot_fig4a <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FA
 
 # Plot average species curve (Fig4b)
 plot_fig4b <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5), hazard_curve = FALSE, 
-                       ylab="Annual mortality probability", xlab=expression("Annual dbh growth"~("cm yr"^-1))) {
+                       ylab="1-yr mortality probability", xlab=expression("Annual dbh growth"~("cm yr"^-1))) {
   preds <- predict_mu_hazards(model,wood_density, growth_range, hazard_curve)
   
   breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
@@ -328,7 +328,7 @@ plot_fig5 <- function(param_variance_explained) {
     geom_bar(stat='identity', fill='black', width=0.5) +
     scale_x_discrete(labels=gsub("_", "\n", dat$param)) +
     scale_y_continuous(expand=c(0,0), limits=c(0,1))   +
-    ylab("Variation captured\nin 1-yr survival") +
+    ylab("Proportion of variation\nin 1-yr mortality") +
     xlab("Effect") +
     plot_theme(legend.position="none")
 

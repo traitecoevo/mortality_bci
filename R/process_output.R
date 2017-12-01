@@ -363,8 +363,8 @@ get_param_variance_explained <- function(model, data) {
     mutate(censusid =c(1,2,3)) # To match with data
   
 
-  # function to predict survival for different levels of effects and time interval dt
-  surv <- function(growth_indepenent, growth_depenent, census, dt = 1) {
+  # function to predict probability of death for different levels of effects and time interval dt
+  mort <- function(growth_indepenent, growth_depenent, census, dt = 1) {
     1-exp(-dt * ((growth_indepenent + growth_depenent)*census))
   }
 
@@ -379,14 +379,14 @@ get_param_variance_explained <- function(model, data) {
       rho_c = rho/0.6, # centers mean to what models used
       true_dbh_dt_c = true_dbh_dt - 0.172 # centers growth to what models used
       ) %>%
-    # Now calculate predicted 1-yr removing different effects including 
+    # Now calculate predicted 1-yr mortality removing different effects included
     mutate(
-      full_model = surv( alpha * exp(-beta * true_dbh_dt_c), gamma, census_err ),
-      full_minus_census = surv( alpha * exp(-beta * true_dbh_dt_c), gamma, mean(census_err) ),
-      full_minus_rho = surv( alpha * exp(-beta * true_dbh_dt_c), gamma/(rho_c^c1), census_err ),
-      full_minus_spp = surv( median( alpha) * exp(-median(beta) * true_dbh_dt_c), median(gamma), census_err ),
-      full_minus_growthdep = surv(median( alpha * exp(-beta * true_dbh_dt_c)), gamma, census_err),
-      full_minus_growthindep =  surv( alpha * exp(-beta * true_dbh_dt_c), median(gamma), census_err )
+      full_model = mort( alpha * exp(-beta * true_dbh_dt_c), gamma, census_err ),
+      full_minus_census = mort( alpha * exp(-beta * true_dbh_dt_c), gamma, mean(census_err) ),
+      full_minus_rho = mort( alpha * exp(-beta * true_dbh_dt_c), gamma/(rho_c^c1), census_err ),
+      full_minus_spp = mort( median( alpha) * exp(-median(beta) * true_dbh_dt_c), median(gamma), census_err ),
+      full_minus_growthdep = mort(median( alpha * exp(-beta * true_dbh_dt_c)), gamma, census_err),
+      full_minus_growthindep =  mort( alpha * exp(-beta * true_dbh_dt_c), median(gamma), census_err )
       ) %>%
     select(
       full_model, 
