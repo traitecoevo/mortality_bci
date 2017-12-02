@@ -138,7 +138,7 @@ Including wood density as an effect on either growth-independent or growth-depen
 \label{fig4}
 \end{figure}
 
-\subsection*{Proportion of variation explained}
+\subsection*{Parameter contribution to predicted variation}
 To compliment the above analysis based on skill in predicting held-out (test) data, we used the final fitted model to estimate the amount of variation captured by different factors in the predicted probability of dying across 1yr for all individuals (Fig. \ref{fig5}). We achieved this by removing a parameter sequentially and calculating the proportion of the sum of squares attributed to a submodel relative to the full model. Species-level effects contributed ~\Sexpr{extract_prop_explained(param_variance_explained, I('species'))}\% of predicted variation in 1-yr mortality. Wood density explained \Sexpr{extract_prop_explained(param_variance_explained, I('wood_density'))}\% of this species variation. Census accounted for only \Sexpr{extract_prop_explained(param_variance_explained, I('census'))}\% of the total predicted variation. The growth-dependent hazard (i.e. the part of the model allowed to vary by individual growth) accounted for \Sexpr{extract_prop_explained(param_variance_explained, I('growth_dependent'))}\% of the total variation, while growth-independent hazards accounted for the remainder (Fig. \ref{fig5}).
 
 \subsection*{Mortality rates, maximum species size and species light requirements}
