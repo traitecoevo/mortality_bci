@@ -62,7 +62,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   hazard_plot <- function(f, text){
     x <- seq(0,1,length.out = 50)
     empty_plot()
-    lines(x, f(x), type='l', col="orange")
+    lines(x, f(x), type='l', col="#d7301f")
     text(0.1, 0.12, text, pos=4, xpd=NA)
   }
   
@@ -82,10 +82,10 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   par(mar=c(2.5,3,2,1))
   plot(NA, xlim = c(0, 1), ylim= c(0, 5), ann = FALSE, las=1)
   p <- seq(0,1, length.out=200)
-  lines(p, -log(1-p), type='l', col="blue")
-  text(0.9, 3, expression(paste(S[i],"=0")), col="blue", pos=3, xpd=NA)
-  lines(p, -log(p), type='l', col="red")
-  text(0.1, 3, expression(paste(S[i],"=1")), col="red", pos=3, xpd=NA)
+  lines(p, -log(1-p), type='l', col="#5e3c99")
+  text(0.85, 3, expression(paste(S[i],"=0 (survived)")), col="#5e3c99", pos=3, xpd=NA)
+  lines(p, -log(p), type='l', col="#e66101")
+  text(0.15, 3, expression(paste(S[i],"=1 (died)")), col="#e66101", pos=3, xpd=NA)
 
   my_label("C) Penalty for incorrect prediction", x=-0.137)
   mtext(expression(paste("Probability of death, ", p[i])), 1, line=2.1, cex=0.5)
@@ -104,7 +104,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
               just=c("bottom"), height=unit(1, "npc"))
   
   popViewport(3)
-  text(0.85, 0.45,  expression(paste(bar("logloss"), " =", sum("logloss"[i])/10)), xpd=NA)
+  text(0.85, 0.45,  expression(paste(bar("logloss"), " =", sum(italic("L")[i])/10)), xpd=NA)
 }
 
 # FIGURE 1 sub functions #
@@ -183,7 +183,7 @@ plot_fig2a <- function(logloss_summaries) {
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
     ylab('Logarithmic loss') + 
     xlab('Hazard function') +
-    scale_shape_manual(values = c(23,21, 24, 22)) +
+    scale_shape_manual(values = c(21,21, 24, 22)) +
     scale_fill_manual(values =c('white','grey80','black')) +
     scale_y_continuous(breaks= scales::pretty_breaks(5)) +
     scale_x_discrete(labels=c("null_model_null_model_none" = expression(gamma),
@@ -337,8 +337,10 @@ plot_fig5 <- function(param_variance_explained) {
 
 # params vs other covariates
 plot_fig6 <- function(data) {
-  p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + ggtitle('Light requirement') 
-  p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = NULL, xlab =NULL) + ggtitle('Maximum size') 
+  p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + 
+    ggtitle('Light requirement') + theme(plot.title = element_text(hjust = 0.5))
+  p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = NULL, xlab =NULL) + 
+    ggtitle('Maximum size') + theme(plot.title = element_text(hjust = 0.5))
   p3 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline mortality"~(gamma)), xlab =NULL)
   p4 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = NULL, xlab = NULL)
   p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","mean_gap_index",ylab = expression("Low growth mortality"~(alpha+gamma)), xlab = NULL)
@@ -359,12 +361,12 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
   
   # Sets limit for beta in order to produce nice log axis
   if (focal_param =='beta') {
-    ylim <- c(5,50)
-    breaks <- c(5,10, 20, 40)
+    ylim <- c(2.5,50)
+    breaks <- c(2.5,5,10, 20, 40)
     labels <- breaks
   } else {
-    ylim = c(5E-4, 2E1)
-    breaks <- c(0.001,0.01,0.1, 1, 10, 100)
+    ylim = c(5E-5, 10)
+    breaks <- c(0.0001,0.001,0.01,0.1, 1, 10)
     labels <- sapply(log10(breaks), function(i) as.expression(bquote(10^ .(i))))
   }
   
@@ -386,11 +388,11 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_
   if(covariate =="dbh_95") {
     fit <- data.frame(r2 = summary(lm(log10(mean)~log10(get(covariate)), data = data[[focal_param]]))$r.squared)
     p1 + scale_x_log10(breaks= xbreaks) +
-                       annotate('text',x=Inf,y=0,label=paste("r2 =", signif(fit$r2,1)), vjust=-0.7, hjust=1, size=2)
+                       annotate('text',x=Inf,y=min(ylim),label=paste("r2 =", signif(fit$r2,1)), vjust=0, hjust=1, size=2)
   }
   else {
     fit <- data.frame(r2 = summary(lm(log10(mean)~get(covariate), data = data[[focal_param]]))$r.squared)
-    p1 + annotate('text',x=Inf,y=0, label=paste("r2 =", signif(fit$r2,2)), vjust=-0.7, hjust=1, size=2)
+    p1 + annotate('text',x=Inf,y=min(ylim), label=paste("r2 =", signif(fit$r2,2)), vjust=0, hjust=1, size=2)
   }
 }
 
