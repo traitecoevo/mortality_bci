@@ -269,6 +269,7 @@ targets:
   ms/figures/fig1_tree.png:
     download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png
     check: exists
+    cleanup_level: never
 
   ms/figures/fig1.pdf:
     command: plot_fig1("ms/figures/fig1_tree.png", "ms/figures/dead_tree.png", "ms/figures/Fig1c.png")
