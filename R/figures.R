@@ -437,8 +437,8 @@ plot_figS1 <- function(data) {
   p4 <- ggplot(data = data,  aes(x = obs_basal_area_dt, y = true_basal_area_dt)) + 
     geom_point(alpha = 0.4, size= 0.2) +
     geom_abline(intercept = 0, slope = 1, col='red', size= 0.2) +
-    scale_x_continuous(expand=c(0,0), limit=c(NA, 300)) +
-    scale_y_continuous(expand=c(0,0), limit=c(0, 300)) +
+    scale_x_continuous(expand=c(0,0), limit=c(NA, 600)) +
+    scale_y_continuous(expand=c(0,0), limit=c(0, 600)) +
     ylab(expression("Predicted basal area growth"~("cm"^2~"yr"^-1))) +
     xlab(expression("Observed basal area growth"~("cm"^2~"yr"^-1))) +
     plot_theme() +
