@@ -124,7 +124,7 @@ If $S_i =0 \rightarrow \mathcal{L}_i = \log(1-p) = -\Lambda$.
 
 If $S_i = 1  \rightarrow \mathcal{L}_i = \log(p) = \textrm{log1m\_exp}(-\Lambda)$.
 
-\noindent In Stan, the function $ \textrm{log1m\_exp}$ is defined so that $ \textrm{log1m\_exp}(x)$ has the same value as $\log(1.0-\exp(x))$, but the computation is faster, more accurate, and more stable \cite{StanDevelopmentTeam:2015uz}.
+\noindent In Stan, the function $ \textrm{log1m\_exp}$ is defined so that $ \textrm{log1m\_exp}(x)$ has the same value as $\log(1.0-\exp(x))$, but the computation is faster, more accurate, and more stable \cite{StanDevelopmentTeam:2017uz}.
 
 \section{Example Stan code}
 
