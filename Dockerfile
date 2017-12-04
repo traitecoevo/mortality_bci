@@ -6,6 +6,8 @@ LABEL email="james.camac@gmail.com"
 RUN    apt-get update \
     && apt-get install -y --no-install-recommends \
          clang \
+         zip \
+         unzip \
          gdal-bin \
          libudunits2-dev \
          libgdal-dev \
