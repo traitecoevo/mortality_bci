@@ -45,7 +45,7 @@ If you haven't installed docker please see [here](https://www.docker.com/product
 We can set up docker two ways. The recommended approach is to download the precompiled docker image by running the following in the terminal/shell:
 
 ```
-docker pull jscamac/mortality_bci
+docker pull traitecoevo/mortality_bci
 ```
 This image contains all required software (and software versions) to run this analysis.
 
@@ -53,7 +53,7 @@ This image contains all required software (and software versions) to run this an
 If however, you would like the recompile the image from scratch the code below can be run. Note this will much slower relative to the `docker pull` approach.
 
 ```
-docker build --rm --no-cache -t jscamac/mortality_bci .
+docker build --rm --no-cache -t traitecoevo/mortality_bci .
 
 ```
 **The period is important as it tells docker to look for the dockerfile in the current directory**
@@ -65,7 +65,7 @@ Now we are all set to reproduce this project!
 To be able to run the code, we interface with the Rstudio within the docker container by running the following in the terminal/shell:
 
 ```
-docker run -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 jscamac/mortality_bci
+docker run -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 traitecoevo/mortality_bci
 
 ```
 Now just open your web browser and go to the following: `localhost:8787/`
