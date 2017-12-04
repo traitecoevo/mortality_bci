@@ -51,7 +51,7 @@
 
 % \setcounter{secnumdepth}{0}
 
-Here we provide some further details on methods and additional results, supplementing those presented in the main text. Section ``S1-Estimating True Growth'' describes a probabilistic methods used to estimate individual growth from field measurements,, taking into account measurement error and the distribution of growth rate across the community. Section ``S2-Parameter distributions'' describes the distributions applied to species-level random effects and priors put over parameters in the fitted model. Section ``S3-Numerical optimisation'' outlines some numerical concerns in estimating logloss, while Section ``S4-Example Stan code'' gives an example of the code fitted to the data. Code and data reproducing the results in this paper are available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}.
+Here we provide some further details on methods and additional results, supplementing those presented in the main text. Section ``S1-Estimating True Growth'' describes a probabilistic methods used to estimate individual growth from field measurements, taking into account measurement error and the distribution of growth rate across the community. Section ``S2-Parameter distributions'' describes the distributions applied to species-level random effects and priors put over parameters in the fitted model. Section ``S3-Numerical optimisation'' outlines some numerical concerns in estimating logloss, while Section ``S4-Example Stan code'' gives an example of the code fitted to the data. Code and data reproducing the results in this paper are available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}.
 
 \section{Estimating True Growth}
 
