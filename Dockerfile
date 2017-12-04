@@ -1,21 +1,18 @@
-FROM rocker/tidyverse:3.3.2
-MAINTAINER James Camac <james.camac@gmail.com>
+FROM rocker/verse:3.4.1
+LABEL maintainer="James Camac"
+LABEL email="james.camac@gmail.com"
 
 # Install latex, git and clang then clean up tmp files
 RUN    apt-get update \
     && apt-get install -y --no-install-recommends \
-         libcurl4-openssl-dev \
-         texlive-latex-recommended \
-         texlive-latex-extra \
-         texlive-humanities \
-         texlive-fonts-recommended \
-         texlive-science \
-         lmodern \
-         git \
          clang \
-    && apt-get clean \
-    && apt-get autoremove \
-    && rm -rf var/lib/apt/lists/*
+         gdal-bin \
+         libudunits2-dev \
+         libgdal-dev \
+         libproj-dev \
+         python-dev \
+         python-gdal \
+         python-numpy
 
 # Global site-wide config
 RUN mkdir -p $HOME/.R/ \
@@ -23,24 +20,24 @@ RUN mkdir -p $HOME/.R/ \
     && echo "\nCXX=clang++ -ftemplate-depth-256\n" >> $HOME/.R/Makevars \
     && echo "CC=clang\n" >> $HOME/.R/Makevars
 
-# Install other dependent R packages
-RUN install2.r -r "https://mran.revolutionanalytics.com/snapshot/2017-01-01/" --error \
-    --deps "TRUE" \
-    cowplot downloadr rmarkdown rstan viridisLite raster rasterVis latticeExtra knitr sp
+# Install other dependent R packages (installed in batches to overcome dependency issues)
+
+RUN . /etc/environment \
+  && install2.r --error --repos $MRAN --deps TRUE \
+  R6 yaml digest crayon getopt optparse downloader raster Hmisc rstan pbmcapply
+  
+RUN . /etc/environment \
+  && install2.r --error --repos $MRAN --deps FALSE \
+  cowplot gridBase png
 
 # Install remake
 RUN installGithub.r \
     --deps "TRUE" \
+    richfitz/storr \
     richfitz/remake
 
 # Remove unnecesarry tmp files
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-# Clone shrub repository
-RUN git clone https://github.com/traitecoevo/mortality_bci /home/mortality_bci
-
 # Set working directory
-WORKDIR /home/mortality_bci
-
-# Open R
-CMD ["R"]
+WORKDIR /home/mortality_bci/
