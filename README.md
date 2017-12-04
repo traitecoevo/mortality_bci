@@ -21,27 +21,6 @@ A preprint of this project has been released on BioRxiv:
 ## Reproducing analysis
 We are committed to reproducible science. As such, this repository contains all the data and code necessary to fully reproduce our results. To facilitate the reproducibility of this work, we have created a docker image and set up the entire workflow using [remake](https://github.com/richfitz/remake). Below we outline the two approaches that can be taken to reproduce the analyses, figures and manuscript.
 
-## Reproducing analysis without docker
-
-### Installing remake
-
-First install some dependencies from cran as follows:
-
-```r
-install.packages(c("R6", "yaml", "digest", "crayon", "optparse"))
-```
-
-Now we'll install some packages from [github](github.com). For this, you'll need the package [devtools](https://github.com/hadley/devtools). If you don't have devtools installed you will see an error "there is no package called 'devtools'"; if that happens install devtools with `install.packages("devtools")`.
-
-
-Then install the following two packages
-
-```r
-devtools::install_github("richfitz/storr")
-devtools::install_github("richfitz/remake")
-```
-See the info in the [remake readme](https://github.com/richfitz/remake) for further details if needed.
-
 ### Copy repository
 First copy the repository to your a desired directory on you local computer. 
 
@@ -53,40 +32,28 @@ git clone https://github.com/traitecoevo/mortality_bci.git
 
 Or can be downloaded manually by clicking [here](https://github.com/traitecoevo/mortality_bci/archive/master.zip).
 
-Now open a new R session with this project set as working directory. We use a number of packages, these can be easily installed by remake:
+### Download the model fits
+Running all model cross validations took approximately 2-months of computing time on a HPC machines. As the model fitting proceedure is not included in the remake workflow. We have however provided the model fits as a release [here]{https://github.com/traitecoevo/mortality_bci/releases/download/untagged-61b41c9f15782f0b1154/chain_fits.zip}. The file `chain_fits.zip` contain the results for stan's MCMC sampler. These should all be unpacked in a folder within the repository called `results/chain_fits`. The file `remake.zip` contains cached files from using the package remake and should be moved (and unpacked) in the parent directory of the repository. It is not essential to download the `.remake folder`. If you do, the code will reproduce the paper using cached calculations. If you don't the code will rerun all the preliminary calculations.
 
-```r
-remake::install_missing_packages()
-```
-
-Then run the following to generate all outputs (figures, table, knitr report):
-
-```r
-remake::make()
-```
-
-For comparison, also included is a traditional script `Rscript.R` that generates the same outputs, without using remake. This script is automatically generated from the `remake.yml` file, as part of the remake workflow.
-
-
-## Reproducing analysis with remake & docker
+## Reproducing analysis with remake & docker (Recommended approach)
 
 Each computer is different. Operating systems, software install and the versions of such software are likely to vary substantially between computers. As such it is extremely difficult to develop code that can easily run on all computers. This is where Docker comes in. [Docker](https://www.docker.com/what-docker) is the world’s leading software container platform.  Here we use Docker because it can readily be used across platforms and is set to install the appropriate software, and software versions used in the original analysis. As such it safeguards code from differences among computers and potential changes in software and cross platform issues.
 
 ### Setting up Docker
 If you haven't installed docker please see [here](https://www.docker.com/products/overview).
 
-We can set up docker two ways. If a docker image already exists on Docker Hub you can just download it by running something like the following:
+We can set up docker two ways. The recommended approach is to download the precompiled docker image by running the following in the terminal/shell:
 
 ```
 docker pull jscamac/mortality_bci
 ```
-This image contains all required software to run this analysis.
+This image contains all required software (and software versions) to run this analysis.
 
 
-If however, the image is not available or you've created your own Dockerfile you can build it. This will be slower relative to the `docker pull` approach as it requires compiling the whole image.
+If however, you would like the recompile the image from scratch the code below can be run. Note this will much slower relative to the `docker pull` approach.
 
 ```
-docker build --rm --no-cache -t mortality_bci .
+docker build --rm --no-cache -t jscamac/mortality_bci .
 
 ```
 **The period is important as it tells docker to look for the dockerfile in the current directory**
@@ -94,32 +61,54 @@ docker build --rm --no-cache -t mortality_bci .
 ## Using docker
 Now we are all set to reproduce this project!
 
-Now there are two common ways we can interface with the docker container:
-If your image only includes base `R` you can access it via the terminal by opening a terminal and running:
-
-### Accessing the docker terminal
-If you're comfortable with running work directly via R from a terminal or your image only includes base `R` run:
+### Rstudio from within docker
+To be able to run the code, we interface with the Rstudio within the docker container by running the following in the terminal/shell:
 
 ```
-docker run -v /Users/path/to/repository/:/home/mortality_bci  -it jscamac/mortality_bci
+docker run -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 jscamac/mortality_bci
 
-```
-
-### Accessing Rstudio from within docker
-If you are more comfortable with running code using a GUI interface such as Rstudio, you can open set run docker such that you interface directly with Docker's Rstudio.
-To do this you must have a docker image that contains Rstudio.
-
-```
-docker run -v /Users/path/to/repository/:/home/rstan_build:/home/rstudio -p 8787:8787 mortality_bci
 ```
 Now just open your web browser and go to the following: `localhost:8787/`
 
 The username and password is `rstudio`
 
 ### Rerunning analysis from within docker
-Now the final stage is to rerun the entire workflow by simply running:
+Assuming the model fits have been downloaded (see above), one can now reproduce the outputs by running:
 
 ```
+remake::make()
+```
+
+## Reproducing analysis without docker (Not recommended)
+This option is not recommended as R packages are constantly being updated and backwards compatibility broken. However, if you are adverse to using Docker you can run `remake` outside docker and willing by using the instructions below. Code was developed under R 3.4.1 (2017-06-30).
+
+### Installing remake
+
+First install some dependencies from cran as follows:
+
+```r
+install.packages(c("R6", "yaml", "digest", "crayon", "optparse"))
+```
+
+Now we'll install some packages from [github](github.com). For this, you'll need the package [devtools](https://github.com/hadley/devtools). If you don't have devtools installed you will see an error "there is no package called 'devtools'"; if that happens install devtools with `install.packages("devtools")`.
+
+Then install the following two packages
+
+```r
+devtools::install_github("richfitz/storr")
+devtools::install_github("richfitz/remake")
+```
+See the info in the [remake readme](https://github.com/richfitz/remake) for further details if needed.
+
+Open a new R session with this project set as working directory. We use a number of packages, these can be easily installed by remake:
+
+```r
+remake::install_missing_packages()
+```
+
+Run the following to generate all outputs (analysis, figures, table, manuscript):
+
+```r
 remake::make()
 ```
 

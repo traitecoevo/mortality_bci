@@ -2,25 +2,20 @@ packages:
   - readr
   - RCurl
   - downloader
+  - knitr
   - rmarkdown
   - sp
-  - viridisLite
   - raster
   - rasterVis
-  - latticeExtra
   - dplyr
   - tidyr
   - rstan
-  - knitr
   - ggplot2
   - cowplot
   - pbmcapply
-  - R6
-  - yaml
-  - digest
-  - crayon
-  - optparse
   - Hmisc
+  - png
+  - gridBase
 
 sources:
   - R
@@ -33,17 +28,13 @@ plot_options:
     
   single_col_portrait_large:
     width: 3.46
-    height: 5.5
+    height: 5.25
     onefile: FALSE   
     
   single_col_portrait:
     width: 3.46
     height: 4
     onefile: FALSE
-
-  single_col_portrait_long:
-    width: 3.46
-    height: 5.5
     
   single_col_portrait_extralong:
     width: 3.46
@@ -51,7 +42,7 @@ plot_options:
 
   single_col_rectangle:
     width: 3.46
-    height: 2.25
+    height: 2.5
     onefile: FALSE
     
   single_col_rectangle_narrow:
@@ -60,8 +51,8 @@ plot_options:
     onefile: FALSE
     
   single_col_square:
-    width: 3.26
-    height: 3.26
+    width: 3.46
+    height: 3.46
     onefile: FALSE
 
   double_col_square:
@@ -194,7 +185,7 @@ targets:
   #------------- Models ---------------------------
   BCI_true_dbh_model:
     command: run_true_dbh_model(BCI_model_dataset)
-    cleanup_level: purge
+    cleanup_level: never
     check: exists  
     
   #------------- Process outputs -------------------

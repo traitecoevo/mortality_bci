@@ -269,7 +269,7 @@ plot_fig4a <- function(model, data, growth_range= c(0.03,0.5), hazard_curve = FA
     ggplot(preds, aes(x = dbh_growth,y = annual_prob_mort, group = sp, colour = wood_density)) + 
       geom_line(alpha=0.4, size=0.3) +
       scale_x_continuous(expand=c(0,0)) +
-      scale_y_continuous(expand=c(0,0), limits = c(0, NA)) +
+      scale_y_continuous(expand=c(0,0), limits = c(0, 1)) +
       ylab(ylab) +
       xlab(xlab) +
       scale_colour_gradient(expression("Wood density"~("g cm"^-3)),low="blue", high="red") +
