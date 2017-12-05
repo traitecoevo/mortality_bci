@@ -16,7 +16,7 @@ This paper uses data from  Barro Colorado Island (BCI) Panama.
 Condit, R., Lao, S., Pérez, R., Dolins, S.B., Foster, R.B. Hubbell, S.P. 2012. Barro Colorado Forest Census Plot Data, 2012 Version. DOI http://dx.doi.org/10.5479/data.bci.20130603
 
 ## Preprint
-A preprint of this project has been released on BioRxiv: 
+A preprint of this project has been released on BioRxiv: https://doi.org/10.1101/228361
 
 ## Reproducing analysis
 We are committed to reproducible science. As such, this repository contains all the data and code necessary to fully reproduce our results. To facilitate the reproducibility of this work, we have created a docker image and set up the entire workflow using [remake](https://github.com/richfitz/remake). Below we outline the two approaches that can be taken to reproduce the analyses, figures and manuscript.
@@ -33,7 +33,7 @@ git clone https://github.com/traitecoevo/mortality_bci.git
 Or can be downloaded manually by clicking [here](https://github.com/traitecoevo/mortality_bci/archive/master.zip).
 
 ### Download the model fits
-Running all model cross validations took approximately 2-months of computing time on a HPC machines. As the model fitting proceedure is not included in the remake workflow. We have however provided the model fits as a release [here](https://github.com/traitecoevo/mortality_bci/releases/download/untagged-61b41c9f15782f0b1154/chain_fits.zip). The release contains a folder called `results.zip`. This contains the chain fits from stan's MCMC sampler. The `result.zip` should be unpacked in the parent directory of the  mortality_bci. The file `remake.zip` contains cached files from using the package remake and should be moved (and unpacked) in the parent directory of mortality_bci. It is not essential to download the `.remake folder`. If you do, the code will reproduce the paper using cached calculations. If you don't the code will rerun all the preliminary calculations.
+Running all model cross validations took approximately 2-months of computing time on a HPC machines. As the model fitting proceedure is not included in the remake workflow. We have however provided the model fits as a release [here](https://github.com/traitecoevo/mortality_bci/releases/tag/v0.91). The release contains a file called `results.zip`. This contains the chain fits from stan's MCMC sampler. The `result.zip` should be unpacked in the parent directory of the  mortality_bci. The file `remake.zip` contains cached files from using the package remake and should be moved (and unpacked) in the parent directory of mortality_bci. It is not essential to download the `.remake folder`. If you do, the code will reproduce the paper using cached calculations. If you don't the code will rerun all the preliminary calculations.
 
 ## Reproducing analysis with remake & docker (Recommended approach)
 
