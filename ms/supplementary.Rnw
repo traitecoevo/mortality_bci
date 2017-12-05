@@ -20,13 +20,13 @@
 \author[f]{S Joseph Wright}
 \author[a,g]{Daniel S Falster}
 
-\affil[a]{Department of Biological Sciences, Macquarie University, New South Wales, Australia}
-\affil[b]{Current Address: Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Victoria, Australia}
+\affil[a]{Department of Biological Sciences, Macquarie University, Sydney, New South Wales, Australia}
+\affil[b]{Current Address: Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Melbourne, Victoria, Australia}
 \affil[c]{Field Museum of Natural History and Morton Arboretum, Chicago, Illinois, USA}
 \affil[d]{Imperial College, London, United Kingdom}
 \affil[e]{Data61, CSIRO, Australia}
 \affil[f]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
-\affil[g]{Current Address: Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, NSW 2052, Australia}
+\affil[g]{Current Address: Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, Sydney, New South Wales, Australia}
 
 % Please give the surname of the lead author for the running footer
 \leadauthor{Camac}
