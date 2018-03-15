@@ -172,32 +172,6 @@ targets:
     command: saveRDS(BCI_training_full, target_name)
     cleanup_level: purge
 
-  #------------- Set up tasks ---------------------
-  null_model_tasks:
-    command: tasks_2_run(I("null_model"))
-    cleanup_level: tidy
-    
-  function_growth_tasks:
-    command: tasks_2_run(I("function_growth_comparison"))
-    cleanup_level: tidy
-    
-  species_re_tasks:
-    command: tasks_2_run(I("species_random_effects"))
-    cleanup_level: tidy
-    
-  rho_tasks:
-    command: tasks_2_run(I("rho_combinations"))
-    cleanup_level: tidy
-    
-  final_model_tasks:
-    command: full_data_tasks(I("final_model"))
-    depends: data/bci_data_full.rds
-    cleanup_level: tidy
-
-  final_model_re_tasks:
-    command: full_data_tasks(I("final_base_growth_hazard_re"))
-    depends: data/bci_data_full.rds
-    cleanup_level: tidy
   #------------- Models ---------------------------
   BCI_true_dbh_model:
     command: run_true_dbh_model(BCI_model_dataset)

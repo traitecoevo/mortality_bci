@@ -1,12 +1,19 @@
 
+launch_task_i <- function(i, task_name, pbs.whisker, iter) {
+  files <- lapply(i, write_pbs, pbs.whisker = pbs.whisker, task_name = task_name, iter = iter)
+  res <- sapply(files, qsub, echo_only=FALSE, verbose=TRUE)
+  dat <- process_pbs(i, res)
+  append_jobfile(dat, file.path("results/pbs", task_name, "_jobs.csv"))
+}
+
 pbs_filename <- function(i, s){
   sprintf("results/pbs/%s/job_%d.pbs", s, i)
 }
 
-write_pbs <- function(id, pbs.whisker, s) {
+write_pbs <- function(id, pbs.whisker, task_name, iter = 2000) {
     template <- readLines(pbs.whisker)
     str <- whisker::whisker.render(template)
-    file <- pbs_filename(id, s)
+    file <- pbs_filename(id, task_name)
     dir.create(dirname(file), FALSE, TRUE)
     writeLines(str, file)
     file
@@ -50,39 +57,7 @@ process_pbs <- function(id, pbs) {
 }
 
 # Delete jobs from queue
-qdel <-function(i){
-   msg <- paste(paste0(i, ".katana.science.unsw.edu.au"), collapse= " ")
+qdel <-function(i, txt = ".katana.science.unsw.edu.au"){
+   msg <- paste(paste0(i, txt), collapse= " ")
    system2("qdel", msg, stdout=TRUE)
 }
-
-# # null models
-# jobfile <- "results/pbs/null_model/_jobs.csv"
-# i <- 1:30
-# files <- lapply(i, write_pbs, pbs.whisker = "pbs_null.whisker", s = "null_model")
-# res <- sapply(files, qsub, echo_only=FALSE, verbose=TRUE)
-# dat <- process_pbs(i, res)
-# append_jobfile(dat, jobfile)
-
-# # functional growth comparison
-# jobfile <- "results/pbs1/function_growth_comparison/_jobs.csv"
-# i <- 1:180
-# files <- lapply(i, write_pbs, pbs.whisker = "pbs_fg.whisker", s = "function_growth_comparison")
-# res <- sapply(files, qsub, echo_only=FALSE, verbose=TRUE)
-# dat <- process_pbs(i, res)
-# append_jobfile(dat, jobfile)
-
-# # wood density comparisons
-# jobfile <- "results/pbs/rho_combinations/_jobs.csv"
-# i <- 108:240
-# files <- lapply(i, write_pbs, pbs.whisker = "pbs_rho.whisker", s = "rho_combinations")
-# res <- sapply(files, qsub, echo_only=FALSE, verbose=TRUE)
-# dat <- process_pbs(i, res)
-# append_jobfile(dat, jobfile)
-
-# # species random effects
-# jobfile <- "results/pbs/species_random_effects/_jobs.csv"
-# i <- 1:30
-# files <- lapply(i, write_pbs, pbs.whisker = "pbs_spre.whisker", s = "species_random_effects")
-# res <- sapply(files, qsub, echo_only=FALSE, verbose=TRUE)
-# dat <- process_pbs(i, res)
-# append_jobfile(dat, jobfile)
