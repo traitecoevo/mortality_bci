@@ -1,0 +1,28 @@
+#!/bin/bash
+
+### project and queue
+#PBS -P dp72
+#PBS -q normal
+
+### job details: number of cores, memory, name etc
+#PBS -N {{{id}}}_{{{task_name}}}
+#PBS -l walltime=0:25:00
+#PBS -l ncpus=1
+#PBS -l mem=5GB
+#PBS -l software=intel-compiler
+#PBS -l jobfs=500MB
+
+### Specify notifications
+#PBS -M daniel.falster@unsw.edu.au
+#PBS -m abe
+
+## location for output and error files
+#PBS -o /short/dp72/mortality_bci/results/pbs/{{{task_name}}}/output_{{{id}}}
+#PBS -j oe
+
+## Start in working where script submitted
+#PBS -l wd   
+
+cd /short/dp72/mortality_bci/
+
+./scripts/run.R {{{task_name}}} {{{id}}} {{{iter}}}

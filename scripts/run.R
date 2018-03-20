@@ -2,14 +2,10 @@
 
 # load packages and functions
 for (p in c("dplyr","rstan"))
-  library(p, character.only=TRUE, quietly=TRUE)
+  suppressWarnings(suppressPackageStartupMessages(library(p, character.only=TRUE, quietly=TRUE)))
 for (s in c("R/bci_data_processing.R", "R/model.R","R/stan_functions.R"))
   source(s)
 
-df_to_list <- function(x) {
-  attr(x, "out.attrs") <- NULL
-  unname(lapply(split(x, seq_len(nrow(x))), as.list))
-}
 options(mc.cores = 1)
 
 # parse and check input variables 
