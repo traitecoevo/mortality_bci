@@ -13,8 +13,7 @@ task_name <- as.character(commandArgs(TRUE)[1])
 i <- as.integer(commandArgs(TRUE)[2])
 iter <- as.integer(commandArgs(TRUE)[3])
 
-if(! task_name %in% c("function_growth_comparison", "null_model", "rho_combinations", "species_random_effects"))
-  stop(sprintf("invalid task name: %s", commandArgs(TRUE)[1]))
+check_task_is_allowed(task_name)
 
 if(is.na(iter) || iter < 1 || iter > 2000)
   stop(sprintf("Invalid value for iterations: %s", commandArgs(TRUE)[3]))

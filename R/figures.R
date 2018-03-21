@@ -173,15 +173,17 @@ plot_fig2 <- function(logloss_summaries) {
 
 plot_fig2a <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
-    filter(model_type == "rho_combinations_base_growth_hazard_c" |
+    #todo - currently plotting trait effects on abc for all three traits
+    filter(model_type %in% c("rho_combinations_base_growth_hazard_abc", "gap_combinations_base_growth_hazard_abc", "size_combinations_base_growth_hazard_abc") |
              comparison %in% c("null_model","function_growth_comparison","species_random_effects")) %>%
-    mutate(comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
-           comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','rho_combinations','species_random_effects'),
-                               labels = c('Null','Census','Growth rate','WD','Species')))
-  
-  ggplot(dat, aes(x = model_type,y = mean, group = growth_measure, fill=growth_measure, shape = model)) + 
+    mutate(comparison = replace(comparison, comparison %in% c("rho_combinations", "gap_combinations", "size_combinations"), "trait"),
+          comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
+           comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','trait','species_random_effects'),
+                               labels = c('Null','Census','Growth rate','Trait','Species')))
+
+  ggplot(dat, aes(x = model_type,y =`50%`, group = comparison, fill=growth_measure, shape = model)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
-    ylab('Logarithmic loss') + 
+    ylab('Logarithmic loss') +
     xlab('Hazard function') +
     scale_shape_manual(values = c(21,21, 24, 22)) +
     scale_fill_manual(values =c('white','grey80','black')) +
@@ -190,31 +192,38 @@ plot_fig2a <- function(logloss_summaries) {
                               "function_growth_comparison_base_hazard_none" =  expression(gamma~delta["t"]),
                               "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~delta["t"]),
                               "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"]),
-                              "rho_combinations_base_growth_hazard_c" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~delta["t"]),
+                              "gap_combinations_base_growth_hazard_abc" = "",
+                              "rho_combinations_base_growth_hazard_abc" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~delta["t"]),
+                              "size_combinations_base_growth_hazard_abc" = "",
                               "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]))) +
     facet_grid(.~comparison, scales='free_x', drop=TRUE, space = "free_x") +
     plot_theme(strips = TRUE) +
-    theme(axis.text.x = element_text(angle=15, hjust = 1)) 
+    theme(axis.text.x = element_text(angle=15, hjust = 1))
 }
 
 plot_fig2b <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
     filter(growth_measure == "true_dbh_dt" &
-             (comparison == "rho_combinations" |
-                model_type == "function_growth_comparison_base_growth_hazard_none"))
-  
-  ggplot(dat, aes(x = model_type,y = mean)) + 
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black', stroke = 0.5,size=0.4) +
+             (comparison %in% c("rho_combinations", "gap_combinations", "size_combinations") |
+                model_type == "function_growth_comparison_base_growth_hazard_none")) %>%
+    mutate(combo = gsub("none", "", paste0(rho_combo, gap_combo, size_combo)),
+           combo = ifelse(combo == "", "none", combo),
+           combo = factor(combo, levels = c("none", "a", "b", "c", "ab", "bc", "ac", "abc")))
+
+  ggplot(dat, aes(x = combo, y = `50%`)) +
+    geom_point(aes(x = combo, y = `50%`, colour = comparison)) +
+#    this need tweaking to work with multiple traits
+#    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black', stroke = 0.5,size=0.4) +
     ylab('Logarithmic loss') + 
-    xlab(expression('Wood density effects in the model'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"])) +
-    scale_x_discrete(labels=c("function_growth_comparison_base_growth_hazard_none" = "none",
-                              "rho_combinations_base_growth_hazard_a" = expression(alpha),
-                              "rho_combinations_base_growth_hazard_b" = expression(beta),
-                              "rho_combinations_base_growth_hazard_ab" = expression(alpha~"&"~beta),
-                              "rho_combinations_base_growth_hazard_c" = expression(gamma),
-                              "rho_combinations_base_growth_hazard_ac" = expression(alpha~"&"~gamma),
-                              "rho_combinations_base_growth_hazard_bc" = expression(beta~"&"~gamma),
-                              "rho_combinations_base_growth_hazard_abc" = expression(alpha~","~beta~","~gamma))) +
+    xlab(expression('Trait effects in the model'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"])) +
+    scale_x_discrete(labels=c("none" = "none",
+                              "a" = expression(alpha),
+                              "b" = expression(beta),
+                              "ab" = expression(alpha~"&"~beta),
+                              "c" = expression(gamma),
+                              "ac" = expression(alpha~"&"~gamma),
+                              "bc" = expression(beta~"&"~gamma),
+                              "abc" = expression(alpha~","~beta~","~gamma))) +
     plot_theme()
 }
 
@@ -337,15 +346,15 @@ plot_fig5 <- function(param_variance_explained) {
 
 # params vs other covariates
 plot_fig6 <- function(data) {
-  p1 <- plot_spp_param_by_covariate(data, "alpha", "mean_gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + 
+  p1 <- plot_spp_param_by_covariate(data, "alpha", "gap_index",ylab = expression("Low growth effect"~(alpha)), xlab =NULL) + 
     ggtitle('Light requirement') + theme(plot.title = element_text(hjust = 0.5))
   p2 <- plot_spp_param_by_covariate(data, "alpha", "dbh_95",ylab = NULL, xlab =NULL) + 
     ggtitle('Maximum size') + theme(plot.title = element_text(hjust = 0.5))
-  p3 <- plot_spp_param_by_covariate(data, "gamma", "mean_gap_index",ylab = expression("Baseline mortality"~(gamma)), xlab =NULL)
+  p3 <- plot_spp_param_by_covariate(data, "gamma", "gap_index",ylab = expression("Baseline mortality"~(gamma)), xlab =NULL)
   p4 <- plot_spp_param_by_covariate(data, "gamma", "dbh_95",ylab = NULL, xlab = NULL)
-  p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","mean_gap_index",ylab = expression("Low growth mortality"~(alpha+gamma)), xlab = NULL)
+  p5 <- plot_spp_param_by_covariate(data, "alpha_gamma","gap_index",ylab = expression("Low growth mortality"~(alpha+gamma)), xlab = NULL)
   p6 <- plot_spp_param_by_covariate(data, "alpha_gamma", "dbh_95",ylab = NULL, xlab = NULL)
-  p7 <- plot_spp_param_by_covariate(data, "beta", "mean_gap_index",ylab = expression("Exponential decay"~(beta)), xlab ='Gap index')
+  p7 <- plot_spp_param_by_covariate(data, "beta", "gap_index",ylab = expression("Exponential decay"~(beta)), xlab ='Gap index')
   p8 <- plot_spp_param_by_covariate(data, "beta", "dbh_95",ylab = NULL, xlab =expression('DBH'['max']~(cm)))
   plot_grid(p1,p2,p3,p4,p5,p6,p7,p8, ncol=2, labels=LETTERS[1:8], label_size = 7)
 }
@@ -354,7 +363,7 @@ plot_fig6 <- function(data) {
 #FIG 6 PANEL FUNCTIONS #
 
 # Plot other covariates by parameter
-plot_spp_param_by_covariate <- function(data, focal_param, covariate ="mean_gap_index", ylab =NULL, xlab = NULL) {
+plot_spp_param_by_covariate <- function(data, focal_param, covariate ="gap_index", ylab =NULL, xlab = NULL) {
   spp <- data[[focal_param]] %>%
     select_('sp', covariate, 'mean', '`2.5%`','`97.5%`') %>%
     filter(complete.cases(.))

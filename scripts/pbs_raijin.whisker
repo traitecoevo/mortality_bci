@@ -6,7 +6,7 @@
 
 ### job details: number of cores, memory, name etc
 #PBS -N {{{id}}}_{{{task_name}}}
-#PBS -l walltime=0:25:00
+#PBS -l walltime=180:0:0
 #PBS -l ncpus=1
 #PBS -l mem=5GB
 #PBS -l software=intel-compiler

@@ -1,7 +1,7 @@
 
-launch_task_i <- function(i, task_name, pbs.whisker, iter) {
+launch_task_i <- function(i, task_name, pbs.whisker, iter, sleep=0) {
   files <- lapply(i, write_pbs, pbs.whisker = pbs.whisker, task_name = task_name, iter = iter)
-  res <- sapply(files, qsub, echo_only=FALSE, verbose=TRUE)
+  res <- sapply(files, qsub, echo_only=FALSE, verbose=TRUE, sleep=sleep)
   dat <- process_pbs(i, res)
   append_jobfile(dat, file.path("results/pbs", task_name, "_jobs.csv"))
 }
@@ -19,7 +19,7 @@ write_pbs <- function(id, pbs.whisker, task_name, iter = 2000) {
     file
 }
 
-qsub <- function(pbs_filenames, echo_only=TRUE, verbose=TRUE) {
+qsub <- function(pbs_filenames, echo_only=TRUE, verbose=TRUE, sleep=0) {
   if (echo_only) {
     system2 <- function(command, args, ...) {
       message(paste(command, args, ...))
@@ -31,6 +31,9 @@ qsub <- function(pbs_filenames, echo_only=TRUE, verbose=TRUE) {
       message("Launching ", pbs_filenames[[i]])
     }
     pbs_ids[[i]] <- system2("qsub", pbs_filenames[[i]], stdout=TRUE)
+  }
+  if(sleep > 0){
+    Sys.sleep(sleep)
   }
   ## TODO: Throw an error if the job was refused.
   invisible(pbs_ids)

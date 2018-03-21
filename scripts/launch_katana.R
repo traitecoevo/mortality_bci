@@ -8,16 +8,27 @@ launch_task_i_katana <- function(...) {
 }
 
 # test
-launch_task_i_katana(1, "null_model", iter =10)
-launch_task_i_katana(1:10, "function_growth_comparison", iter=10)
+# launch_task_i_katana(1, "null_model", iter =10)
+# launch_task_i_katana(1:10, "function_growth_comparison", iter=10)
 
-# The real deal
-i <- 1:30
-launch_task_i_katana(i, "null_model", iter =10)
+launch_task_i_katana(24, "gap_combinations", iter=2000)
+launch_task_i_katana(58, "gap_combinations", iter=2000)
 
-i <- 1:180
-launch_task_i_katana(1, "function_growth_comparison")
 
-i <- 1:240
-launch_task_i_katana(i, "rho_combinations")
+## Done
+# launch_task_i_katana(1:30, "null_model", iter =10)
+# launch_task_i_katana(1:180, "function_growth_comparison")
+# launch_task_i_katana(1:240, "rho_combinations")
 
+# launch_task_i_katana(101:119, "gap_combinations", iter=2000)
+# launch_task_i_katana(101:119, "size_combinations", iter=2000)
+# launch_task_i_katana(120:179, "gap_combinations", iter=2000)
+# launch_task_i_katana(120:179, "size_combinations", iter=2000)
+# launch_task_i_katana(180:240, "gap_combinations", iter=2000)
+# launch_task_i_katana(180:240, "size_combinations", iter=2000)
+# launch_task_i_katana(100:179, "gap_combinations", iter=2000)
+# launch_task_i_katana(100:179, "size_combinations", iter=2000)
+
+# First queued on raijin but didn't run so run on katana
+# launch_task_i_katana(c(45, 46, 62:99), "gap_combinations", iter=2000)
+# launch_task_i_katana(51:84, "size_combinations", iter=2000)

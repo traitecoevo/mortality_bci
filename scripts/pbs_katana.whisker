@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ### Set the number of cores (cpus) and memory needed for job
-#PBS -l nodes=1:ppn=1,vmem=3gb
-#PBS -l walltime=200:00:00
+#PBS -l nodes=1:ppn=1,vmem=5gb
+#PBS -l walltime=350:00:00
 
 ### Specify notifications
 #PBS -M daniel.falster@unsw.edu.au

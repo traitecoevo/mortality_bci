@@ -120,9 +120,15 @@ targets:
     command: BCI_load_50ha_plot("downloads/bci.full.Rdata31Aug2012.zip")
     cleanup_level: purge
     
-  BCI_traits:
+  BCI_traits_wood:
     command: load_trait_data("data/BCI_traits_20101220.csv")
     cleanup_level: purge
+
+  BCI_traits_dbh_95:
+    command: get_spp_dbh_95(BCI_50haplot)
+
+  BCI_traits_gap_index:
+    command: get_mean_spp_gap_index(recruit_gap_conditions)   
 
   BCI_nomenclature:
     command: BCI_load_nomenclature("downloads/bci.spptable.rdata")
@@ -143,7 +149,7 @@ targets:
     cleanup_level: purge
 
   BCI_model_dataset:
-    command: merge_BCI_data(BCI_cleaned, BCI_traits)
+    command: merge_BCI_data(BCI_cleaned, BCI_traits_wood, BCI_traits_dbh_95, BCI_traits_gap_index)
     cleanup_level: purge
     
   BCI_model_dataset_true_dbh:

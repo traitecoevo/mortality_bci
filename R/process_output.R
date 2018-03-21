@@ -25,13 +25,12 @@ compile_models <- function(comparison) {
 
 # Sub-function to compile_models for our workflow
 compile_chains <- function(comparison) {
-  if(!comparison %in% c("null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model","final_base_growth_hazard_re")) {
-    stop('comparison can only be one of the following: 
-         "null_model","function_growth_comparison","species_random_effects","rho_combinations","final_model", "final_base_growth_hazard_re"')
-  }
+
+  check_task_is_allowed(comparison)
+
   tasks <- tasks_2_run(comparison)
-  sets <- split(tasks,  list(tasks$comparison,tasks$model,tasks$growth_measure,tasks$rho_combo,tasks$kfold), sep='_', drop=TRUE)
-  pars <- lapply(sets,  function(s) s[1, c("comparison","model","growth_measure","rho_combo","kfold")])
+  sets <- split(tasks,  list(tasks$comparison,tasks$model,tasks$growth_measure, tasks$rho_combo, tasks$gap_combo, tasks$size_combo, tasks$kfold), sep='_', drop=TRUE)
+  pars <- lapply(sets,  function(s) s[1, c("comparison", "model", "growth_measure", "rho_combo", "gap_combo", "size_combo", "kfold")])
   fits <- lapply(sets, function(s) combine_stan_chains(s[['filename']]))
   list(model_info=pars, fits=fits)
 }
@@ -69,58 +68,81 @@ diagnose <- function(model) {
       n_divergent = sum(sapply(sampler_params, function(y) y[,'divergent__'])),
       max_treedepth = max(sapply(sampler_params, function(y) y[,'treedepth__'])))
   }))
-  
+
   out2 <- suppressWarnings(bind_rows(lapply(info, function(x) {
     data.frame(
       comparison = x$comparison,
       model = x$model,
       growth_measure = x$growth_measure,
       rho_combo = x$rho_combo,
+      gap_combo = x$gap_combo,
+      size_combo = x$size_combo,
       kfold = as.integer(x$kfold))
   })))
-  
+
   res <- cbind(out2,out1) %>%
-    arrange(comparison,model,growth_measure,rho_combo,kfold)
+    arrange(comparison,model,growth_measure,rho_combo, gap_combo, size_combo, kfold)
   
   row.names(res) <- NULL
   return(res)
 }
-
 
 # Combines all cross val logloss outputs.
 combine_logloss_summaries <- function() {
   logloss_null_model <- summarise_crossval_logloss("null_model")
   logloss_func_growth <- summarise_crossval_logloss("function_growth_comparison")
   logloss_rho_comparisons <- summarise_crossval_logloss("rho_combinations")
+  logloss_gap_comparisons <- summarise_crossval_logloss("gap_combinations")
+  logloss_size_comparisons <- summarise_crossval_logloss("size_combinations")
   logloss_re_comparison <- summarise_crossval_logloss("species_random_effects")
-  
+
+  vars <- c("growth_hazard_a", "growth_hazard_b", "growth_hazard_ab", "growth_hazard_c", "growth_hazard_ac", "growth_hazard_bc", "growth_hazard_abc")
+
   logloss_func_growth %>%
-    bind_rows(logloss_null_model,logloss_rho_comparisons, logloss_re_comparison) %>%
+    bind_rows(
+      logloss_null_model,
+      logloss_rho_comparisons,
+      logloss_gap_comparisons, logloss_size_comparisons,
+      logloss_re_comparison
+      ) %>%
     arrange(comparison, growth_measure) %>%
-    filter(model!= "base_hazard" | growth_measure !='true_basal_area_dt') %>% # removes unnecessary model base_hazard fit.
-    filter(comparison !='rho_combinations' |  rho_combo!='none') %>% # Already included in logloss_func_growth
-    mutate(growth_measure = replace(growth_measure, model %in% c("null_model","base_hazard"), "none"), # No growth for base model
-           model = replace(model, model=="base_growth_hazard_re", "base_growth_hazard")) %>% # rename for plotting purposes
-    mutate(model = factor(model, levels=c('null_model','base_hazard','growth_hazard','base_growth_hazard')),
-           growth_measure = factor(growth_measure, levels=c('none','true_basal_area_dt','true_dbh_dt')),
-           model_type = paste(comparison,model, rho_combo, sep='_')) %>%
-    mutate(model_type = factor(model_type, levels=c("null_model_null_model_none",
-                                                    "function_growth_comparison_base_hazard_none",
-                                                    "function_growth_comparison_growth_hazard_none",
-                                                    "function_growth_comparison_base_growth_hazard_none",
-                                                    "rho_combinations_base_growth_hazard_a",
-                                                    "rho_combinations_base_growth_hazard_b",
-                                                    "rho_combinations_base_growth_hazard_ab",
-                                                    "rho_combinations_base_growth_hazard_c",
-                                                    "rho_combinations_base_growth_hazard_ac",
-                                                    "rho_combinations_base_growth_hazard_bc",
-                                                    "rho_combinations_base_growth_hazard_abc",
-                                                    "species_random_effects_base_growth_hazard_none"))) %>%
-    mutate(modelid = as.factor(as.numeric(model_type))) %>%
+    # remove duplicate / redundant fits
+    filter(!(
+              # unnecessary model base_hazard fit
+              (model == "base_hazard" & growth_measure =='true_basal_area_dt') |
+              # Already included in logloss_func_growth
+              (comparison =='rho_combinations'  &   rho_combo=='none') |
+              (comparison =='gap_combinations'  &   gap_combo=='none') |
+              (comparison =='size_combinations' &  size_combo=='none')
+            )
+          ) %>%
+    mutate(
+          # No growth for base model
+          growth_measure = replace(growth_measure, model %in% c("null_model", "base_hazard"), "none"), 
+          # rename for plotting purposes
+          model = replace(model, model=="base_growth_hazard_re", "base_growth_hazard")
+          ) %>%
+    mutate(
+          # paste together strings as identifier for model
+          model_type = paste(sep='_', comparison, model,
+                                ifelse(comparison == "gap_combinations", gap_combo,
+                                ifelse(comparison == "size_combinations", size_combo, rho_combo))),
+          # make factors with specified order
+          model = factor(model, levels=c('null_model','base_hazard','growth_hazard','base_growth_hazard')),
+          growth_measure = factor(growth_measure, levels=c('none','true_basal_area_dt','true_dbh_dt')),
+          model_type = factor(model_type, levels=
+                    c("null_model_null_model_none",
+                      sprintf("function_growth_comparison_%s", c("base_hazard_none", "growth_hazard_none", "base_growth_hazard_none")),
+                      sprintf("rho_combinations_base_%s", vars),
+                      sprintf("gap_combinations_base_%s", vars),
+                      sprintf("size_combinations_base_%s", vars),
+                      "species_random_effects_base_growth_hazard_none")),
+          modelid = as.factor(as.numeric(model_type))
+          ) %>%
     arrange(modelid) %>%
-    select(modelid, model_type, comparison, model, 
-           growth_measure, rho_combo,logloss, 
-           mean, st_err,ci, `2.5%`,`97.5%`)
+    select(modelid, model_type, comparison, model,
+           growth_measure, rho_combo, gap_combo, size_combo, logloss,
+           mean, st_err, ci, `50%`, `2.5%`,`97.5%`)
 }
 
 
@@ -130,16 +152,18 @@ summarise_crossval_logloss <- function(comparison) {
   # We don't make an explicit target of compiled models because of
   # a lack of support for long vectors in digest (remake issue #76)
   samples <- extract_logloss_samples(models)
+
   samples %>%
-    group_by(comparison, model, growth_measure, rho_combo, kfold, logloss) %>%
+    group_by(comparison, model, growth_measure, rho_combo, gap_combo, size_combo, kfold, logloss) %>%
     summarise(kfold_logloss = mean(estimate)) %>%
     ungroup() %>%
-    group_by(comparison, model, growth_measure, rho_combo, logloss) %>%
+    group_by(comparison, model, growth_measure, rho_combo, gap_combo, size_combo, logloss) %>%
     summarise(mean = mean(kfold_logloss),
-              st_err = sd(kfold_logloss)/sqrt(n())) %>%
-    mutate(ci = 1.96 * st_err,
-           `2.5%` = mean - ci,
-           `97.5%` = mean + ci) %>%
+              st_err = sd(kfold_logloss)/sqrt(n()),
+              ci = 1.96 * st_err,
+              `50%` = stats::quantile(kfold_logloss, 0.5),
+              `2.5%` = stats::quantile(kfold_logloss, 0.05),
+              `97.5%` = stats::quantile(kfold_logloss, 0.95)) %>%
     ungroup()
 }
 
@@ -174,12 +198,12 @@ logloss_samples <- function(model) {
 get_times <- function(comparison) {
   fits <- comparison$fits
   info <- plyr::ldply(comparison$model_info, .id='modelid')
-  times <- lapply(fits, function(x) 
+  times <- lapply(fits, function(x)
     rstan::get_elapsed_time(x))
-  
+
   res <- plyr::ldply(lapply(times, function(x) {
     tidyr::gather(data.frame(x),'warmup','sample')}), .id='modelid')
-  
+
   left_join(info, res, 'modelid') %>%
     select(-modelid) %>%
     mutate(total_hours = ((warmup + sample)/3600))
@@ -199,7 +223,7 @@ summarise_hyper_params <- function(model, data) {
   dat <- prep_full_data_for_stan(data)
   samples <- rstan::extract(fit, pars=c("mu_log_alpha","mu_log_beta","mu_log_gamma",
                                         "sigma_log_alpha", "sigma_log_beta", "sigma_log_gamma"))
-  
+
   lapply(samples, function(x) {
     cbind.data.frame(
       mean = mean(x),
@@ -406,9 +430,9 @@ get_param_variance_explained <- function(model, data) {
 # Merge estimated model parameters with other covariates
 merge_spp_params_covs <- function(spp_params,recruit_gap_conditions, raw_plot_data) {
   suppressWarnings(lapply(spp_params, function(x) {
-    left_join(x, get_spp_dbh95(raw_plot_data), by ='sp') %>%
+    left_join(x, get_spp_dbh_95(raw_plot_data), by ='sp') %>%
       left_join(get_mean_spp_gap_index(recruit_gap_conditions), by = 'sp') %>%
-      select(species,sp,wood_density, dbh_95, mean_gap_index, mean, median, sd, `2.5%`,`97.5%`)
+      select(species,sp,wood_density, dbh_95, gap_index, mean, median, sd, `2.5%`,`97.5%`)
   }))
 }
 

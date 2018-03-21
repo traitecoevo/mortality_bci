@@ -235,11 +235,55 @@ BCI_clean <- function(BCI_data, spp_table) {
 # MERGING FUNCTIONS
 
 # Merge BCI individual data with trait database
-merge_BCI_data <- function(BCI_demography, BCI_traits) {
-  merge(BCI_demography,BCI_traits[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
+merge_BCI_data <- function(BCI_demography, traits_wood, traits_dbh_95, traits_gap_index) {
+
+  data_1 <- 
+    merge(BCI_demography, traits_wood[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
     filter(!is.na(rho)) %>%
     mutate(sp_id = as.numeric(factor(sp)),
            censusid = as.numeric(factor(census)))
+
+  
+  # Now merge with data on dbh_95 and gap_index
+
+  # Note, in our initial submission to the journal, the traits gap_index
+  # and dbh_95 were only considered in a post-hoc analyses. So in that 
+  # case we used the dataset above (data_1) in the our analysis
+
+  # In the revision we added dbh_95 and gap_index into the main analysis
+  # The code below merges those variables in with the original variables
+  # To preserve the integrity of our initial simulations, we'll require 
+  # that the new dataset has the same number of rows as the original
+
+  # First check have the same species
+  sp1 <- unique(data_1$sp)
+  sp2 <- unique(traits_dbh_95$sp)
+  sp3 <- unique(traits_gap_index$sp)
+  # all(sp1 %in% sp2)
+  # all(sp1 %in% sp3)
+
+  ## Note that traits_dbh_95 covers all species in data_1 but 
+  ## traits_gap_index does not. There are 5 missing species 
+  ## ( "amaico" "anacex" "caseco" "ficuto" "mar1la")
+  missing_sp <- unique(sp1[!sp1 %in% sp3])
+
+  ## For the 5 missing species we'll set their gap index to the  
+  ## centred value (= 0.7), which is very close to the mean (=0.697)
+  # mean(traits_gap_index$gap_index)
+  
+  gap_data2 <- rbind(traits_gap_index,
+                      tibble(sp = missing_sp, gap_index = 0.7))
+
+  # now combine with the original data
+  data_2 <- data_1 %>% left_join(traits_dbh_95) %>% left_join(gap_data2) 
+
+  ## Sanity check: 
+  ## the new dataset should have the same number of rows as the original
+  ## and have no nas
+  # nrow(data_1) == nrow(data_2)
+  # data_2 %>% select(rho, dbh_95, gap_index) %>% is.na() %>% sum()
+
+  data_2
 }
 
 # Add true growth rate estimates to data
@@ -347,7 +391,7 @@ get_gap_index_raster <- function(canopy_data,weight_matrix = matrix(c(1, 1, 1, 1
       raster::rasterFromXYZ(as.data.frame(x)[c('x','y','gap_index')], res = c(5,5)) 
     }) %>% # calculates mean gap index value using weights
     lapply(raster::focal, weight_matrix, mean) %>% # calculates mean gap index value using weights
-    lapply(setNames, 'mean_gap_index') %>% # Names the gap index column
+    lapply(setNames, 'gap_index') %>% # Names the gap index column
     lapply(function(x) x/raster::maxValue(x)) %>% # Converts to binary scale 0 = no gap 1 = full gap.
     {names(.) <- c("1985 to 1990", "1990 to 1995"); .}
 }
@@ -369,20 +413,21 @@ get_recruit_gap_conditions <- function(recruits, gap_index_raster) {
 # more recruits in gaps relative to a shade tolerant species, and hence
 # a higher gap_index.
 get_mean_spp_gap_index <- function(recruit_gap_conditions) {
-  as.data.frame(do.call(rbind, recruit_gap_conditions))%>%
+  as.data.frame(do.call(rbind, recruit_gap_conditions)) %>%
+    mutate(sp = as.character(sp)) %>% 
     group_by(sp) %>%
-    summarise(mean_gap_index = mean(mean_gap_index))
+    summarise(gap_index = mean(gap_index))
 }
 
 # Find the 95 percentile dbh observed for each species.
-get_spp_dbh95 <- function(raw_BCI_data) {
+get_spp_dbh_95 <- function(raw_BCI_data) {
   raw_BCI_data %>%
     arrange(sp, treeid, exactdate) %>%
     select(sp, treeid, nostems, pom, dbh) %>%
     filter(!is.na(sp)) %>%
     mutate(dbh = dbh/10) %>%
     group_by(treeid) %>%
-    filter(max(nostems)==1 & !is.na(dbh)) %>%
+    filter(max(nostems, na.rm = TRUE)==1 & !is.na(dbh)) %>%
     filter(pom == '1.3') %>%
     ungroup() %>%
     group_by(sp) %>%
