@@ -94,6 +94,8 @@ combine_logloss_summaries <- function() {
   logloss_rho_comparisons <- summarise_crossval_logloss("rho_combinations")
   logloss_gap_comparisons <- summarise_crossval_logloss("gap_combinations")
   logloss_size_comparisons <- summarise_crossval_logloss("size_combinations")
+  #logloss_multi_trait_all <- summarise_crossval_logloss("multi_trait_all")
+  #logloss_multi_trait_parsimony <- summarise_crossval_logloss("multi_trait_parsimony")
   logloss_re_comparison <- summarise_crossval_logloss("species_random_effects")
 
   vars <- c("growth_hazard_a", "growth_hazard_b", "growth_hazard_ab", "growth_hazard_c", "growth_hazard_ac", "growth_hazard_bc", "growth_hazard_abc")
@@ -102,7 +104,10 @@ combine_logloss_summaries <- function() {
     bind_rows(
       logloss_null_model,
       logloss_rho_comparisons,
-      logloss_gap_comparisons, logloss_size_comparisons,
+      logloss_gap_comparisons, 
+      logloss_size_comparisons,
+      #logloss_multi_trait_all,
+      #logloss_multi_trait_parsimony,
       logloss_re_comparison
       ) %>%
     arrange(comparison, growth_measure) %>%
@@ -142,7 +147,7 @@ combine_logloss_summaries <- function() {
     arrange(modelid) %>%
     select(modelid, model_type, comparison, model,
            growth_measure, rho_combo, gap_combo, size_combo, logloss,
-           mean, st_err, ci, `50%`, `2.5%`,`97.5%`)
+           mean, st_err, ci, `2.5%`,`97.5%`)
 }
 
 
@@ -152,18 +157,16 @@ summarise_crossval_logloss <- function(comparison) {
   # We don't make an explicit target of compiled models because of
   # a lack of support for long vectors in digest (remake issue #76)
   samples <- extract_logloss_samples(models)
-
   samples %>%
-    group_by(comparison, model, growth_measure, rho_combo, gap_combo, size_combo, kfold, logloss) %>%
+    group_by(comparison, model, growth_measure, rho_combo,gap_combo,size_combo,kfold, logloss) %>%
     summarise(kfold_logloss = mean(estimate)) %>%
     ungroup() %>%
-    group_by(comparison, model, growth_measure, rho_combo, gap_combo, size_combo, logloss) %>%
+    group_by(comparison, model, growth_measure, rho_combo,gap_combo,size_combo, logloss) %>%
     summarise(mean = mean(kfold_logloss),
-              st_err = sd(kfold_logloss)/sqrt(n()),
-              ci = 1.96 * st_err,
-              `50%` = stats::quantile(kfold_logloss, 0.5),
-              `2.5%` = stats::quantile(kfold_logloss, 0.05),
-              `97.5%` = stats::quantile(kfold_logloss, 0.95)) %>%
+              st_err = sd(kfold_logloss)/sqrt(n())) %>%
+    mutate(ci = 1.96 * st_err,
+           `2.5%` = mean - ci,
+           `97.5%` = mean + ci) %>%
     ungroup()
 }
 
