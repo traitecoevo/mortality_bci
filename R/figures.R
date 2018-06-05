@@ -177,11 +177,11 @@ plot_fig2a <- function(logloss_summaries) {
     filter(model_type %in% c("rho_combinations_base_growth_hazard_abc", "gap_combinations_base_growth_hazard_abc", "size_combinations_base_growth_hazard_abc") |
              comparison %in% c("null_model","function_growth_comparison","species_random_effects")) %>%
     mutate(comparison = replace(comparison, comparison %in% c("rho_combinations", "gap_combinations", "size_combinations"), "trait"),
-          comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
+           comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
            comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','trait','species_random_effects'),
                                labels = c('Null','Census','Growth rate','Trait','Species')))
-
-  ggplot(dat, aes(x = model_type,y =`50%`, group = comparison, fill=growth_measure, shape = model)) + 
+  
+  ggplot(dat, aes(x = model_type,y =mean, group = comparison, fill=growth_measure, shape = model)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
     ylab('Logarithmic loss') +
     xlab('Hazard function') +
@@ -192,9 +192,9 @@ plot_fig2a <- function(logloss_summaries) {
                               "function_growth_comparison_base_hazard_none" =  expression(gamma~delta["t"]),
                               "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~delta["t"]),
                               "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"]),
-                              "gap_combinations_base_growth_hazard_abc" = "",
-                              "rho_combinations_base_growth_hazard_abc" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1])~delta["t"]),
-                              "size_combinations_base_growth_hazard_abc" = "",
+                              "size_combinations_base_growth_hazard_abc" = "Max dbh",
+                              "rho_combinations_base_growth_hazard_abc" = "Wood density",
+                              "gap_combinations_base_growth_hazard_abc" = "Light index",
                               "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]))) +
     facet_grid(.~comparison, scales='free_x', drop=TRUE, space = "free_x") +
     plot_theme(strips = TRUE) +
@@ -206,14 +206,16 @@ plot_fig2b <- function(logloss_summaries) {
     filter(growth_measure == "true_dbh_dt" &
              (comparison %in% c("rho_combinations", "gap_combinations", "size_combinations") |
                 model_type == "function_growth_comparison_base_growth_hazard_none")) %>%
-    mutate(combo = gsub("none", "", paste0(rho_combo, gap_combo, size_combo)),
-           combo = ifelse(combo == "", "none", combo),
-           combo = factor(combo, levels = c("none", "a", "b", "c", "ab", "bc", "ac", "abc")))
-
-  ggplot(dat, aes(x = combo, y = `50%`)) +
-    geom_point(aes(x = combo, y = `50%`, colour = comparison)) +
-#    this need tweaking to work with multiple traits
-#    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, fill='black', stroke = 0.5,size=0.4) +
+    dplyr::select(-c(modelid,model,growth_measure, comparison)) %>%
+    tidyr::gather(Trait, param, -c(model_type,logloss,mean,st_err,ci,mean,`2.5%`,`97.5%`)) %>%
+    filter(param != "none" | (model_type =="function_growth_comparison_base_growth_hazard_none" & Trait =="rho_combo")) %>% # remove duplicate "none" combinations (just keep the wood density one)
+    mutate(Trait = ifelse(model_type=="function_growth_comparison_base_growth_hazard_none","none",Trait),
+           Trait = factor(Trait, levels = c("none","size_combo","rho_combo","gap_combo"), labels = c("none","Max dbh","wood density","light index")),
+           param = factor(param, levels = c("none", "a", "b", "c", "ab", "bc", "ac", "abc"))) %>%
+    filter(`97.5%`<0.5)
+  
+  ggplot(dat, aes(x = param, y = mean, group=Trait, fill= Trait, col=Trait)) +
+    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, stroke = 0.5, position=position_dodge(0.5), size=0.4) +
     ylab('Logarithmic loss') + 
     xlab(expression('Trait effects in the model'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"])) +
     scale_x_discrete(labels=c("none" = "none",
