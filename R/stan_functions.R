@@ -73,7 +73,22 @@ kfold_tasks <- function(comparison,iter=2000,path='.') {
            gap_combo <- "none"
            size_combo <- effects_combo
            model <- "base_growth_hazard"
-         }, NA
+         },
+         "multi_trait_all" = {
+           growth_measure <- 'true_dbh_dt'
+           rho_combo <- "abc"
+           gap_combo <- "abc"
+           size_combo <- "abc"
+           model <- "base_growth_hazard"
+         },
+         "multi_trait_parsimony" = {
+           growth_measure <- 'true_dbh_dt'
+           rho_combo <- "c"
+           gap_combo <- "c"
+           size_combo <- "none"
+           model <- "base_growth_hazard"
+         },
+         NA
   )
   ret <- expand.grid(comparison=comparison,
                      model = model,
