@@ -718,14 +718,33 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
 }
   
 
-## FINAL FULL FIT MODEL WITH RANDOM EFFECTS   (STILL BEING FIXED; NOT HOOKED UP TO REST OF REMAKE YET)   
+## FINAL FULL FIT MODEL WITH RANDOM EFFECTS
 
 get_final_model_chunks <- function(tasks) {
+  
+  f <- function(x) {
+    x[x=="none"] = ""
+    sapply(seq_len(nchar(x)), function(i) substr(x, i, i))
+  }
+
+  rho_combo <- f(tasks$rho_combo)
+  gap_combo <- f(tasks$gap_combo)
+  size_combo <- f(tasks$size_combo)
+  
   list(
     growth_measure = tasks$growth_measure,
     pars = c("mu_log_alpha","sigma_log_alpha",
+             if("a" %in% rho_combo)  "a1",
+             if("a" %in% gap_combo)  "a2",
+             if("a" %in% size_combo) "a3",
              "mu_log_beta","sigma_log_beta",
-             "mu_log_gamma","sigma_log_gamma","c1",
+             if("b" %in% rho_combo)  "b1",
+             if("b" %in% gap_combo)  "b2",
+             if("b" %in% size_combo) "b3",
+             "mu_log_gamma","sigma_log_gamma",
+             if("c" %in% rho_combo)  "c1",
+             if("c" %in% gap_combo)  "c2",
+             if("c" %in% size_combo) "c3",
              "census_err","sigma_log_census_err",
              "alpha","beta","gamma","logloss"),
     data = "
@@ -741,7 +760,7 @@ get_final_model_chunks <- function(tasks) {
         vector[n_spp] gap_index_c;
         vector[n_spp] dbh_95_c;
         int<lower=0, upper=1> y[n_obs];",
-    parameters ="
+    parameters =sprintf("
       // Mortality model parameters
       real raw_log_alpha[n_spp];
       real mu_log_alpha;
@@ -754,11 +773,20 @@ get_final_model_chunks <- function(tasks) {
       real raw_log_gamma[n_spp];
       real mu_log_gamma;
       real<lower=0> sigma_log_gamma;
-      real c1;
     
       real raw_log_census_err[n_census];
-      real<lower=0> sigma_log_census_err;",
-    model ="
+      real<lower=0> sigma_log_census_err;
+      %s%s%s%s%s%s%s%s%s",
+      ifelse("a" %in% rho_combo, "real a1;\n\t\t\t", ""),
+      ifelse("a" %in% gap_combo, "real a2;\n\t\t\t", ""),
+      ifelse("a" %in% size_combo, "real a3;\n\t\t\t", ""),
+      ifelse("b" %in% rho_combo, "real b1;\n\t\t\t", ""),
+      ifelse("b" %in% gap_combo, "real b2;\n\t\t\t", ""),
+      ifelse("b" %in% size_combo, "real b3;\n\t\t\t", ""),
+      ifelse("c" %in% rho_combo, "real c1;\n\t\t\t", ""),
+      ifelse("c" %in% gap_combo, "real c2;\n\t\t\t", ""),
+      ifelse("c" %in% size_combo, "real c3;\n", "")),
+    model =sprintf("
       // Declaring mortality parameters
       real alpha[n_spp];
       real beta[n_spp];
@@ -772,9 +800,9 @@ get_final_model_chunks <- function(tasks) {
       }
       // Calculating species random effects
       for (s in 1:n_spp) {
-        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha); // e.g. implies lognormal(mu_log_alpha, sigma_log_alpha)
-        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
-        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
+        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha)%s%s%s; // e.g. implies lognormal(mu_log_alpha, sigma_log_alpha)
+        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta)%s%s%s;
+        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma)%s%s%s;
       }
       
       for (i in 1:n_obs) {
@@ -800,11 +828,30 @@ get_final_model_chunks <- function(tasks) {
       raw_log_gamma ~ normal(0, 1);
       mu_log_gamma ~ normal(0, 2.5);
       sigma_log_gamma ~ cauchy(0, 2.5);
-      c1 ~ normal(0, 2.5);
     
       raw_log_census_err ~ normal(0, 1);
-      sigma_log_census_err ~ cauchy(0, 2.5);",
-    generated_quantities = "
+      sigma_log_census_err ~ cauchy(0, 2.5);
+      %s%s%s%s%s%s%s%s%s",
+      ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
+      ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
+      ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
+      ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
+      ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
+      ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
+      ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
+      ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
+      ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", ""),
+
+      ifelse("a" %in% rho_combo,  "a1 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("a" %in% gap_combo,  "a2 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("a" %in% size_combo, "a3 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("b" %in% rho_combo,  "b1 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("b" %in% gap_combo,  "b2 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("b" %in% size_combo, "b3 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("c" %in% rho_combo,  "c1 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("c" %in% gap_combo,  "c2 ~ normal(0,2.5);\n\t\t\t", ""),
+      ifelse("c" %in% size_combo, "c3 ~ normal(0,2.5);\n", "")),
+    generated_quantities = sprintf("
       real alpha[n_spp];
       real beta[n_spp];
       real gamma[n_spp];
@@ -821,9 +868,9 @@ get_final_model_chunks <- function(tasks) {
 
       // Recalulate species random effects
       for (s in 1:n_spp) {
-        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha);
-        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta);
-        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma) * pow(rho_c[s], c1);
+        alpha[s] = exp(raw_log_alpha[s] * sigma_log_alpha + mu_log_alpha)%s%s%s;
+        beta[s] = exp(raw_log_beta[s] * sigma_log_beta + mu_log_beta)%s%s%s;
+        gamma[s] = exp(raw_log_gamma[s] * sigma_log_gamma + mu_log_gamma)%s%s%s;
       }
 
       // Recalculate census random effects      
@@ -844,6 +891,16 @@ get_final_model_chunks <- function(tasks) {
         sum_loglik = sum_loglik + loglik;
     }
         // Calculation of average negative log likelihoods
-        logloss = -sum_loglik/n_obs;"
+        logloss = -sum_loglik/n_obs;",
+      ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
+      ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
+      ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
+      ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
+      ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
+      ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
+      ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
+      ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
+      ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", "")
     )
+  )
 }
