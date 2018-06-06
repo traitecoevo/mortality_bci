@@ -118,7 +118,7 @@ full_data_tasks <- function(model, iter=2000,path='.') {
   switch(model,
          "final_model" = {
            rho_combo = "c"
-           gap_combo = "none"
+           gap_combo = "c"
            size_combo = "none"
            comparison = 'final_model'
          },
