@@ -312,6 +312,10 @@ prep_kfold_data_for_stan <- function(data, growth_measure) {
 
 # Prepares full dataset for use with stan
 prep_full_data_for_stan <- function(data) {
+  # find index for first record of each species in each dataset
+  # use this below to access traits records for each species
+  i <- match(unique(data$sp_id), data$sp_id)
+  
   list(
     n_obs = nrow(data),
     n_census = max(data$censusid),
@@ -320,11 +324,11 @@ prep_full_data_for_stan <- function(data) {
     spp = data$sp_id,
     census_length = data$census_interval,
     growth_dt = data$true_dbh_dt - 0.172,
-    rho_c  = unique(data$rho)/0.6,
-    gap_index_c  = unique(data$gap_index)/0.7,
-    dbh_95_c  = unique(data$dbh_95)/15,
+    rho_c  = data$rho[i]/0.6,
+    gap_index_c  = data$gap_index[i]/0.7,
+    dbh_95_c  = data$dbh_95[i]/15,
     y = as.integer(data$dead_next_census),
-    species = unique(data$species),
-    sp = unique(data$sp),
-    raw_rho = unique(data$rho))
+    species = data$species[i],
+    sp = data$sp[i],
+    raw_rho = data$rho[i])
 }

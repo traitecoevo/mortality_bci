@@ -1,5 +1,5 @@
 # This script launches jobs on the UNSW katana cluster
-# It is written to be run from the project root. 
+# It is written to be run from the project root.
 
 source("scripts/pbs.R")
 
@@ -11,8 +11,17 @@ launch_task_i_katana <- function(...) {
 # launch_task_i_katana(1, "null_model", iter =10)
 # launch_task_i_katana(1:10, "function_growth_comparison", iter=10)
 
-launch_task_i_katana(24, "gap_combinations", iter=2000)
-launch_task_i_katana(58, "gap_combinations", iter=2000)
+# Launch final model
+launch_task_i_katana(1:3, "final_model", iter=2000)
+
+
+# Multitrait models
+launch_task_i_katana(1:29, "multi_trait_all", iter=2000)
+launch_task_i_katana(1:29, "multi_trait_parsimony", iter=2000)
+
+# Extra models
+# launch_task_i_katana(24, "gap_combinations", iter=2000)
+# launch_task_i_katana(58, "gap_combinations", iter=2000)
 
 
 ## Done
