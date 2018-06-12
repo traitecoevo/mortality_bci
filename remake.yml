@@ -194,6 +194,22 @@ targets:
   rho_comparisons_diagnostics:
     command: model_diagnostics(I("rho_combinations"))
     cleanup_level: tidy
+    
+  size_comparisons_diagnostics:
+    command: model_diagnostics(I("size_combinations"))
+    cleanup_level: tidy
+    
+  gap_comparisons_diagnostics:
+    command: model_diagnostics(I("gap_combinations"))
+    cleanup_level: tidy
+    
+  multi_trait_all_diagnostics:
+    command: model_diagnostics(I("multi_trait_all"))
+    cleanup_level: tidy
+    
+  multi_trait_parsimony_diagnostics:
+    command: model_diagnostics(I("multi_trait_parsimony"))
+    cleanup_level: tidy
 
   random_effect_diagnostics:
     command: model_diagnostics(I("species_random_effects"))

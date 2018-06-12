@@ -48,7 +48,7 @@ BCI_load_50ha_plot <- function(path_to_zip) {
   on.exit(unlink(tmp, recursive=TRUE))
   
   files <- list.files(tmp, pattern=".rdata", full.names=TRUE)
-  data <- tbl_df(lapply(list.files(tmp, pattern=".rdata", full.names=TRUE), function(x) load_rdata(x)) %>% bind_rows)
+  data <- tbl_df(lapply(list.files(tmp, pattern=".rdata", full.names=TRUE), function(x) load_rdata(x)) %>% dplyr::bind_rows(.))
   names(data) <- tolower(names(data)) # lower case for all column names
   data
 }
@@ -58,8 +58,8 @@ load_trait_data <- function(file) {
   names(data) <- tolower(names(data)) # lowers trait column names for merging
   data$sp <- tolower(data$sp) # lowers species code names for merging
   
-  mutate(data, rho = sg100c_avg) %>% # in g/cm3
-    select(-sg100c_avg)
+  dplyr::mutate(data, rho = sg100c_avg) %>% # in g/cm3
+    dplyr::select(-sg100c_avg)
 }
 
 # Load BCI measurement error data
@@ -79,8 +79,8 @@ BCI_load_canopy <- function(path_to_zip) {
   on.exit(unlink(tmp, recursive=TRUE))
   
   files <- list.files(tmp, pattern=".csv", full.names=TRUE)
-  tbl_df(lapply(list.files(tmp, pattern=".csv", full.names=TRUE), function(x)
-    read_tsv(x, col_types=cols_only(
+  dplyr::tbl_df(lapply(list.files(tmp, pattern=".csv", full.names=TRUE), function(x)
+    readr::read_tsv(x, col_types=cols_only(
       x = "d",
       y = "d",
       ht0_2 = "d",
@@ -91,10 +91,10 @@ BCI_load_canopy <- function(path_to_zip) {
       ht10_20 = "d",
       ht20_30 = "d",
       ht30_ = "d")) %>% 
-      mutate_(year = gsub('^.*_|\\D', '', basename(x))) %>%
-      mutate_at(vars(-x,-y,-year),funs(replace(.,.==100,1)))) %>%
-      bind_rows) %>%
-    select(x,y,year,ht0_1,ht0_2,ht1_2,ht2_5,ht5_10,ht10_20,ht20_30,ht30_)
+      dplyr::mutate_(year = gsub('^.*_|\\D', '', basename(x))) %>%
+      dplyr::mutate_at(vars(-x,-y,-year),funs(replace(.,.==100,1)))) %>%
+      dplyr::bind_rows(.)) %>%
+    dplyr::select(x,y,year,ht0_1,ht0_2,ht1_2,ht2_5,ht5_10,ht10_20,ht20_30,ht30_)
 }
 
 # Load species table
@@ -168,9 +168,9 @@ BCI_clean <- function(BCI_data, spp_table) {
   BCI_data$dbh <- BCI_data$dbh/10
   
   data <- BCI_data %>%
-    arrange(sp, treeid, exactdate) %>%
-    select(gx,gy,sp, species, family, treeid, nostems, census, exactdate, dfstatus, pom, dbh) %>%
-    filter(
+    dplyr::arrange(sp, treeid, exactdate) %>%
+    dplyr::select(gx,gy,sp, species, family, treeid, nostems, census, exactdate, dfstatus, pom, dbh) %>%
+    dplyr::filter(
       # Remove stems from earlier census, measured with course resolution
       # First measurement in 1990 ='1990-02-06'
       census >= 3 &
@@ -182,27 +182,27 @@ BCI_clean <- function(BCI_data, spp_table) {
         !is.na(sp)
     ) %>%
     # fix missing species name.
-    mutate(species = replace(species, sp == "swars2", "Swartzia simplex2")) %>%
+    dplyr::mutate(species = replace(species, sp == "swars2", "Swartzia simplex2")) %>%
     # For each individual..
-    group_by(treeid) %>%
+    dplyr::group_by(treeid) %>%
     # Filter plants with multiple stems
-    filter(max(nostems)==1) %>%
+    dplyr::filter(max(nostems)==1) %>%
     # Remove zombies - individuals that are recorded as dead but reappear at later date
-    filter(!is_zombie(dbh)) %>%
+    dplyr::filter(!is_zombie(dbh)) %>%
     # Remove any measurement that was not recorded at 1.3m or that was recorded as 'dead'.
     # Second argument is because dead individuals always have pom = NA. This needs
     # to occur after zombies function
-    filter(pom == '1.3' | dfstatus=='dead') %>%
+    dplyr::filter(pom == '1.3' | dfstatus=='dead') %>%
     # Remove individuals that are not alive for at least 2 censuses
-    mutate(
+    dplyr::mutate(
       dead_next_census = mortality_in_next_census(dfstatus)) %>%
-    filter(
+    dplyr::filter(
       # Only keep alive stems
       dfstatus=="alive" &
         #Removes data from most recent survey because survival unknown
         !is.na(dead_next_census)
     ) %>%
-    mutate(
+    dplyr::mutate(
       n_census = length(census),
       # First measurement in 1990 ='1990-02-06'
       julian = as.vector(julian(as.Date(exactdate,"%Y-%m-%d"), as.Date("1990-02-06", "%Y-%m-%d"))),
@@ -210,7 +210,7 @@ BCI_clean <- function(BCI_data, spp_table) {
       dbh_dt = calculate_growth_rate(dbh, julian),
       dbh_prev = c(NA, drop_last(dbh))
     ) %>%
-    filter(
+    dplyr::filter(
       # Some individuals
       n_census > 1 &
         # Some individuals skipped a census and therefore have interval much more than 5 years
@@ -221,14 +221,14 @@ BCI_clean <- function(BCI_data, spp_table) {
         # Remove anything where don't have adequate growth from previous period
         !is.na(census_interval*dbh_dt)
     ) %>%
-    ungroup() %>%
-    group_by(sp) %>%
-    mutate(n_ind = length(unique(treeid))) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(sp) %>%
+    dplyr::mutate(n_ind = length(unique(treeid))) %>%
     # ensures at least 1 individual is in the heldout dataset
-    filter(n_ind >=10) %>%
-    ungroup() %>%
-    select(gx,gy,species,sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
-           dbh_prev,dbh,dead_next_census)
+    dplyr::filter(n_ind >=10) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(gx,gy,species,sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
+                  dbh_prev,dbh,dead_next_census)
   
 }
 
@@ -236,53 +236,53 @@ BCI_clean <- function(BCI_data, spp_table) {
 
 # Merge BCI individual data with trait database
 merge_BCI_data <- function(BCI_demography, traits_wood, traits_dbh_95, traits_gap_index) {
-
+  
   data_1 <- 
-    merge(BCI_demography, traits_wood[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
-    filter(!is.na(rho)) %>%
-    mutate(sp_id = as.numeric(factor(sp)),
-           censusid = as.numeric(factor(census)))
-
+    base::merge(BCI_demography, traits_wood[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
+    dplyr::filter(!is.na(rho)) %>%
+    dplyr::mutate(sp_id = as.numeric(factor(sp)),
+                  censusid = as.numeric(factor(census)))
+  
   
   # Now merge with data on dbh_95 and gap_index
-
+  
   # Note, in our initial submission to the journal, the traits gap_index
   # and dbh_95 were only considered in a post-hoc analyses. So in that 
   # case we used the dataset above (data_1) in the our analysis
-
+  
   # In the revision we added dbh_95 and gap_index into the main analysis
   # The code below merges those variables in with the original variables
   # To preserve the integrity of our initial simulations, we'll require 
   # that the new dataset has the same number of rows as the original
-
+  
   # First check have the same species
   sp1 <- unique(data_1$sp)
   sp2 <- unique(traits_dbh_95$sp)
   sp3 <- unique(traits_gap_index$sp)
   # all(sp1 %in% sp2)
   # all(sp1 %in% sp3)
-
+  
   ## Note that traits_dbh_95 covers all species in data_1 but 
   ## traits_gap_index does not. There are 5 missing species 
   ## ( "amaico" "anacex" "caseco" "ficuto" "mar1la")
   missing_sp <- unique(sp1[!sp1 %in% sp3])
-
+  
   ## For the 5 missing species we'll set their gap index to the  
   ## centred value (= 0.7), which is very close to the mean (=0.697)
   # mean(traits_gap_index$gap_index)
   
   gap_data2 <- rbind(traits_gap_index,
-                      tibble(sp = missing_sp, gap_index = 0.7))
-
+                     tibble(sp = missing_sp, gap_index = 0.7))
+  
   # now combine with the original data
-  data_2 <- data_1 %>% left_join(traits_dbh_95) %>% left_join(gap_data2) 
-
+  data_2 <- data_1 %>% dplyr::left_join(traits_dbh_95) %>% dplyr::left_join(gap_data2) 
+  
   ## Sanity check: 
   ## the new dataset should have the same number of rows as the original
   ## and have no nas
   # nrow(data_1) == nrow(data_2)
   # data_2 %>% select(rho, dbh_95, gap_index) %>% is.na() %>% sum()
-
+  
   data_2
 }
 
@@ -319,14 +319,14 @@ extract_trainheldout_set <- function(data, k=NA) {
   i_train <- seq_len(length(data))
   if (is.na(k)) {
     i_heldout <- NA
-    res <- bind_rows(data[i_train])
+    res <- dplyr::bind_rows(data[i_train])
   } else {
-    i_train <- setdiff(i_train, k)
+    i_train <- dplyr::setdiff(i_train, k)
     i_heldout <- k
     
     res <- list(
-      train = bind_rows(data[i_train]),
-      heldout  = bind_rows(data[i_heldout]))
+      train = dplyr::bind_rows(data[i_train]),
+      heldout  = dplyr::bind_rows(data[i_heldout]))
   }
   return(res)
 }
@@ -347,16 +347,16 @@ make_trainheldout <- function(data) {
 gap_data <- function(canopy_data) {
   canopy_data %>%
     dplyr::select(-ht0_1) %>% # Not used in earlier years
-    filter(year >=1985 & year <= 1995) %>% # 2003 onwwards uses voxels which is not comparable to earlier years
-    group_by(x,y,year) %>%
-    mutate(sum_canopy_above2m = sum(ht2_5,ht5_10,ht10_20,ht20_30,ht30_, na.rm=TRUE)) %>% 
+    dplyr::filter(year >=1985 & year <= 1995) %>% # 2003 onwwards uses voxels which is not comparable to earlier years
+    dplyr::group_by(x,y,year) %>%
+    dplyr::mutate(sum_canopy_above2m = sum(ht2_5,ht5_10,ht10_20,ht20_30,ht30_, na.rm=TRUE)) %>% 
     # sums presences above 2m and converts it to a scale between 0 and 1.
     #where 1 = gap (no veg above 2 m) & 0 = non gap (veg in all strata above 2 m)
-    ungroup %>%
-    mutate(censusid = findInterval(year,c(1990))+1) %>% # 1= past light environment for 1985 recruits etc..
-    group_by(x,y,censusid) %>%
-    summarise(gap_index = (5 - min(sum_canopy_above2m))/5) %>% # Find minumum canopy stratum above 2m per census.
-    ungroup() %>%
+    dplyr::ungroup %>%
+    dplyr::mutate(censusid = base::findInterval(year,c(1990))+1) %>% # 1= past light environment for 1985 recruits etc..
+    dplyr::group_by(x,y,censusid) %>%
+    dplyr::summarise(gap_index = (5 - min(sum_canopy_above2m))/5) %>% # Find minumum canopy stratum above 2m per census.
+    dplyr::ungroup() %>%
     dplyr::select(x,y,censusid,gap_index)
 }
 
@@ -365,17 +365,17 @@ gap_data <- function(canopy_data) {
 recruits_8595 <- function(raw_BCI_data) {
   
   raw_BCI_data %>%
-    filter(censusid >1 & censusid < 5) %>% # Only using recruit data from 1985 to 1995 as this uses only vertical line approach
-    arrange(sp, treeid, censusid) %>%
+    dplyr::filter(censusid >1 & censusid < 5) %>% # Only using recruit data from 1985 to 1995 as this uses only vertical line approach
+    dplyr::arrange(sp, treeid, censusid) %>%
     dplyr::select(gx,gy,sp, treeid, censusid, dfstatus, dbh) %>%
-    filter(dfstatus=="alive" & !is.na(dbh) & !is.na(gx) & !is.na(gy)) %>% 
+    dplyr::filter(dfstatus=="alive" & !is.na(dbh) & !is.na(gx) & !is.na(gy)) %>% 
     # above removes dead observations & NA dbh or coordinates.
-    group_by(treeid) %>%
-    slice(1) %>% # Takes first observation per treeid
-    ungroup() %>%
-    filter(censusid!=2 & # removes first census as unsure whether these are recruits or not
-             dbh < 250) %>% # removes individuals with a dbh > 25 cm - unlikely to be recruits
-    mutate(censusid = as.numeric(factor(censusid))) %>% # rescales censusid such that 1 = 85. 
+    dplyr::group_by(treeid) %>%
+    dplyr::slice(1) %>% # Takes first observation per treeid
+    dplyr::ungroup() %>%
+    dplyr::filter(censusid!=2 & # removes first census as unsure whether these are recruits or not
+                    dbh < 250) %>% # removes individuals with a dbh > 25 cm - unlikely to be recruits
+    dplyr::mutate(censusid = as.numeric(factor(censusid))) %>% # rescales censusid such that 1 = 85. 
     dplyr::select(x=gx,y=gy,sp,treeid,censusid)
 }
 
@@ -383,10 +383,10 @@ recruits_8595 <- function(raw_BCI_data) {
 get_gap_index_raster <- function(canopy_data,weight_matrix = matrix(c(1, 1, 1, 1, 8, 1, 1, 1, 1), 3, 3)) {
   
   gap_data(canopy_data) %>%
-    as.data.frame %>% # converts to df for sp package
-    {coordinates(.) <- ~x+y; .} %>%
+    base::as.data.frame(.) %>% # converts to df for sp package
+    {sp::coordinates(.) <- ~x+y; .} %>%
     raster::shift(x=2.5, y=2.5) %>% # centers coordinates on cell mid point
-    split(.$censusid) %>% # splits by census
+    base::split(.$censusid) %>% # splits by census
     lapply(function(x) { # Converts to raster
       raster::rasterFromXYZ(as.data.frame(x)[c('x','y','gap_index')], res = c(5,5)) 
     }) %>% # calculates mean gap index value using weights
@@ -400,10 +400,10 @@ get_gap_index_raster <- function(canopy_data,weight_matrix = matrix(c(1, 1, 1, 1
 get_recruit_gap_conditions <- function(recruits, gap_index_raster) {
   # get light environment for recruits
   recruits  %>% 
-    as.data.frame %>% # converts to df for sp package
-    {coordinates(.) <- ~x+y; .} %>% 
+    base::as.data.frame(.) %>% # converts to df for sp package
+    {sp::coordinates(.) <- ~x+y; .} %>% 
     raster::crop(raster::extent(.) - 20*2) %>%  # removes edge effects out to 20 m
-    split(.$censusid) %>% # splits by census
+    base::split(.$censusid) %>% # splits by census
     mapply(function(raster, points) raster::extract(raster, points, sp=TRUE), gap_index_raster, .)
 }
 
@@ -413,25 +413,25 @@ get_recruit_gap_conditions <- function(recruits, gap_index_raster) {
 # more recruits in gaps relative to a shade tolerant species, and hence
 # a higher gap_index.
 get_mean_spp_gap_index <- function(recruit_gap_conditions) {
-  as.data.frame(do.call(rbind, recruit_gap_conditions)) %>%
-    mutate(sp = as.character(sp)) %>% 
-    group_by(sp) %>%
-    summarise(gap_index = mean(gap_index))
+  base::as.data.frame(do.call(rbind, recruit_gap_conditions)) %>%
+    dplyr::mutate(sp = as.character(sp)) %>% 
+    dplyr::group_by(sp) %>%
+    dplyr::summarise(gap_index = mean(gap_index))
 }
 
 # Find the 95 percentile dbh observed for each species.
 get_spp_dbh_95 <- function(raw_BCI_data) {
   raw_BCI_data %>%
-    arrange(sp, treeid, exactdate) %>%
-    select(sp, treeid, nostems, pom, dbh) %>%
-    filter(!is.na(sp)) %>%
-    mutate(dbh = dbh/10) %>%
-    group_by(treeid) %>%
-    filter(max(nostems, na.rm = TRUE)==1 & !is.na(dbh)) %>%
-    filter(pom == '1.3') %>%
-    ungroup() %>%
-    group_by(sp) %>%
-    summarise(dbh_95 = quantile(dbh, 0.95, na.rm=TRUE)) %>%
-    ungroup() %>%
-    select(sp,dbh_95)
+    dplyr::arrange(sp, treeid, exactdate) %>%
+    dplyr::select(sp, treeid, nostems, pom, dbh) %>%
+    dplyr::filter(!is.na(sp)) %>%
+    dplyr::mutate(dbh = dbh/10) %>%
+    dplyr::group_by(treeid) %>%
+    dplyr::filter(max(nostems, na.rm = TRUE)==1 & !is.na(dbh)) %>%
+    dplyr::filter(pom == '1.3') %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(sp) %>%
+    dplyr::summarise(dbh_95 = quantile(dbh, 0.95, na.rm=TRUE)) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(sp,dbh_95)
 }

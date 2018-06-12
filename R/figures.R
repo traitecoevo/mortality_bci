@@ -86,7 +86,7 @@ plot_fig1 <- function(tree1, tree2, panelc) {
   text(0.85, 3, expression(paste(S[i],"=0 (survived)")), col="#5e3c99", pos=3, xpd=NA)
   lines(p, -log(p), type='l', col="#e66101")
   text(0.15, 3, expression(paste(S[i],"=1 (died)")), col="#e66101", pos=3, xpd=NA)
-
+  
   my_label("C) Penalty for incorrect prediction", x=-0.137)
   mtext(expression(paste("Probability of death, ", p[i])), 1, line=2.1, cex=0.5)
   mtext("log loss", 2, line=2.1, cex=0.5)
@@ -173,13 +173,31 @@ plot_fig2 <- function(logloss_summaries) {
 
 plot_fig2a <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
-    #todo - currently plotting trait effects on abc for all three traits
     filter(model_type %in% c("rho_combinations_base_growth_hazard_abc", "gap_combinations_base_growth_hazard_abc", "size_combinations_base_growth_hazard_abc") |
-             comparison %in% c("null_model","function_growth_comparison","species_random_effects")) %>%
-    mutate(comparison = replace(comparison, comparison %in% c("rho_combinations", "gap_combinations", "size_combinations"), "trait"),
+             comparison %in% c("null_model",
+                               "function_growth_comparison",
+                               "species_random_effects", 
+                               "multi_trait_parsimony",
+                               "multi_trait_all"
+             )) %>%
+    mutate(comparison = replace(comparison, comparison %in% c("rho_combinations", 
+                                                              "gap_combinations", 
+                                                              "size_combinations",
+                                                              "multi_trait_parsimony",
+                                                              "multi_trait_all"), "trait"),
            comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
            comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','trait','species_random_effects'),
-                               labels = c('Null','Census','Growth rate','Trait','Species')))
+                               labels = c('Null','Census','Growth rate','Trait','Species')),
+           model_type = factor(model_type, levels = c("null_model_null_model_none",
+                                          "function_growth_comparison_base_hazard_none",
+                                          "function_growth_comparison_growth_hazard_none",
+                                          "function_growth_comparison_base_growth_hazard_none",
+                                          "size_combinations_base_growth_hazard_abc",
+                                          "rho_combinations_base_growth_hazard_abc",
+                                          "gap_combinations_base_growth_hazard_abc",
+                                          "multi_trait_parsimony_base_growth_hazard_rho_gap_c",
+                                          "multi_trait_all_base_growth_hazard_rho_gap_size_abc",
+                                          "species_random_effects_base_growth_hazard_none")))
   
   ggplot(dat, aes(x = model_type,y =mean, group = comparison, fill=growth_measure, shape = model)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
@@ -195,6 +213,8 @@ plot_fig2a <- function(logloss_summaries) {
                               "size_combinations_base_growth_hazard_abc" = "Max dbh",
                               "rho_combinations_base_growth_hazard_abc" = "Wood density",
                               "gap_combinations_base_growth_hazard_abc" = "Light index",
+                              "multi_trait_parsimony_base_growth_hazard_rho_gap_c" = "Parsimonious",
+                              "multi_trait_all_base_growth_hazard_rho_gap_size_abc" = "All traits; All parameters",
                               "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]))) +
     facet_grid(.~comparison, scales='free_x', drop=TRUE, space = "free_x") +
     plot_theme(strips = TRUE) +
@@ -329,11 +349,11 @@ plot_fig4b <- function(model,wood_density=c(0.3,0.8), growth_range = c(0.03,0.5)
 #### FIGURE 5 ######
 # Proportion of variance explained
 plot_fig5 <- function(param_variance_explained) {
-
+  
   dat <- param_variance_explained %>%
-  # Force order of levels in factor param, otherwise makes alphabetical
+    # Force order of levels in factor param, otherwise makes alphabetical
     transform(param = factor(param, levels = param))
-
+  
   p1 <- ggplot(dat, aes(x=param, y=proportion)) +
     geom_bar(stat='identity', aes(fill=param), width=0.5) +
     geom_bar(stat='identity', fill='black', width=0.5) +
@@ -342,7 +362,7 @@ plot_fig5 <- function(param_variance_explained) {
     ylab("Proportion of variation\nin 1-yr mortality") +
     xlab("Effect") +
     plot_theme(legend.position="none")
-
+  
   p1 
 }
 
@@ -399,7 +419,7 @@ plot_spp_param_by_covariate <- function(data, focal_param, covariate ="gap_index
   if(covariate =="dbh_95") {
     fit <- data.frame(r2 = summary(lm(log10(mean)~log10(get(covariate)), data = data[[focal_param]]))$r.squared)
     p1 + scale_x_log10(breaks= xbreaks) +
-                       annotate('text',x=Inf,y=min(ylim),label=paste("r2 =", signif(fit$r2,1)), vjust=0, hjust=1, size=2)
+      annotate('text',x=Inf,y=min(ylim),label=paste("r2 =", signif(fit$r2,1)), vjust=0, hjust=1, size=2)
   }
   else {
     fit <- data.frame(r2 = summary(lm(log10(mean)~get(covariate), data = data[[focal_param]]))$r.squared)

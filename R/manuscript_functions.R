@@ -30,22 +30,22 @@ obs_error_sigma <- function(data) {
 
 # Number of heldout observations
 n_heldout <- function(data) {
- prettyNum(nrow(data[[1]]$heldout), big.mark = ",")
+  prettyNum(nrow(data[[1]]$heldout), big.mark = ",")
 }
-  
+
 # Proportion of deaths by census
 prop_deaths <- function(data, census) {
-res <-data %>%
-  group_by(censusid) %>%
-  summarise(deaths = sum(dead_next_census),
-            survivors = sum(dead_next_census==0)) %>%
-    ungroup() %>%
-  mutate(
-    total = survivors + deaths,
-    prop_died = deaths/total,
-    census = factor(censusid, labels=c('1995to2000','2000to2005','2005to2010'))) %>%
-  select(census,censusid, total, deaths, survivors, prop_died)
-signif(res[res$censusid==census,"prop_died"],2)*100
+  res <-data %>%
+    dplyr::group_by(censusid) %>%
+    dplyr::summarise(deaths = sum(dead_next_census),
+                     survivors = sum(dead_next_census==0)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      total = survivors + deaths,
+      prop_died = deaths/total,
+      census = factor(censusid, labels=c('1995to2000','2000to2005','2005to2010'))) %>%
+    dplyr::select(census,censusid, total, deaths, survivors, prop_died)
+  signif(res[res$censusid==census,"prop_died"],2)*100
 }
 
 # Extract census scaling factor
@@ -63,15 +63,15 @@ extract_prop_explained <- function(data, param) {
 pred_gain_wd <- function(data) {
   
   df <- data %>%
-    filter(growth_measure=='true_dbh_dt' &
-             model_type %in% c('function_growth_comparison_base_growth_hazard_none',
-                               'rho_combinations_base_growth_hazard_c',
-                               'species_random_effects_base_growth_hazard_none')) %>%
-    select(comparison, mean) %>%
-    spread(comparison, mean) %>%
-    mutate(rho_diff = function_growth_comparison - rho_combinations,
-           spp_diff = function_growth_comparison - species_random_effects,
-           prop_spp_gain = rho_diff/spp_diff)
+    dplyr::filter(growth_measure=='true_dbh_dt' &
+                    model_type %in% c('function_growth_comparison_base_growth_hazard_none',
+                                      'rho_combinations_base_growth_hazard_c',
+                                      'species_random_effects_base_growth_hazard_none')) %>%
+    dplyr::select(comparison, mean) %>%
+    dplyr::spread(comparison, mean) %>%
+    dplyr::mutate(rho_diff = function_growth_comparison - rho_combinations,
+                  spp_diff = function_growth_comparison - species_random_effects,
+                  prop_spp_gain = rho_diff/spp_diff)
   
   return(signif(df$prop_spp_gain,2)*100)
 }
@@ -88,23 +88,23 @@ fullmodelcode <- function() {
 extract_baseline_estimate <- function(model, hazard=FALSE, wood_density) {
   fit <- model$fits[[1]]
   samples <- rstan::extract(fit, pars=c("mu_log_gamma","c1"))
-  samples <- as.data.frame(lapply(samples, as.vector)) 
+  samples <- base::as.data.frame(lapply(samples, as.vector)) 
   
   
   output <-samples %>%
-    mutate(wood_density_centered = wood_density/0.6,
-           inst_hazard = exp(mu_log_gamma) * wood_density_centered^c1,
-           prob_death = 1 - exp(-exp(mu_log_gamma) * wood_density_centered^c1))
+    dplyr::mutate(wood_density_centered = wood_density/0.6,
+                  inst_hazard = exp(mu_log_gamma) * wood_density_centered^c1,
+                  prob_death = 1 - exp(-exp(mu_log_gamma) * wood_density_centered^c1))
   
   if(hazard==FALSE) {
     output %>%
-      summarise(mean = mean(prob_death),
-                `2.5%` = quantile(prob_death,0.025),
-                `97.5%` = quantile(prob_death, 0.975))
+      dplyr::summarise(mean = mean(prob_death),
+                       `2.5%` = quantile(prob_death,0.025),
+                       `97.5%` = quantile(prob_death, 0.975))
   } else {
     output %>%
-      summarise(mean = mean(inst_hazard),
-                `2.5%` = quantile(inst_hazard,0.025),
-                `97.5%` = quantile(inst_hazard, 0.975))
+      dplyr::summarise(mean = mean(inst_hazard),
+                       `2.5%` = quantile(inst_hazard,0.025),
+                       `97.5%` = quantile(inst_hazard, 0.975))
   }
 }
