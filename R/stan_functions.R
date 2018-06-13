@@ -88,6 +88,13 @@ kfold_tasks <- function(comparison,iter=2000,path='.') {
                  size_combo <- "none"
                  model <- "base_growth_hazard"
                },
+               "rho_gap_all" = {
+                 growth_measure <- 'true_dbh_dt'
+                 rho_combo <- "abc"
+                 gap_combo <- "abc"
+                 size_combo <- "none"
+                 model <- "base_growth_hazard"
+               },               
                NA
   )
   ret <- expand.grid(comparison=comparison,

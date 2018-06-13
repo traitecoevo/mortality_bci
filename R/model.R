@@ -2,7 +2,7 @@
 
 allowed_tasks <- function() {
   c("null_model", "function_growth_comparison","rho_combinations", "gap_combinations", "size_combinations","species_random_effects",
-    "multi_trait_all","multi_trait_parsimony", "final_model","final_base_growth_hazard_re")
+    "multi_trait_all","multi_trait_parsimony","rho_gap_2pars", "final_model","final_base_growth_hazard_re")
 }
 
 check_task_is_allowed <- function(task_name) {
