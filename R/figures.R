@@ -177,17 +177,23 @@ plot_fig2a <- function(logloss_summaries) {
              comparison %in% c("null_model",
                                "function_growth_comparison",
                                "species_random_effects", 
-                               "multi_trait_parsimony",
-                               "multi_trait_all"
+                               "multi_trait_all",
+                               "rho_gap_all",
+                               "rho_size_all",
+                               "gap_size_all",
+                               "multi_trait_parsimony"
              )) %>%
     mutate(comparison = replace(comparison, comparison %in% c("rho_combinations", 
                                                               "gap_combinations", 
-                                                              "size_combinations",
-                                                              "multi_trait_parsimony",
-                                                              "multi_trait_all"), "trait"),
+                                                              "size_combinations"), "1_trait"),
+           comparison = replace(comparison, comparison %in% c("rho_gap_all",
+                                                              "rho_size_all",
+                                                              "gap_size_all"), "2_traits"),
+           comparison = replace(comparison, comparison == "multi_trait_all", "3_traits"),
            comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
-           comparison = factor(comparison, levels=c('null_model','census','function_growth_comparison','trait','species_random_effects'),
-                               labels = c('Null','Census','Growth rate','Trait','Species')),
+           comparison = replace(comparison, comparison =="multi_trait_parsimony", "parsimonious"),
+           comparison = factor(comparison, levels=c("null_model","census","function_growth_comparison","1_trait","2_traits", "3_traits","species_random_effects"),
+                               labels = c("Null","Census","Growth~rate","1-trait~on~alpha~beta~gamma", "2-traits~on~alpha~beta~gamma", "3-traits~on~alpha~beta~gamma","Species", "Parsimonious")),
            model_type = factor(model_type, levels = c("null_model_null_model_none",
                                           "function_growth_comparison_base_hazard_none",
                                           "function_growth_comparison_growth_hazard_none",
@@ -195,9 +201,12 @@ plot_fig2a <- function(logloss_summaries) {
                                           "size_combinations_base_growth_hazard_abc",
                                           "rho_combinations_base_growth_hazard_abc",
                                           "gap_combinations_base_growth_hazard_abc",
-                                          "multi_trait_parsimony_base_growth_hazard_rho_gap_c",
                                           "multi_trait_all_base_growth_hazard_rho_gap_size_abc",
-                                          "species_random_effects_base_growth_hazard_none")))
+                                          "rho_gap_all_base_growth_hazard_rho_gap_abc",
+                                          "rho_size_all_base_growth_hazard_rho_gap_abc",
+                                          "gap_all_size_base_growth_hazard_rho_gap_abc",
+                                          "species_random_effects_base_growth_hazard_none",
+                                          "multi_trait_parsimony_base_growth_hazard_rho_gap_c")))
   
   ggplot(dat, aes(x = model_type,y =mean, group = comparison, fill=growth_measure, shape = model)) + 
     geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), position=position_dodge(0.5), stroke = 0.5, size=0.4) +
@@ -207,46 +216,25 @@ plot_fig2a <- function(logloss_summaries) {
     scale_fill_manual(values =c('white','grey80','black')) +
     scale_y_continuous(breaks= scales::pretty_breaks(5)) +
     scale_x_discrete(labels=c("null_model_null_model_none" = expression(gamma),
-                              "function_growth_comparison_base_hazard_none" =  expression(gamma~delta["t"]),
+                              "function_growth_comparison_base_hazard_none" = expression(gamma~delta["t"]),
                               "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~delta["t"]),
                               "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"]),
-                              "size_combinations_base_growth_hazard_abc" = "Max dbh",
-                              "rho_combinations_base_growth_hazard_abc" = "Wood density",
-                              "gap_combinations_base_growth_hazard_abc" = "Light index",
-                              "multi_trait_parsimony_base_growth_hazard_rho_gap_c" = "Parsimonious",
-                              "multi_trait_all_base_growth_hazard_rho_gap_size_abc" = "All traits; All parameters",
-                              "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]))) +
-    facet_grid(.~comparison, scales='free_x', drop=TRUE, space = "free_x") +
+                              "size_combinations_base_growth_hazard_abc" = expression("Max dbh"~(psi)),
+                              "rho_combinations_base_growth_hazard_abc" = expression("Wood density"~(rho)),
+                              "gap_combinations_base_growth_hazard_abc" = expression("Light index"~(upsilon)),
+                              "rho_gap_all_base_growth_hazard_rho_gap_abc" = "Wood density & Light index",
+                              "rho_size_all_base_growth_hazard_rho_size_abc" = "Wood density & Max dbh",
+                              "gap_size_all_base_growth_hazard_gap_size_abc" = "Light index & Max dbh",
+                              "multi_trait_all_base_growth_hazard_rho_gap_size_abc" = "All traits",
+                              "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]),
+                              "multi_trait_parsimony_base_growth_hazard_rho_gap_c" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma*rho["s[i]"]^gamma[1]*upsilon["s[i]"]^gamma[2])~delta["t"]))) +
+    facet_grid(.~comparison, scales='free_x', drop=TRUE, space = "free_x", labeller=label_parsed) +
     plot_theme(strips = TRUE) +
     theme(axis.text.x = element_text(angle=15, hjust = 1))
 }
 
 plot_fig2b <- function(logloss_summaries) {
-  dat <- logloss_summaries %>%
-    filter(growth_measure == "true_dbh_dt" &
-             (comparison %in% c("rho_combinations", "gap_combinations", "size_combinations") |
-                model_type == "function_growth_comparison_base_growth_hazard_none")) %>%
-    dplyr::select(-c(modelid,model,growth_measure, comparison)) %>%
-    tidyr::gather(Trait, param, -c(model_type,logloss,mean,st_err,ci,mean,`2.5%`,`97.5%`)) %>%
-    filter(param != "none" | (model_type =="function_growth_comparison_base_growth_hazard_none" & Trait =="rho_combo")) %>% # remove duplicate "none" combinations (just keep the wood density one)
-    mutate(Trait = ifelse(model_type=="function_growth_comparison_base_growth_hazard_none","none",Trait),
-           Trait = factor(Trait, levels = c("none","size_combo","rho_combo","gap_combo"), labels = c("none","Max dbh","wood density","light index")),
-           param = factor(param, levels = c("none", "a", "b", "c", "ab", "bc", "ac", "abc"))) %>%
-    filter(`97.5%`<0.5)
-  
-  ggplot(dat, aes(x = param, y = mean, group=Trait, fill= Trait, col=Trait)) +
-    geom_pointrange(aes(ymin = `2.5%`, ymax=`97.5%`), shape=22, stroke = 0.5, position=position_dodge(0.5), size=0.4) +
-    ylab('Logarithmic loss') + 
-    xlab(expression('Trait effects in the model'~(alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"])) +
-    scale_x_discrete(labels=c("none" = "none",
-                              "a" = expression(alpha),
-                              "b" = expression(beta),
-                              "ab" = expression(alpha~"&"~beta),
-                              "c" = expression(gamma),
-                              "ac" = expression(alpha~"&"~gamma),
-                              "bc" = expression(beta~"&"~gamma),
-                              "abc" = expression(alpha~","~beta~","~gamma))) +
-    plot_theme()
+    
 }
 
 #### FIGURE 3 ######

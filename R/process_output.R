@@ -95,6 +95,9 @@ combine_logloss_summaries <- function() {
   logloss_gap_comparisons <- summarise_crossval_logloss("gap_combinations")
   logloss_size_comparisons <- summarise_crossval_logloss("size_combinations")
   logloss_multi_trait_all <- summarise_crossval_logloss("multi_trait_all")
+  logloss_rho_gap_all <- summarise_crossval_logloss("rho_gap_all")
+  logloss_rho_size_all <- summarise_crossval_logloss("rho_size_all")
+  logloss_gap_size_all <- summarise_crossval_logloss("gap_size_all")
   logloss_multi_trait_parsimony <- summarise_crossval_logloss("multi_trait_parsimony")
   logloss_re_comparison <- summarise_crossval_logloss("species_random_effects")
   
@@ -107,6 +110,9 @@ combine_logloss_summaries <- function() {
       logloss_gap_comparisons, 
       logloss_size_comparisons,
       logloss_multi_trait_all,
+      logloss_rho_gap_all,
+      logloss_rho_size_all,
+      logloss_gap_size_all,
       logloss_multi_trait_parsimony,
       logloss_re_comparison)
     ) %>%
@@ -134,7 +140,10 @@ combine_logloss_summaries <- function() {
                                 ifelse(comparison == "size_combinations", size_combo,
                                        ifelse(comparison == "rho_combinations",rho_combo, 
                                               ifelse(comparison %in% c("function_growth_comparison","species_random_effects", "null_model"), "none",
-                                                     ifelse(comparison == "multi_trait_all", "rho_gap_size_abc", "rho_gap_c")))))),
+                                                     ifelse(comparison == "multi_trait_all", "rho_gap_size_abc",
+                                                            ifelse(comparison == "rho_gap_all", "rho_gap_abc",
+                                                                   ifelse(comparison == "rho_size_all", "rho_size_abc",
+                                                                          ifelse(comparison == "gap_size_all", "gap_size_abc", "rho_gap_c"))))))))),
       # make factors with specified order
       model = factor(model, levels=c('null_model','base_hazard','growth_hazard','base_growth_hazard')),
       growth_measure = factor(growth_measure, levels=c('none','true_basal_area_dt','true_dbh_dt')),
@@ -144,9 +153,12 @@ combine_logloss_summaries <- function() {
                               sprintf("rho_combinations_base_%s", vars),
                               sprintf("gap_combinations_base_%s", vars),
                               sprintf("size_combinations_base_%s", vars),
-                              "multi_trait_parsimony_base_growth_hazard_rho_gap_c",
                               "multi_trait_all_base_growth_hazard_rho_gap_size_abc",
-                              "species_random_effects_base_growth_hazard_none")),
+                              "rho_gap_all_base_growth_hazard_rho_gap_abc",
+                              "rho_size_all_base_growth_hazard_rho_size_abc",
+                              "rho_gap_all_base_growth_hazard_gap_size_abc",
+                              "species_random_effects_base_growth_hazard_none",
+                              "multi_trait_parsimony_base_growth_hazard_rho_gap_c")),
       modelid = as.factor(as.numeric(model_type))
     ) %>%
     dplyr::arrange(modelid) %>%

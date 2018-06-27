@@ -94,7 +94,21 @@ kfold_tasks <- function(comparison,iter=2000,path='.') {
                  gap_combo <- "abc"
                  size_combo <- "none"
                  model <- "base_growth_hazard"
-               },               
+               },
+               "rho_size_all" = {
+                 growth_measure <- 'true_dbh_dt'
+                 rho_combo <- "abc"
+                 gap_combo <- "none"
+                 size_combo <- "abc"
+                 model <- "base_growth_hazard"
+               }, 
+               "gap_size_all" = {
+                 growth_measure <- 'true_dbh_dt'
+                 rho_combo <- "none"
+                 gap_combo <- "abc"
+                 size_combo <- "abc"
+                 model <- "base_growth_hazard"
+               }, 
                NA
   )
   ret <- expand.grid(comparison=comparison,
@@ -124,9 +138,9 @@ full_data_tasks <- function(model, iter=2000,path='.') {
   n_chains = 3
   base::switch(model,
                "final_model" = {
-                 rho_combo = "c"
-                 gap_combo = "c"
-                 size_combo = "none"
+                 rho_combo = "abc"
+                 gap_combo = "abc"
+                 size_combo = "abc"
                  comparison = 'final_model'
                },
                "final_base_growth_hazard_re" = {
