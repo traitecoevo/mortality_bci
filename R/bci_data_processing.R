@@ -221,12 +221,12 @@ BCI_clean <- function(BCI_data, spp_table) {
         # Remove anything where don't have adequate growth from previous period
         !is.na(census_interval*dbh_dt)
     ) %>%
-    dplyr::ungroup() %>%
+    ungroup %>%
     dplyr::group_by(sp) %>%
     dplyr::mutate(n_ind = length(unique(treeid))) %>%
     # ensures at least 1 individual is in the heldout dataset
     dplyr::filter(n_ind >=10) %>%
-    dplyr::ungroup() %>%
+    ungroup %>%
     dplyr::select(gx,gy,species,sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
                   dbh_prev,dbh,dead_next_census)
   
@@ -352,11 +352,11 @@ gap_data <- function(canopy_data) {
     dplyr::mutate(sum_canopy_above2m = sum(ht2_5,ht5_10,ht10_20,ht20_30,ht30_, na.rm=TRUE)) %>% 
     # sums presences above 2m and converts it to a scale between 0 and 1.
     #where 1 = gap (no veg above 2 m) & 0 = non gap (veg in all strata above 2 m)
-    dplyr::ungroup %>%
+    ungroup %>%
     dplyr::mutate(censusid = base::findInterval(year,c(1990))+1) %>% # 1= past light environment for 1985 recruits etc..
     dplyr::group_by(x,y,censusid) %>%
     dplyr::summarise(gap_index = (5 - min(sum_canopy_above2m))/5) %>% # Find minumum canopy stratum above 2m per census.
-    dplyr::ungroup() %>%
+    ungroup %>%
     dplyr::select(x,y,censusid,gap_index)
 }
 
@@ -372,7 +372,7 @@ recruits_8595 <- function(raw_BCI_data) {
     # above removes dead observations & NA dbh or coordinates.
     dplyr::group_by(treeid) %>%
     dplyr::slice(1) %>% # Takes first observation per treeid
-    dplyr::ungroup() %>%
+    ungroup %>%
     dplyr::filter(censusid!=2 & # removes first census as unsure whether these are recruits or not
                     dbh < 250) %>% # removes individuals with a dbh > 25 cm - unlikely to be recruits
     dplyr::mutate(censusid = as.numeric(factor(censusid))) %>% # rescales censusid such that 1 = 85. 
@@ -383,12 +383,12 @@ recruits_8595 <- function(raw_BCI_data) {
 get_gap_index_raster <- function(canopy_data,weight_matrix = matrix(c(1, 1, 1, 1, 8, 1, 1, 1, 1), 3, 3)) {
   
   gap_data(canopy_data) %>%
-    base::as.data.frame(.) %>% # converts to df for sp package
-    {sp::coordinates(.) <- ~x+y; .} %>%
+    raster::as.data.frame(.) %>% # converts to df for sp package
+    {coordinates(.) <- ~x+y; .} %>%
     raster::shift(x=2.5, y=2.5) %>% # centers coordinates on cell mid point
-    base::split(.$censusid) %>% # splits by census
+    sp::split(.$censusid) %>% # splits by census
     lapply(function(x) { # Converts to raster
-      raster::rasterFromXYZ(as.data.frame(x)[c('x','y','gap_index')], res = c(5,5)) 
+      raster::rasterFromXYZ(raster::as.data.frame(x)[c('x','y','gap_index')], res = c(5,5)) 
     }) %>% # calculates mean gap index value using weights
     lapply(raster::focal, weight_matrix, mean) %>% # calculates mean gap index value using weights
     lapply(setNames, 'gap_index') %>% # Names the gap index column
@@ -403,7 +403,7 @@ get_recruit_gap_conditions <- function(recruits, gap_index_raster) {
     base::as.data.frame(.) %>% # converts to df for sp package
     {sp::coordinates(.) <- ~x+y; .} %>% 
     raster::crop(raster::extent(.) - 20*2) %>%  # removes edge effects out to 20 m
-    base::split(.$censusid) %>% # splits by census
+    sp::split(.$censusid) %>% # splits by census
     mapply(function(raster, points) raster::extract(raster, points, sp=TRUE), gap_index_raster, .)
 }
 
@@ -429,9 +429,9 @@ get_spp_dbh_95 <- function(raw_BCI_data) {
     dplyr::group_by(treeid) %>%
     dplyr::filter(max(nostems, na.rm = TRUE)==1 & !is.na(dbh)) %>%
     dplyr::filter(pom == '1.3') %>%
-    dplyr::ungroup() %>%
+    ungroup %>%
     dplyr::group_by(sp) %>%
     dplyr::summarise(dbh_95 = quantile(dbh, 0.95, na.rm=TRUE)) %>%
-    dplyr::ungroup() %>%
+    ungroup %>%
     dplyr::select(sp,dbh_95)
 }

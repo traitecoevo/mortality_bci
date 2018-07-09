@@ -157,6 +157,7 @@ combine_logloss_summaries <- function() {
                               "rho_gap_all_base_growth_hazard_rho_gap_abc",
                               "rho_size_all_base_growth_hazard_rho_size_abc",
                               "rho_gap_all_base_growth_hazard_gap_size_abc",
+                              "gap_size_all_base_growth_hazard_gap_size_abc",
                               "species_random_effects_base_growth_hazard_none",
                               "multi_trait_parsimony_base_growth_hazard_rho_gap_c")),
       modelid = as.factor(as.numeric(model_type))

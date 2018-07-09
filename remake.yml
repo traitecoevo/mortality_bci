@@ -286,7 +286,7 @@ targets:
     
   ms/figures/fig2.pdf:
     command: plot_fig2(logloss_summaries)
-    plot: single_col_portrait
+    plot: double_col_square
     cleanup_level: tidy
     
   ms/figures/fig3.pdf:
