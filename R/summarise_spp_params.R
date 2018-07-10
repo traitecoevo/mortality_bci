@@ -9,7 +9,7 @@
 #' @export
 summarise_spp_params <- function(model, data, logscale=FALSE) {
   fit <- model$fits[[1]] # Indexing to avoid list name
-  dat <- prep_data_for_stan(data, growth_measure = "true_dbh_dt")
+  dat <- prep_data_for_stan(data, growth_measure = model$model_info[[1]][,'growth_measure'],crossval = FALSE)
   samples <- rstan::extract(fit, pars=c("alpha","beta","gamma"))
   samples[["alpha_gamma"]] <- samples$alpha + samples$gamma
   
@@ -36,7 +36,7 @@ summarise_spp_params <- function(model, data, logscale=FALSE) {
         sp = dat$sp,
         wood_density = dat$raw_rho,
         gap_index = dat$raw_gap_index,
-        raw_dbh_95 = dat$raw_dbh_95,
+        dbh_95 = dat$raw_dbh_95,
         mean = apply(x,2, mean),
         median = apply(x,2, median),
         sd = apply(x,2,sd),

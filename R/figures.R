@@ -173,7 +173,9 @@ plot_fig2 <- function(logloss_summaries) {
 
 plot_fig2a <- function(logloss_summaries) {
   dat <- logloss_summaries %>%
-    filter(model_type %in% c("rho_combinations_base_growth_hazard_abc", "gap_combinations_base_growth_hazard_abc", "size_combinations_base_growth_hazard_abc") |
+    filter(model_type %in% c("rho_combinations_base_growth_hazard_abc", 
+                             "gap_combinations_base_growth_hazard_abc", 
+                             "size_combinations_base_growth_hazard_abc") |
              comparison %in% c("null_model",
                                "function_growth_comparison",
                                "species_random_effects", 

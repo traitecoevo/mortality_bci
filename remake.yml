@@ -84,19 +84,13 @@ targets:
 
   process_crossval:
     depends:
-      - func_growth_diagnostics
-      - random_effect_diagnostics
-      - rho_comparisons_diagnostics
+      - all_model_diagnostics
       - logloss_summaries
 
   process_final_model:
     depends:
       - final_model
-      - final_model_diagnostics
       - final_spp_re_model
-      - final_spp_re_model_diagnostics
-      - predicted_mu_basehaz_by_rho
-      - spp_params_and_covs
       
   #------------- download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -120,14 +114,14 @@ targets:
     command: BCI_load_50ha_plot("downloads/bci.full.Rdata31Aug2012.zip")
     cleanup_level: purge
     
-  BCI_traits_wood:
+  BCI_wood_density:
     command: load_trait_data("data/BCI_traits_20101220.csv")
     cleanup_level: purge
 
-  BCI_traits_dbh_95:
+  BCI_dbh_95:
     command: get_spp_dbh_95(BCI_50haplot)
 
-  BCI_traits_gap_index:
+  BCI_gap_index:
     command: get_mean_spp_gap_index(recruit_gap_conditions)   
 
   BCI_nomenclature:
@@ -144,20 +138,20 @@ targets:
   
   #------------- Process data  ----------------------------
   
-  BCI_cleaned:
+  BCI_demography_cleaned:
     command: BCI_clean(BCI_50haplot, BCI_nomenclature)
     cleanup_level: purge
 
-  BCI_model_dataset:
-    command: merge_BCI_data(BCI_cleaned, BCI_traits_wood, BCI_traits_dbh_95, BCI_traits_gap_index)
+  BCI_demography_traits:
+    command: merge_BCI_data(BCI_demography_cleaned, BCI_wood_density, BCI_dbh_95, BCI_gap_index)
     cleanup_level: purge
     
-  BCI_model_dataset_true_dbh:
-    command: add_true_growth(BCI_model_dataset, BCI_true_dbh_model)
+  BCI_model_data:
+    command: add_true_growth(BCI_demography_traits, BCI_true_dbh_model)
     cleanup_level: purge
     
   BCI_model_dataset_folds:
-    command: split_into_kfolds(BCI_model_dataset_true_dbh)
+    command: split_into_kfolds(BCI_model_data)
     cleanup_level: purge
     
   BCI_training_full:
@@ -187,63 +181,44 @@ targets:
   #------------- Process outputs -------------------
   
   # Diagnostics
-  func_growth_diagnostics:
-    command: model_diagnostics(I("function_growth_comparison"))
-    cleanup_level: tidy
-    
-  rho_comparisons_diagnostics:
-    command: model_diagnostics(I("rho_combinations"))
-    cleanup_level: tidy
-    
-  size_comparisons_diagnostics:
-    command: model_diagnostics(I("size_combinations"))
-    cleanup_level: tidy
-    
-  gap_comparisons_diagnostics:
-    command: model_diagnostics(I("gap_combinations"))
-    cleanup_level: tidy
-    
-  multi_trait_all_diagnostics:
-    command: model_diagnostics(I("multi_trait_all"))
-    cleanup_level: tidy
-    
-  multi_trait_parsimony_diagnostics:
-    command: model_diagnostics(I("multi_trait_parsimony"))
+  all_model_diagnostics:
+    command: model_diagnostics(I("null_model", 
+                                 "function_growth_comparison",
+                                 "rho_combinations", 
+                                 "gap_combinations", 
+                                 "size_combinations",
+                                 "species_random_effects",
+                                 "rho_gap_all",
+                                 "rho_size_all",
+                                 "gap_size_all",
+                                 "multi_trait_all",
+                                 "multi_trait_parsimony",
+                                 "final_model",
+                                 "final_base_growth_hazard_re"))
     cleanup_level: tidy
 
-  random_effect_diagnostics:
-    command: model_diagnostics(I("species_random_effects"))
-    cleanup_level: tidy
-    
-  # Cross validation summary output
+  # Cross validation statistics
   logloss_summaries:
-    command: combine_logloss_summaries()
+    command: collate_logloss_summaries()
     cleanup_level: tidy
 
   # Final model
   final_model:
     command: compile_models(I('final_model'))
     cleanup_level: tidy
-
-  final_model_diagnostics:
-    command: model_diagnostics(I("final_model"))
-    cleanup_level: tidy
     
-  # Final only random effect model
+  # Final model with only species random effects only
   final_spp_re_model:
     command: compile_models(I('final_base_growth_hazard_re'))
     cleanup_level: tidy
 
-  final_spp_re_model_diagnostics:
-    command: model_diagnostics(I("final_base_growth_hazard_re"))
-    cleanup_level: tidy
-
+  # Final model parameter estimates
   spp_params:
     command: summarise_spp_params(final_model, BCI_training_full)
     cleanup_level: tidy
-
-  predicted_mu_basehaz_by_rho:
-    command: predict_mu_baseline_hazard_by_rho(final_model, BCI_training_full)
+    
+  mu_param_trends_by_trait:
+    command: trait_param_combo_mu_trends(final_model, BCI_training_full, I("wood_density","gap_index","dbh_95"))
     cleanup_level: tidy
     
   param_variance_explained:
@@ -261,11 +236,6 @@ targets:
   
   recruit_gap_conditions:
     command: get_recruit_gap_conditions(recruits, gap_index_raster)
-    cleanup_level: tidy
-  
-  #------ Merging fitted species params with covariates -------
-  spp_params_and_covs:
-    command: merge_spp_params_covs(spp_params, recruit_gap_conditions, BCI_50haplot)
     cleanup_level: tidy
 
   #------------- Figures ---------------------------
@@ -304,13 +274,8 @@ targets:
     plot: single_col_rectangle_narrow
     cleanup_level: tidy
     
-  ms/figures/fig6.pdf:
-    command: plot_fig6(spp_params_and_covs)
-    plot: single_col_portrait_large
-    cleanup_level: tidy
-    
   ms/figures/supp_fig1.png:
-    command: plot_figS1(BCI_model_dataset_true_dbh)
+    command: plot_figS1(BCI_model_data)
     plot:
       width: 3.46
       height: 3.46
@@ -343,7 +308,7 @@ targets:
 
   ms/manuscript.tex:
     depends:
-      - BCI_model_dataset_true_dbh
+      - BCI_model_data
       - BCI_dbh_error_data
       - BCI_training_sets
       - BCI_training_full
@@ -354,7 +319,7 @@ targets:
     
   ms/supplementary.tex:
     depends:
-      - BCI_model_dataset_true_dbh
+      - BCI_model_dataset_complete
       - BCI_dbh_error_data
       - BCI_training_sets
       - BCI_training_full
