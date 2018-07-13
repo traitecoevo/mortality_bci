@@ -86,7 +86,7 @@ data <- readRDS("data/bci_data_full.rds")
     full_minus_census = mort(alpha * exp(-beta * true_dbh_dt_c), gamma, mean(unique(census_error)),census_interval),
     full_minus_rho = mort((alpha/(rho_c^a1)) * exp(-(beta/(rho_c^b1)) * true_dbh_dt_c), gamma/(rho_c^c1), census_error, census_interval),
     full_minus_gap = mort((alpha/(gap_index_c^a2)) * exp(-(beta/(gap_index_c^b2)) * true_dbh_dt_c), gamma/(gap_index_c^c2), census_error, census_interval),
-    full_minus_dbh = mort((alpha/(dbh_95_c^a2)) * exp(-(beta/(dbh_95_c^b2)) * true_dbh_dt_c), gamma/(dbh_95_c^c2), census_error, census_interval),
+    full_minus_dbh = mort((alpha/(dbh_95_c^a3)) * exp(-(beta/(dbh_95_c^b3)) * true_dbh_dt_c), gamma/(dbh_95_c^c3), census_error, census_interval),
     full_minus_spp = mort(mu_alpha * exp(-mu_beta * true_dbh_dt_c), mu_gamma, census_error, census_interval), # Should this include trait effects?
     full_minus_growthdep = mort(median(alpha * exp(-beta * true_dbh_dt_c)), gamma, census_error, census_interval),
     full_minus_growthindep =  mort(alpha * exp(-beta * true_dbh_dt_c), median(gamma), census_error, census_interval)
@@ -103,4 +103,10 @@ data <- readRDS("data/bci_data_full.rds")
       growth_dependent = full_minus_growthdep, 
       growth_independent = full_minus_growthindep) %>%
     dplyr::group_by(sp, prop_died) %>%
-    dplyr::summarise_all(dplyr::funs(mean)) 
+    dplyr::summarise_all(dplyr::funs(mean)) %>%
+    dplyr::ungroup() %>%
+    tidyr::gather(model_without, mean_prob_death, -c(sp,prop_died)) %>%
+    dplyr::group_by(model_without) %>%
+    dplyr::mutate(r2 = cor(mean_prob_death,prop_died)^2) %>% # Calculate person  and square it
+    dplyr::select(-c(sp, prop_died,mean_prob_death)) %>%
+    dplyr::distinct()
