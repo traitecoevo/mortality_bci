@@ -23,6 +23,7 @@ data <- readRDS("data/bci_data_full.rds")
     tidyr::spread(param, mean)
   
   # Extract mean species parameter estimates
+  # These parameters willbe alpha beta and gamma. They encompass any trait effects
   spp_params <- summarise_spp_params(model, data) %>%
     dplyr::select(param,species,sp,mean) %>%
     dplyr::mutate(sp = as.character(sp),
@@ -83,13 +84,13 @@ data <- readRDS("data/bci_data_full.rds")
   # Now calculate predicted 1-yr mortality removing different effects included
   df %>% dplyr::mutate(
     full_model = mort(alpha * exp(-beta * true_dbh_dt_c), gamma, census_error, census_interval),
-    full_minus_census = mort(alpha * exp(-beta * true_dbh_dt_c), gamma, mean(unique(census_error)),census_interval),
-    full_minus_rho = mort((alpha/(rho_c^a1)) * exp(-(beta/(rho_c^b1)) * true_dbh_dt_c), gamma/(rho_c^c1), census_error, census_interval),
+    full_minus_census = mort(alpha * exp(-beta * true_dbh_dt_c), gamma, 1,census_interval), # No census effect should 1? not median(census_error)
+    full_minus_rho = mort((alpha/(rho_c^a1)) * exp(-(beta/(rho_c^b1)) * true_dbh_dt_c), gamma/(rho_c^c1), census_error, census_interval), # If maths is correct removing the trait effect should be x/trait^a1
     full_minus_gap = mort((alpha/(gap_index_c^a2)) * exp(-(beta/(gap_index_c^b2)) * true_dbh_dt_c), gamma/(gap_index_c^c2), census_error, census_interval),
     full_minus_dbh = mort((alpha/(dbh_95_c^a3)) * exp(-(beta/(dbh_95_c^b3)) * true_dbh_dt_c), gamma/(dbh_95_c^c3), census_error, census_interval),
     full_minus_spp = mort(mu_alpha * exp(-mu_beta * true_dbh_dt_c), mu_gamma, census_error, census_interval), # Should this include trait effects?
     full_minus_growthdep = mort(median(alpha * exp(-beta * true_dbh_dt_c)), gamma, census_error, census_interval),
-    full_minus_growthindep =  mort(alpha * exp(-beta * true_dbh_dt_c), median(gamma), census_error, census_interval)
+    full_minus_growthindep =  mort(alpha * exp(-beta * true_dbh_dt_c), median(gamma), census_error, census_interval) # Should median(gamma) be 0? Otherwise we are using the averge species gamma... not really minusing it
   ) %>%
     dplyr::select(
       sp,
