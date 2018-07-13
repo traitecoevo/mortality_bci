@@ -1,4 +1,6 @@
 # Manuscript functions
+# These are a variety of small functions used to extract various bits of information
+# required within the manuscript.
 
 n_obs <- function(data) {
   prettyNum(nrow(data), big.mark = ",")

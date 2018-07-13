@@ -1,9 +1,9 @@
-#' Loads dbh measurement error data
+#' Loads BCI dbh measurement error data
 #' 
-#' Loads dbh measurement error data
+#' Loads BCI dbh measurement error data
 #' @param file Character. Path to file
 #' @return Dataframe
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 BCI_load_dbh_error_data <- function(file) {
   data <-  load_rdata(file)

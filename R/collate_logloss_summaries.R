@@ -3,9 +3,11 @@
 #' Collate logloss summary statistics across kfolds for all model comparisons
 #' @return Dataframe containing logloss summary statistics across kfolds for all model comparisons
 #' @details This function requires all model comparisons to have been run.
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 collate_logloss_summaries <- function() {
+  `%>%` <- magrittr::`%>%`
+  
   logloss_null_model <- summarise_crossval_logloss("null_model")
   logloss_func_growth <- summarise_crossval_logloss("function_growth_comparison")
   logloss_rho_comparisons <- summarise_crossval_logloss("rho_combinations")

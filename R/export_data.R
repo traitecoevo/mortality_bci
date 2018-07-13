@@ -5,7 +5,7 @@
 #' @param filename Character. Base filename for outputs
 #' @return Exports multiple .rds files from a single target in remake
 #' @details Required for remake (1 function -> n file outputs)
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 export_data <- function(data, filename) {
   filename_fmt <- sub("\\.rds$", "_%s.rds", filename)

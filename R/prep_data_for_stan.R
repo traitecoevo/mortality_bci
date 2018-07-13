@@ -5,7 +5,7 @@
 #' @param growth_measure Character. Can be either "true_dbh_dt" or "true_basal_area_dt"
 #' @param crossval Logical. Whether to subdivide data into folds.
 #' @return List
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 prep_data_for_stan <- function(data, growth_measure, crossval) {
   

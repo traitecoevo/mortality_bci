@@ -3,9 +3,12 @@
 #' Loads wood density data into R
 #' @param file Character. Path to file
 #' @return Dataframe
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
-load_wood_density <- function(file) {
+BCI_load_wood_density <- function(file) {
+  
+  `%>%` <- magrittr::`%>%`
+  
   data <- read.csv(file, stringsAsFactors=FALSE)
   names(data) <- tolower(names(data)) # lowers trait column names for merging
   data$sp <- tolower(data$sp) # lowers species code names for merging

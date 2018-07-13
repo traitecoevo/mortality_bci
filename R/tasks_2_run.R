@@ -5,9 +5,11 @@
 #' @param iter Integer. Number of iterations to run
 #' @param path Character. Parent directory to store output
 #' @return Dataframe
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 tasks_2_run <- function(comparison,iter=2000,path='.') {
+  
+  `%>%` <- magrittr::`%>%`
   
   # SUB FUNCTION: COMPARISON CHECK
   check_task_is_allowed <- function(task_name) {

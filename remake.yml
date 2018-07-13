@@ -19,80 +19,24 @@ packages:
 
 sources:
   - R
-  
-plot_options:
-  double_col_rectangle:
-    width: 6.6
-    height: 3
-    onefile: FALSE
-    
-  single_col_portrait_large:
-    width: 3.46
-    height: 5.25
-    onefile: FALSE   
-    
-  single_col_portrait:
-    width: 3.46
-    height: 4
-    onefile: FALSE
-    
-  single_col_portrait_extralong:
-    width: 3.46
-    height: 8
-
-  single_col_rectangle:
-    width: 3.46
-    height: 2.5
-    onefile: FALSE
-    
-  single_col_rectangle_narrow:
-    width: 3.46
-    height: 1.25
-    onefile: FALSE
-    
-  single_col_square:
-    width: 3.46
-    height: 3.46
-    onefile: FALSE
-
-  double_col_square:
-    width: 6
-    height: 6
-    onefile: FALSE
-
-  talk_3by8:
-    width: 8
-    height: 3
-
-  talk_2by4:
-    width: 4
-    height: 2
-
-  talk_2by5:
-    width: 5
-    height: 2
-
-  talk_3by6:
-    width: 6
-    height: 3
     
 targets:
   all:
     depends:
-      - ms/manuscript.pdf
-      - ms/supplementary.pdf
-
-  process_crossval:
-    depends:
+      - data/bci_data_full.rds
       - all_model_diagnostics
-      - logloss_summaries
-
-  process_final_model:
-    depends:
-      - final_model
-      - final_spp_re_model
+      - ms/figures/fig1_tree.png
+      - ms/figures/fig1.pdf
+      - ms/figures/fig2.pdf
+      - ms/figures/fig3.pdf
+      - ms/figures/fig4.pdf
+      - ms/figures/supp_fig1.png
+      - ms/figures/supp_fig2.pdf
+      - ms/figures/supp_fig3.pdf
+      - ms/figures/supp_fig4.pdf
+      - ms/figures/supp_fig5.pdf
       
-  #------------- download data ---------------------------
+  #------------- Download data ---------------------------
   downloads/bci.spptable.rdata:
     command: BCI_download_species_table(target_name)
     cleanup_level: never
@@ -115,15 +59,9 @@ targets:
     cleanup_level: purge
     
   BCI_wood_density:
-    command: load_trait_data("data/BCI_traits_20101220.csv")
+    command: BCI_load_wood_density("data/BCI_traits_20101220.csv")
     cleanup_level: purge
-
-  BCI_dbh_95:
-    command: get_spp_dbh_95(BCI_50haplot)
-
-  BCI_gap_index:
-    command: get_mean_spp_gap_index(recruit_gap_conditions)   
-
+    
   BCI_nomenclature:
     command: BCI_load_nomenclature("downloads/bci.spptable.rdata")
     cleanup_level: purge
@@ -141,10 +79,35 @@ targets:
   BCI_demography_cleaned:
     command: BCI_clean(BCI_50haplot, BCI_nomenclature)
     cleanup_level: purge
+    
+  BCI_dbh_95:
+    command: get_spp_dbh_95(BCI_50haplot)
+    cleanup_level: purge
+    
+  recruits:
+    command: recruits_8595(BCI_50haplot)
+    cleanup_level: tidy
+  
+  gap_index_raster:
+    command: get_gap_index_raster(BCI_canopy)
+    cleanup_level: tidy
+  
+  recruit_gap_conditions:
+    command: get_recruit_gap_conditions(recruits, gap_index_raster)
+    cleanup_level: tidy
+
+  BCI_gap_index:
+    command: get_mean_spp_gap_index(recruit_gap_conditions)   
+    cleanup_level: purge
 
   BCI_demography_traits:
     command: merge_BCI_data(BCI_demography_cleaned, BCI_wood_density, BCI_dbh_95, BCI_gap_index)
     cleanup_level: purge
+    
+  BCI_true_dbh_model:
+    command: run_true_dbh_model(BCI_demography_traits)
+    cleanup_level: never
+    check: exists  
     
   BCI_model_data:
     command: add_true_growth(BCI_demography_traits, BCI_true_dbh_model)
@@ -162,7 +125,7 @@ targets:
     command: make_trainheldout(BCI_model_dataset_folds)
     cleanup_level: purge
 
-  #------------- data export ---------------------------
+  #-------------Export data ---------------------------
 
   data/kfold_data/bci_data.rds:
     command: export_data(BCI_training_sets, target_name)
@@ -171,16 +134,8 @@ targets:
   data/bci_data_full.rds:
     command: saveRDS(BCI_training_full, target_name)
     cleanup_level: purge
-
-  #------------- Models ---------------------------
-  BCI_true_dbh_model:
-    command: run_true_dbh_model(BCI_model_dataset)
-    cleanup_level: never
-    check: exists  
     
-  #------------- Process outputs -------------------
-  
-  # Diagnostics
+  #------------- Model diagnostics ------------------------
   all_model_diagnostics:
     command: model_diagnostics(I("null_model", 
                                  "function_growth_comparison",
@@ -192,10 +147,11 @@ targets:
                                  "rho_size_all",
                                  "gap_size_all",
                                  "multi_trait_all",
-                                 "multi_trait_parsimony",
                                  "final_model",
                                  "final_base_growth_hazard_re"))
     cleanup_level: tidy
+    
+  #------------- Model outputs -------------------
 
   # Cross validation statistics
   logloss_summaries:
@@ -211,31 +167,14 @@ targets:
   final_spp_re_model:
     command: compile_models(I('final_base_growth_hazard_re'))
     cleanup_level: tidy
-
+    
   # Final model parameter estimates
   spp_params:
     command: summarise_spp_params(final_model, BCI_training_full)
     cleanup_level: tidy
     
   mu_param_trends_by_trait:
-    command: trait_param_combo_mu_trends(final_model, BCI_training_full, I("wood_density","gap_index","dbh_95"))
-    cleanup_level: tidy
-    
-  param_variance_explained:
-    command: get_param_variance_explained(final_model, BCI_training_full)
-    cleanup_level: tidy
-
-  #------------- Other covariates -------------------
-  recruits:
-    command: recruits_8595(BCI_50haplot)
-    cleanup_level: tidy
-  
-  gap_index_raster:
-    command: get_gap_index_raster(BCI_canopy)
-    cleanup_level: tidy
-  
-  recruit_gap_conditions:
-    command: get_recruit_gap_conditions(recruits, gap_index_raster)
+    command: param_by_trait_mu_trends(final_model, BCI_training_full, I(c("wood_density","gap_index","dbh_95")))
     cleanup_level: tidy
 
   #------------- Figures ---------------------------
@@ -246,7 +185,9 @@ targets:
 
   ms/figures/fig1.pdf:
     command: plot_fig1("ms/figures/fig1_tree.png", "ms/figures/dead_tree.png", "ms/figures/Fig1c.png")
-    plot: single_col_portrait
+    plot:
+      width: 3.46
+      height: 4
     cleanup_level: tidy
     packages:
       - png
@@ -256,22 +197,26 @@ targets:
     
   ms/figures/fig2.pdf:
     command: plot_fig2(logloss_summaries)
-    plot: double_col_square
+    plot:
+      width: 6.6
+      height: 4
+      onefile: FALSE
     cleanup_level: tidy
     
   ms/figures/fig3.pdf:
-    command: plot_fig3(spp_params_and_covs, predicted_mu_basehaz_by_rho)
-    plot: single_col_rectangle
+    command: plot_fig3(spp_params, mu_param_trends_by_trait)
+    plot:
+      width: 6
+      height: 6
+      onefile: FALSE
     cleanup_level: tidy
 
   ms/figures/fig4.pdf:
     command: plot_fig4(final_model, BCI_training_full)
-    plot: single_col_square
-    cleanup_level: tidy
-    
-  ms/figures/fig5.pdf:
-    command: plot_fig5(param_variance_explained)
-    plot: single_col_rectangle_narrow
+    plot:
+      width: 6
+      height: 6
+      onefile: FALSE
     cleanup_level: tidy
     
   ms/figures/supp_fig1.png:
@@ -285,133 +230,29 @@ targets:
     
   ms/figures/supp_fig2.pdf:
     command: plot_figS2(gap_index_raster, recruit_gap_conditions)
-    plot: double_col_square
+    plot:
+      width: 6
+      height: 6
+      onefile: FALSE
     cleanup_level: tidy
     
   ms/figures/supp_fig3.pdf:
     command: plot_spp_params(final_model, BCI_training_full, I("alpha"), I(expression(log(alpha))))
-    plot: single_col_portrait_extralong
+    plot:
+      width: 3.46
+      height: 8
     cleanup_level: tidy
-
+    
   ms/figures/supp_fig4.pdf:
-    command: plot_spp_params(final_model, BCI_training_full, I("beta"),I(expression(log(beta))))
-    plot: single_col_portrait_extralong
+    command: plot_spp_params(final_model, BCI_training_full, I("beta"), I(expression(log(beta))))
+    plot:
+      width: 3.46
+      height: 8
     cleanup_level: tidy
     
   ms/figures/supp_fig5.pdf:
     command: plot_spp_params(final_model, BCI_training_full, I("gamma"), I(expression(log(gamma))))
-    plot: single_col_portrait_extralong
-    cleanup_level: tidy
-    
-  
-  #------------- Manuscript ---------------------------
-
-  ms/manuscript.tex:
-    depends:
-      - BCI_model_data
-      - BCI_dbh_error_data
-      - BCI_training_sets
-      - BCI_training_full
-      - logloss_summaries
-      - final_model
-      - param_variance_explained
-    knitr: TRUE
-    
-  ms/supplementary.tex:
-    depends:
-      - BCI_model_dataset_complete
-      - BCI_dbh_error_data
-      - BCI_training_sets
-      - BCI_training_full
-      - logloss_summaries
-      - final_model
-    knitr: TRUE
-
-  ms/manuscript.pdf:
-    command: latex_build("ms/manuscript.tex", "ms/refs.bib", clean=TRUE)
-    depends:
-      - ms/pnas-new.cls
-      - ms/pnasresearcharticle.sty
-      - ms/widetext.sty
-      - ms/figures/fig1.pdf
-      - ms/figures/fig2.pdf
-      - ms/figures/fig3.pdf
-      - ms/figures/fig4.pdf
-      - ms/figures/fig5.pdf
-      - ms/figures/fig6.pdf
-
-      
-  ms/supplementary.pdf:
-    command: latex_build("ms/supplementary.tex", "ms/refs.bib", clean=TRUE)
-    depends:
-      - ms/pnas-new.cls
-      - ms/pnasresearcharticle.sty
-      - ms/widetext.sty
-      - ms/figures/supp_fig1.png
-      - ms/figures/supp_fig2.pdf
-      - ms/figures/supp_fig3.pdf
-      - ms/figures/supp_fig4.pdf
-      - ms/figures/supp_fig5.pdf
-
-
- #------------- Talk ---------------------------
-  talk: 
-    depends:
-      - talk/cross-val.pdf
-      - talk/results1.pdf
-      - talk/results2.pdf
-      - talk/results3.pdf
-      - talk/results4.pdf
-      - talk/map1.png
-      - talk/hazards.pdf
-      - talk/Survival1.pdf
-      - talk/Survival2.pdf
-      - talk/Survival3.pdf
-      - talk/Survival4.pdf
-
-  talk/cross-val.pdf:
-    command: fig_talk_cross_val(I("ms/figures/Fig1c.png"))
-    plot: talk_3by8
- 
-  talk/results1.pdf:
-    command: plot_fig2a(logloss_summaries)
-    plot: talk_2by4
-
-  talk/results2.pdf:
-    command: plot_fig2b(logloss_summaries)
-    plot: talk_2by4
-
-  talk/results3.pdf:
-    command: fig_talk_fig45(final_model, BCI_training_full, param_variance_explained)
-    plot: talk_3by6
-
-  talk/results4.pdf:
-    command: fig_talk_spp_params(final_model, BCI_training_full)
-    plot: talk_2by5
-
-  talk/map1.png:
-    command: fig_talk_map(BCI_training_full)
     plot:
-      height: 300
-      width: 900   
-
-  talk/hazards.pdf:
-    command: fig_talk_hazards()
-    plot: talk_3by8
-    
-  talk/Survival1.pdf:
-    command: fig_talk_survival_time(I(1))
-    plot: talk_3by8
-
-  talk/Survival2.pdf:
-    command: fig_talk_survival_time(I(2))
-    plot: talk_3by8
-
-  talk/Survival3.pdf:
-    command: fig_talk_survival_time(I(3))
-    plot: talk_3by8
-
-  talk/Survival4.pdf:
-    command: fig_talk_survival_time(I(4))
-    plot: talk_3by8
- 
+      width: 3.46
+      height: 8
+    cleanup_level: tidy

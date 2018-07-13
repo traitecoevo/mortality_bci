@@ -3,10 +3,11 @@
 #' Extract model diagnostics summary for single or multiple model comparisons
 #' @param comparison Character. Vector of model comparisons
 #' @return Dataframe containing estimated true growth rate and true dbh's
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 model_diagnostics <- function(comparison) {
   
+  `%>%` <- magrittr::`%>%`
   # Sub function extracting model diagnostics for single model
   diagnose <- function(model) {
     fits <- model$fits

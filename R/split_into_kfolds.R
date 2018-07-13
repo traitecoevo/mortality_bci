@@ -4,7 +4,7 @@
 #' @param data Dataframe.
 #' @param k Integer. Number of data folds required
 #' @return List of dataframe folds
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 split_into_kfolds <- function(data, k=10) {
   # make dataset an even multiple of 10

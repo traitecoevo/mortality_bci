@@ -3,7 +3,7 @@
 #' Run optimisation procedure to estimate true growth for each individual per census
 #' @param data Dataframe.
 #' @return Stan fit object
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 
 run_true_dbh_model <- function(data) {

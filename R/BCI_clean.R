@@ -20,11 +20,12 @@
 #' 2) Whether the individual died in the subsequent census
 #' 3) Links species codes with species nomenculture
 #' 4) Creates a new ID for each individual
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 
 BCI_clean <- function(BCI_data, spp_table) {
   
+  `%>%` <- magrittr::`%>%`
   # SUB FUNCTION: Drop last observation
   drop_last <- function(x) {
     if(length(x) > 0)
@@ -138,12 +139,12 @@ BCI_clean <- function(BCI_data, spp_table) {
         # Remove anything that doesn't have adequate growth from previous period
         !is.na(census_interval*dbh_dt)
     ) %>%
-    ungroup %>%
+    dplyr::ungroup() %>%
     dplyr::group_by(sp) %>%
     dplyr::mutate(n_ind = length(unique(treeid))) %>%
     # ensures at least 1 individual is in the heldout dataset
     dplyr::filter(n_ind >=10) %>%
-    ungroup %>%
+    dplyr::ungroup() %>%
     dplyr::select(gx,gy,species,sp,n_ind,treeid,census,exactdate,julian,census_interval,pom,nostems,
                   dbh_prev,dbh,dead_next_census)
 }

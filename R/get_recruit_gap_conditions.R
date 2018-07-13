@@ -4,9 +4,12 @@
 #' @param recruits Dataframe containing recruit data.
 #' @param gap_index_raster List of rasters by census.
 #' @return List of SpatialPointsDataDrames
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 get_recruit_gap_conditions <- function(recruits, gap_index_raster) {
+  
+  `%>%` <- magrittr::`%>%`
+  
   # get light environment for recruits
   recruits  %>% 
     base::as.data.frame(.) %>% # converts to df for sp package

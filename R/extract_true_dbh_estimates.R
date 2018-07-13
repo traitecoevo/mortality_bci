@@ -3,9 +3,11 @@
 #' Extract estimated dbh estimates (without measurement error) for each individual at each census from optimisation output
 #' @param optimization_results Model output from function run_true_dbh_model()
 #' @return Dataframe containing estimated true growth rate and true dbh's
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 extract_true_dbh_estimates <- function(optimization_results) {
+  `%>%` <- magrittr::`%>%`
+  
   fit <- optimization_results$par
   base::data.frame(fit, nm=names(fit)) %>%
     tidyr::separate(nm, c('variable', 'ind'), sep='\\[', fill='right') %>%

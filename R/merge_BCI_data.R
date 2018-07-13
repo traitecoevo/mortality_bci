@@ -6,12 +6,13 @@
 #' @param traits_dbh_95 Dataframe containing species max dbh's at 95th quantile (obtained from get_spp_dbh_95())
 #' @param trait_gap_index Dataframe containing gap index data (from obtained from (get_mean_spp_gap_index()))  
 #' @return Dataframe
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 merge_BCI_data <- function(BCI_demography, traits_wood, traits_dbh_95, traits_gap_index) {
   
-  data_1 <- 
-    base::merge(BCI_demography, traits_wood[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
+  `%>%` <- magrittr::`%>%`
+  
+  data_1 <- base::merge(BCI_demography, traits_wood[,c('sp','rho')],by = 'sp') %>% #only uses species trait data exists for
     dplyr::filter(!is.na(rho)) %>%
     dplyr::mutate(sp_id = as.numeric(factor(sp)),
                   censusid = as.numeric(factor(census)))

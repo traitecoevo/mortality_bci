@@ -3,9 +3,10 @@
 #' Summarise logloss across kfolds for a single model comparison
 #' @param comparison Character. Name of model comparison
 #' @return Dataframe containing logloss summary statistics across kfolds for a single model comparison
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 summarise_crossval_logloss <- function(comparison) {
+  `%>%` <- magrittr::`%>%`
   
   # SUB FUNCTION: Extract logloss samples from single model
   logloss_samples <- function(model) {
@@ -20,7 +21,7 @@ summarise_crossval_logloss <- function(comparison) {
     dplyr::left_join(info, res, 'modelid') %>%
       dplyr::select(-modelid)
   }
-
+  
   # SUB FUNCTION: Extract log loss samples from multiple models
   extract_logloss_samples <- function(model) {
     if(is.null(model$fits)) { #Check to see if object is multi model 
@@ -47,5 +48,5 @@ summarise_crossval_logloss <- function(comparison) {
                   mean = exp(log_mean),
                   `2.5%` = exp(log_mean - ci),
                   `97.5%` = exp(log_mean + ci)) %>%
-    dplyr::ungroup
+    dplyr::ungroup()
 }

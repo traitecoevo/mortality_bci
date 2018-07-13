@@ -3,9 +3,11 @@
 #' Extract times taken for chain to complete for a given model comparison
 #' @param models List object obtained from compile_models().
 #' @return Dataframe
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 get_chain_times <- function(models) {
+  `%>%` <- magrittr::`%>%`
+  
   fits <- models$fits
   info <- dplyr::bind_rows(models$model_info, .id='modelid')
   times <- lapply(fits, function(x)

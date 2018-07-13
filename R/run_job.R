@@ -3,10 +3,10 @@
 # Summarise posteriors of species level trait parameters
 #' @param task Single row of a dataframe obtained from tasks_2_run()
 #' @return Returns a .rds
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 run_job <- function(task) {
-  
+  `%>%` <- magrittr::`%>%`
   # SUB FUNCTION: Builds the model code
   make_stan_model <- function(chunks) {
     list(

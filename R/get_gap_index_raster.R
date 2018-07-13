@@ -5,13 +5,15 @@
 #' @param weight_matrix Integer matrix. A weight to be applied to both focal cell and those surround it. 
 #' Default: matrix(c(1, 1, 1, 1, 8, 1, 1, 1, 1), 3, 3) weights the focal cell as the sum of all immediate neighbouring cells
 #' @return List of rasters
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 get_gap_index_raster <- function(canopy_data,weight_matrix = matrix(c(1, 1, 1, 1, 8, 1, 1, 1, 1), 3, 3)) {
   
+  `%>%` <- magrittr::`%>%`
+  
   gap_data(canopy_data) %>%
     raster::as.data.frame(.) %>% # converts to df for sp package
-    {coordinates(.) <- ~x+y; .} %>%
+    {sp::coordinates(.) <- ~x+y; .} %>%
     raster::shift(x=2.5, y=2.5) %>% # centers coordinates on cell mid point
     sp::split(.$censusid) %>% # splits by census
     lapply(function(x) { # Converts to raster

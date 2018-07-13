@@ -4,7 +4,7 @@
 #' @param data Dataframe.
 #' @param true_dbh_mod Stan object. Obtained from run_true_dbh_model()
 #' @return Dataframe
-#' @author James Camac (\email{james.camac@gmail.com})
+#' @author James Camac (\email{james.camac@gmail.com}) & Daniel Falster (\email{daniel.falster@unsw.edu.au})
 #' @export
 add_true_growth <- function(data, true_dbh_mod) {
   true <- extract_true_dbh_estimates(true_dbh_mod)
