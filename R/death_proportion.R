@@ -9,9 +9,10 @@
 death_proportion <- function(data) {
   data %>%
     dplyr::select(species, sp, n_ind, dead_next_census) %>%
-    dplyr::group_by(species,sp, n_ind) %>%
-    dplyr::summarise(n_deaths = sum(dead_next_census)) %>%
-    dplyr::mutate(prop_died = n_deaths/n_ind) %>%
+    dplyr::group_by(species,sp) %>%
+    dplyr::summarise(n_deaths = sum(dead_next_census),
+                     n_total = length(dead_next_census)) %>%
+    dplyr::mutate(prop_died = n_deaths/n_total) %>%
     dplyr::ungroup()
 }
 

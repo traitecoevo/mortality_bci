@@ -11,7 +11,7 @@ for (s in sources) {
 }
 
 
-model <- make('final_model')
+model <- remake::make('final_model')
 data <- readRDS("data/bci_data_full.rds")
   
   # Extract mean parameter estimates
@@ -49,7 +49,7 @@ data <- readRDS("data/bci_data_full.rds")
   
   # Extract observed deaths
   observed_death <- death_proportion(data) %>%
-    select(sp,n_deaths, prop_died)
+    dplyr::select(sp,n_deaths, prop_died)
   
   
   # function to predict probability of death for different levels of effects and time interval dt
@@ -75,7 +75,7 @@ data <- readRDS("data/bci_data_full.rds")
       c1 = traits$c1,
       c2 = traits$c2,
       c3 = traits$c3,
-      true_dbh_dt_c = true_dbh_dt/0.172,
+      true_dbh_dt_c = true_dbh_dt - 0.172,
       rho_c = rho/0.6,
       gap_index_c = gap_index/0.7,
       dbh_95_c = dbh_95/15)
