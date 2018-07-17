@@ -35,6 +35,7 @@ targets:
       - ms/figures/supp_fig3.pdf
       - ms/figures/supp_fig4.pdf
       - ms/figures/supp_fig5.pdf
+      - ms/manuscript.pdf
       
   #------------- Download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -198,24 +199,24 @@ targets:
   ms/figures/fig2.pdf:
     command: plot_fig2(logloss_summaries)
     plot:
-      width: 6.6
-      height: 4
+      width: 6.5
+      height: 3
       onefile: FALSE
     cleanup_level: tidy
     
   ms/figures/fig3.pdf:
     command: plot_fig3(spp_params, mu_param_trends_by_trait)
     plot:
-      width: 6
-      height: 6
+      width: 6.5
+      height: 5
       onefile: FALSE
     cleanup_level: tidy
 
   ms/figures/fig4.pdf:
     command: plot_fig4(final_model, BCI_training_full)
     plot:
-      width: 6
-      height: 6
+      width: 3.46
+      height: 5
       onefile: FALSE
     cleanup_level: tidy
     
@@ -255,4 +256,28 @@ targets:
     plot:
       width: 3.46
       height: 8
+    cleanup_level: tidy
+
+  #------------- Manuscript ---------------------------
+  ms/manuscript.tex:
+    depends:
+      - BCI_model_data
+      - BCI_dbh_error_data
+      - BCI_training_sets
+      - BCI_training_full
+      - logloss_summaries
+      - final_model
+    knitr: TRUE
+    cleanup_level: tidy
+
+  ms/manuscript.pdf:
+    command: latex_build("ms/manuscript.tex", "ms/refs.bib", clean=TRUE)
+    depends:
+      - ms/pnas-new.cls
+      - ms/pnasresearcharticle.sty
+      - ms/widetext.sty
+      - ms/figures/fig1.pdf
+      - ms/figures/fig2.pdf
+      - ms/figures/fig3.pdf
+      - ms/figures/fig4.pdf
     cleanup_level: tidy

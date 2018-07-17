@@ -30,9 +30,9 @@ plot_mu_curves <- function(model,
   
   p1 <- ggplot2::ggplot(preds, ggplot2::aes(x = dbh_growth,y = mean, group = type, colour = factor(trait_value), fill=factor(trait_value))) + 
     ggplot2::geom_line() +
-    viridis::scale_color_viridis(name=legend_label, discrete = TRUE) +
+    ggplot2::scale_colour_manual(name=legend_label, values = c("blue","red")) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = `2.5%`,ymax = `97.5%`), alpha=0.5, colour=NA) +
-    viridis::scale_fill_viridis(legend_label, discrete=TRUE) +
+    ggplot2::scale_fill_manual(legend_label,values = c("blue","red")) +
     ggplot2::scale_x_continuous(expand=c(0,0)) +
     ggplot2::xlab(xlab)
   

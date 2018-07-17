@@ -16,7 +16,7 @@ predict_spp_hazard_curves <- function(model, data, growth_range = c(0.03,0.5)) {
                                    dbh_growth_centered = seq(min(growth_range),max(growth_range),length.out = 100) - 0.172)
   
   res <- spp_parameters %>%
-    select(-c(median,sd,`2.5%`,`97.5%`)) %>%
+    dplyr::select(-c(median,sd,`2.5%`,`97.5%`)) %>%
     tidyr::spread(param, mean) %>%
     base::merge(growth_rates) %>%
     dplyr::mutate(
