@@ -8,22 +8,20 @@
 
 \title{Unifying intra- and inter-specific variation in tropical tree mortality}
 
-\author[a,b,1]{James S Camac}
-\author[c]{Richard Condit}
-\author[d]{Richard G FitzJohn}
-\author[e]{Lachlan McCalman}
-\author[e]{Daniel Steinberg}
+\author[a,1]{James S Camac}
+\author[b]{Richard Condit}
+\author[a,2]{Richard G FitzJohn}
+\author[c]{Lachlan McCalman}
+\author[c]{Daniel Steinberg}
 \author[a]{Mark Westoby}
-\author[f]{S Joseph Wright}
-\author[a,g]{Daniel S Falster}
+\author[d]{S Joseph Wright}
+\author[e]{Daniel S Falster}
 
 \affil[a]{Department of Biological Sciences, Macquarie University, Sydney, New South Wales, Australia}
-\affil[b]{Current Address: Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Melbourne, Victoria, Australia}
-\affil[c]{Field Museum of Natural History and Morton Arboretum, Chicago, Illinois, USA}
-\affil[d]{Imperial College, London, United Kingdom}
-\affil[e]{Data61, CSIRO, Australia}
-\affil[f]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
-\affil[g]{Current Address: Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, Sydney, New South Wales, Australia}
+\affil[b]{Field Museum of Natural History and Morton Arboretum, Chicago, Illinois, USA}
+\affil[c]{Data61, CSIRO, Australia}
+\affil[d]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
+\affil[e]{Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, Sydney, New South Wales, Australia}
 
 \leadauthor{Camac}
 
@@ -31,15 +29,19 @@
 % 120 words
 \significancestatement{Tree mortality is a fundamental demographic process affecting forest dynamics and carbon cycling. Here, for the first time, we build a statistical mortality model that not only integrates intra-specific and inter-specific variation but also, for the first time, simulataneously estimates the independent contributions of two fundamental hazards faced by plants -- Death due to low growth rates and death independent of growth. We parameterise this model using over 400,000 observed survival records collected over a 15-year period from more than 180,000 individuals encompassed within 203 species. We show that both growth-independent and growth-dependent hazards are significant contribtors to tree mortality at Barro Colorado Island. Moreover, we show that species traits -- wood density, maximum dbh and shade intolerance -- all variously affect rates of tree mortality but ultimately only account for a small fraction of the total species variability.}
 
+
 % Please include corresponding author, author contribution and author declaration information
-\authorcontributions{D.F. conceived idea; all authors designed research; J.C. \& R.F. performed analysis in discussion with L.M, D.S. \& M.W; R.C. \& S.W. collected data. J.C \& D.F. wrote the manuscript}
+\authorcontributions{D.S.F. conceived idea; all authors designed research; J.S.C., D.S.F. \& R.G.F. performed analysis in discussion with L.M, D.S. \& M.W; R.C. \& S.W. collected data. J.S.C \& D.S.F. wrote the manuscript}
 
 \authordeclaration{The authors declare that they have no competing financial interests.\\
 
 Data deposition: Code reproducing the results in this paper is available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}. Data from BCI is available at DOIs \href{http://doi.org/10.5479/data.bci.20130603.}{10.5479/data.bci.20130603.}, \href{http://doi.org/10.5479/data.bci20140711}{10.5479/data.bci20140711}.
 }
 
-\correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: james.camac@gmail.com}
+\correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: james.camac@gmail.com. Present address: Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Melbourne, Victoria, Australia
+
+\textsuperscript{2} Present address: Department of Infectious Disease Epidemiology, Imperial College London, Faculty of Medicine, Norfolk Place, London W2 1PG, United Kingdom
+}
 
 % Please include two to five keywords, separated by the pipe symbol
 \keywords{Bayesian $|$ Growth rates $|$ Hazard rates $|$ Tropical trees $|$ Wood density} 
@@ -125,7 +127,7 @@ A) Six sequential stages of model selection with each stage increasing in comple
 \subsection*{Hazard functions}
 Comparing the three hazard functions summarised in Fig. \ref{fig1}B, we found that the third function --- the function containing both growth-dependent and growth-independent hazard terms, i.e. $(\alpha e^{-\beta X_{i}} + \gamma)\delta_t$ --- significantly outperformed both the baseline hazard or growth-dependent only functions (Fig. \ref{fig2}). Moreover, we found that predictive skill was higher when using stem diameter growth over stem-area growth (Fig. \ref{fig2}A). A summary of hyper parameter estimates can be found in Table S1.
 
-\begin{figure*}[h!]
+\begin{figure*}[ht!]
 \includegraphics{figures/fig3.pdf}
 \caption{Estimated relationships between between species traits (maximum dbh, light demand and wood density) and model parameters $\alpha$, $\beta$ and $\gamma$. Points are the estimated mean ($\pm$ 95\% credible intervals) parameters for each of the 203 Barro Colorado Island species used in this study. Blue trendline with grey shading shows average ($\pm$ 95\% credible intervals) expected relationship across observed trait ranges.}
 \label{fig3}
@@ -211,7 +213,7 @@ We calculated a gap index as a measure of a species' light dependence using annu
 
 \showmatmethods % Display the Materials and Methods section
 
-\acknow{We thank H. Muller-Landau and anonymous reviewers for feedback and B. Carpenter for technical advice. We acknowledge S. Hubbell, R. Foster, R. Pérez, S. Aguilar, S. Lao, S. Dolins, \& hundreds of field workers for their contribution; and the National Science Foundation, Smithsonian Tropical Research Institute, \& MacArthur Foundation for funding the design, collection, quality control and management of long-term growth data at BCI. Fig. 1a uses images by Tracey Saxby, IAN Image Library. J.C., R.F., L.M. and D.S. were supported by the Science and Industry Endowment Fund (SIEF; RP04-174). D.F. and M.W. were supported by fellowships from the Australian Research Council.}
+\acknow{We thank H. Muller-Landau and anonymous reviewers for feedback and B. Carpenter for technical advice. We acknowledge S. Hubbell, R. Foster, R. Pérez, S. Aguilar, S. Lao, S. Dolins, \& hundreds of field workers for their contribution; and the National Science Foundation, Smithsonian Tropical Research Institute, \& MacArthur Foundation for funding the design, collection, quality control and management of long-term growth data at BCI. Fig. 1a uses images by Tracey Saxby, IAN Image Library. J.S.C., R.G.F., L.M. and D.S. were supported by the Science and Industry Endowment Fund (SIEF; RP04-174). D.S.F. and M.W. were supported by fellowships from the Australian Research Council.}
 
 \showacknow % Display the acknowledgements section
 

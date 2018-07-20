@@ -21,7 +21,7 @@ plot_fig4 <- function(model,
                         hazard_curve, 
                         colour_by_trait = FALSE, 
                         xlab= NULL, 
-                        ylab=("1-yr mortality probability"))
+                        ylab=NULL)
   
   p2 <- plot_mu_curves(model, 
                        growth_range, 
@@ -29,7 +29,7 @@ plot_fig4 <- function(model,
                        trait_values = c(0.2,0.8), 
                        hazard_curve, 
                        xlab=NULL, 
-                       ylab = ("1-yr mortality probability"), 
+                       ylab =NULL, 
                        legend_position = c(0.75,0.7),
                        legend_label = expression("Wood density"~(g~cm^-3))) +
           ggplot2::theme(legend.background = ggplot2::element_rect(fill = "transparent"),
@@ -46,7 +46,7 @@ plot_fig4 <- function(model,
                        trait_values = c(3,180),
                        hazard_curve, 
                        xlab=NULL, 
-                       ylab = ("1-yr mortality probability"), 
+                       ylab = NULL, 
                        legend_position = c(0.75,0.7),                       
                        legend_label = expression("Maximum dbh (cm)")) +
           ggplot2::theme(legend.background = ggplot2::element_rect(fill = "transparent"),
@@ -63,7 +63,7 @@ plot_fig4 <- function(model,
                        trait_values = c(0.5, 0.8), 
                        hazard_curve, 
                        xlab=expression("Annual dbh growth"~("cm yr"^-1)), 
-                       ylab = ("1-yr mortality probability"), 
+                       ylab = NULL, 
                        legend_position = c(0.75,0.8),
                        legend_label = expression("Light demand"))  +
           ggplot2::theme(legend.background = ggplot2::element_rect(fill = "transparent"),
@@ -74,5 +74,6 @@ plot_fig4 <- function(model,
                      legend.key.size = unit(0.5, "cm"),
                      legend.title.align =2)
   
+  # ("1-yr mortality probability")
   cowplot::plot_grid(p1,p2,p3,p4, ncol=1, labels=LETTERS[1:4], label_size = 7)
 }

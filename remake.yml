@@ -204,7 +204,7 @@ targets:
     command: plot_fig2(logloss_summaries)
     plot:
       width: 6.5
-      height: 3
+      height: 2
       onefile: FALSE
     cleanup_level: tidy
     
@@ -212,7 +212,7 @@ targets:
     command: plot_fig3(spp_params, mu_param_trends_by_trait)
     plot:
       width: 6.5
-      height: 5
+      height: 3.5
       onefile: FALSE
     cleanup_level: tidy
 
@@ -220,7 +220,7 @@ targets:
     command: plot_fig4(final_model, BCI_training_full)
     plot:
       width: 3.46
-      height: 5
+      height: 4
       onefile: FALSE
     cleanup_level: tidy
     
