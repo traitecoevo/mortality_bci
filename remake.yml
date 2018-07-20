@@ -178,6 +178,10 @@ targets:
     command: param_by_trait_mu_trends(final_model, BCI_training_full, I(c("wood_density","gap_index","dbh_95")))
     cleanup_level: tidy
 
+  #------------- Tables ---------------------------
+  table1:
+    command: table_1(final_model, BCI_training_full)
+    cleanup_level: tidy
   #------------- Figures ---------------------------
   ms/figures/fig1_tree.png:
     download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png

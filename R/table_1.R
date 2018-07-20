@@ -117,7 +117,7 @@ table_1 <- function(model, data) {
     dplyr::ungroup() %>%
     tidyr::gather(Model, mean_prob_death, -c(sp,prop_died)) %>%
     dplyr::group_by(Model) %>%
-    dplyr::mutate(r2 = cor(mean_prob_death,prop_died)^2) %>%
+    dplyr::mutate(r2 = round(cor(mean_prob_death,prop_died)^2,3)) %>%
     dplyr::select(-c(sp, prop_died,mean_prob_death)) %>%
     dplyr::distinct()
   
@@ -131,5 +131,7 @@ table_1 <- function(model, data) {
     dplyr::summarise_all(.funs = AUC, response =predictions$dead_next_census) %>%
     tidyr::gather(Model, AUC)
   
-  dplyr::left_join(R2, auc, by="Model")
+  #x <- dplyr::left_join(R2, auc, by="Model")
+  
+ R2
 }

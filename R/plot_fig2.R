@@ -75,6 +75,6 @@ plot_fig2 <- function(logloss_summaries) {
     plot_theme(strips = TRUE) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle=15, hjust = 1),
                    panel.spacing = unit(.5, 'pt'),
-                   strip.text.x = ggplot2::element_text(size=4),
+                   strip.text.x = ggplot2::element_text(size=5),
                    strip.background=element_rect(colour ="lightgrey"))
 }

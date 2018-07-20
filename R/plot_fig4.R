@@ -65,7 +65,7 @@ plot_fig4 <- function(model,
                        xlab=expression("Annual dbh growth"~("cm yr"^-1)), 
                        ylab = ("1-yr mortality probability"), 
                        legend_position = c(0.75,0.8),
-                       legend_label = expression("Shade intolerance"))  +
+                       legend_label = expression("Light demand"))  +
           ggplot2::theme(legend.background = ggplot2::element_rect(fill = "transparent"),
                      legend.key = ggplot2::element_rect(fill = "transparent", 
                                                         color = "transparent"),
