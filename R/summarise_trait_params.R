@@ -12,7 +12,7 @@ summarise_trait_params <- function(model) {
   fit <- model$fits[[1]] # Indexing to avoid list name
   samples <- rstan::extract(fit, pars=c("a1","a2","a3","b1","b2","b3","c1","c2","c3"))
   
-  res <-lapply(samples, function(x) {
+  lapply(samples, function(x) {
     cbind.data.frame(
       mean = mean(x),
       median = median(x),

@@ -28,11 +28,16 @@ plot_fig2 <- function(logloss_summaries) {
                                                                      "rho_size_all",
                                                                      "gap_size_all"), "2_traits"),
                   comparison = replace(comparison, comparison == "multi_trait_all", "3_traits"),
-                  comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "census"),
+                  comparison = replace(comparison, comparison =="function_growth_comparison" & model=="base_hazard", "null_model"),
+                  stage = factor(comparison, 
+                                 levels=c("null_model","function_growth_comparison","1_trait","2_traits", 
+                                          "3_traits","species_random_effects"),
+                                 labels = c("bold(Stage~1)","bold(Stage~2)","bold(Stage~3)", 
+                                            "bold(Stage~4)", "bold(Stage~5)","bold(Stage~6)")),
                   comparison = factor(comparison, 
-                                      levels=c("null_model","census","function_growth_comparison","1_trait","2_traits", 
+                                      levels=c("null_model","function_growth_comparison","1_trait","2_traits", 
                                                "3_traits","species_random_effects"),
-                                      labels = c("Null","Census","Growth~rate","1~trait~(alpha~beta~gamma)", 
+                                      labels = c("Baseline","Growth~rate","1~trait~(alpha~beta~gamma)", 
                                                  "2~traits~(alpha~beta~gamma)", "3~traits~(alpha~beta~gamma)","Species")),
                   model_type = factor(model_type, levels = c("null_model_null_model_none",
                                                              "function_growth_comparison_base_hazard_none",
@@ -66,9 +71,10 @@ plot_fig2 <- function(logloss_summaries) {
                                        "gap_size_all_base_growth_hazard_gap_size_abc" = expression(psi + upsilon),
                                        "multi_trait_all_base_growth_hazard_rho_gap_size_abc" = expression(psi + rho + upsilon),
                                        "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]))) +
-    ggplot2::facet_grid(.~comparison, scales='free_x', drop=TRUE, space = "free_x", labeller = ggplot2::label_parsed) +
+    ggplot2::facet_grid(.~stage + comparison, scales='free_x', drop=TRUE, space = "free_x", labeller = labeller(comparison = ggplot2::label_parsed, stage = ggplot2::label_parsed)) +
     plot_theme(strips = TRUE) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle=15, hjust = 1),
                    panel.spacing = unit(.5, 'pt'),
-                   strip.text.x = ggplot2::element_text(size=4))
+                   strip.text.x = ggplot2::element_text(size=4),
+                   strip.background=element_rect(colour ="lightgrey"))
 }
