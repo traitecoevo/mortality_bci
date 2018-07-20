@@ -17,7 +17,7 @@ plot_fig3 <- function(spp_params, mu_trend) {
   
   breaks <- c(0.001,0.01,0.1, 1, 10)
   labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
-  trait_label_lookup <- c(wood_density ="Wood~density~(g~cm^-3)", gap_index = "Shade~intolerance", dbh_95 = "log10(Max~dbh~(cm))")
+  trait_label_lookup <- c(wood_density ="Wood~density~(g~cm^-3)", gap_index = "Light~demand", dbh_95 = "log10(Max~dbh~(cm))")
   param_label_lookup <- c(alpha = "Low~growth~effect~(alpha)", beta = "Growth~decay~rate~(beta)", gamma ="Baseline~hazard~(gamma)")
   
   ggplot2::ggplot(spp_params, ggplot2::aes(x = trait_value2,y = mean)) + 
