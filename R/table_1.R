@@ -99,14 +99,14 @@ table_1 <- function(model, data) {
       prop_died,
       dead_next_census,
       `Full model` = full_model, 
-      `Full - Census error` = full_minus_census, 
-      `Full - Wood density` = full_minus_rho, 
-      `Full - Gap index` = full_minus_gap,
-      `Full - Max dbh` = full_minus_dbh,
-      `Full - Species error` = full_minus_sppre,
-      `Full - Species traits & species error` = full_minus_spp,
-      `Full - Growth dependent hazard` = full_minus_growthdep, 
-      `Full - Growth independent hazard` = full_minus_growthindep)
+      `Full minus census error` = full_minus_census, 
+      `Full minus wood density` = full_minus_rho, 
+      `Full minus light demand` = full_minus_gap,
+      `Full minus max dbh` = full_minus_dbh,
+      `Full minus species error` = full_minus_sppre,
+      `Full minus species traits & species error` = full_minus_spp,
+      `Full minus growth dependent hazard` = full_minus_growthdep, 
+      `Full minus growth independent hazard` = full_minus_growthindep)
   
   
   # Calculate R2 relative to observed proportion of death per species
@@ -117,7 +117,7 @@ table_1 <- function(model, data) {
     dplyr::ungroup() %>%
     tidyr::gather(Model, mean_prob_death, -c(sp,prop_died)) %>%
     dplyr::group_by(Model) %>%
-    dplyr::mutate(r2 = round(cor(mean_prob_death,prop_died)^2,3)) %>%
+    dplyr::mutate(`$r^2$` = round(cor(mean_prob_death,prop_died)^2,3)) %>%
     dplyr::select(-c(sp, prop_died,mean_prob_death)) %>%
     dplyr::distinct()
   
@@ -129,9 +129,9 @@ table_1 <- function(model, data) {
   auc <- predictions %>%
     dplyr::select(-c(dead_next_census,sp, prop_died)) %>%
     dplyr::summarise_all(.funs = AUC, response =predictions$dead_next_census) %>%
-    tidyr::gather(Model, AUC)
+    tidyr::gather(Model, AUC) %>%
+    dplyr::mutate(AUC = round(AUC,3))
   
-  #x <- dplyr::left_join(R2, auc, by="Model")
+  dplyr::left_join(R2, auc, by="Model")
   
- R2
 }

@@ -29,7 +29,7 @@ plot_fig3 <- function(spp_params, mu_trend) {
     ggplot2::geom_point(shape= 21, fill='red') +
     ggplot2::geom_line(data = mu_trend, ggplot2::aes(x = trait_value2, y= mean), col='blue') +
     ggplot2::scale_y_log10(breaks= breaks, labels = labels) +
-    ggplot2::ylab(expression("Instantaneous hazard rate"~("yr"^-1))) +
+    ggplot2::ylab(expression("Hazard rate"~("yr"^-1))) +
     ggplot2::xlab("Species value") +
     plot_theme(strips = TRUE) +
     theme(panel.border = ggplot2::element_rect(color="grey", size=0.5, linetype="solid", fill=NA),
