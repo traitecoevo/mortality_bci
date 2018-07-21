@@ -66,18 +66,17 @@ Tree death is a fundamental process driving population dynamics, nutrient cyclin
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
-\dropcap{R}ates of plant mortality are known to vary widely among individuals within a species, among coexisting species, between forests, and from year-to-year \cite{Kobe:1995tw,Wyckoff:2002ul,Poorter:2008iu}. This variation has considerable consequences for forest structure and dynamics. For example, the death of a single large tree can transfer up to 20,000 kg of carbon from living to decaying carbon pools \cite{Chave:2005hz} and creates a gap in the canopy that can restart a successional race, during which 100's of plants may die while competing for a spot in the sun. In models of forest dynamics, variation in tree mortality rates has been shown to have significantly larger impacts on forest structure relative to variation in absolute growth rates \cite{Johnson-2016}. Improving our understanding of the mortality process is therefore a priority for making accurate predictions about population, carbon and nutrient dynamics of forests; especially in an era of increased climate-driven forest die-off \cite{Anderegg:2012ep}.
+\dropcap{R}ates of plant mortality vary widely among individuals within a species, among coexisting species, between forests, and from year-to-year \cite{Kobe:1995tw,Wyckoff:2002ul,Poorter:2008iu}. This variation has large consequences for forest structure and dynamics. The death of a large tree can transfer up to 20,000 kg of carbon from living to decaying carbon pools \cite{Chave:2005hz}, while also creating a gap in the canopy that restarts a successional race, during which 100's of plants will die while competing for a spot in the sun. Models of forest dynamics suggest variation in tree mortality rates can have larger impacts on forest structure relative than variation in growth rates \cite{Johnson-2016}. Improving our understanding of the mortality process is therefore a priority for accurately predicting changes in population, carbon and nutrient dynamics of forests; especially in an era of rapid environmental change \cite{Anderegg:2012ep}.
 
-Two difficulties arise when studying tree mortality in tropical rainforests. The first is that large population sizes and long periods of observation are required to make accurate inferences into how various factors affect tree mortality rates \cite{Poorter:2008iu}. This requirement arises in part because the observed outcome -- alive vs. dead -- is one step removed from the variable we ideally want to measure: $\lambda_i(t)$, the mortality rate for individual $i$ at time $t$, also known as the ``hazard function or hazard rate''. In classic survival analysis \cite{Kleinbaum:2012tn, Zens:2003jv}, the probability an individual dies between times $t_1$ and $t_2$ is a function of both $\lambda_i(t)$, and the amount of time lapsed between $t_1$ and $t_2$:
+Two difficulties arise when studying tree mortality in tropical rainforests. The first is that large population sizes and long periods of observation are required to make accurate inferences into how various factors affect tree mortality rates \cite{Poorter:2008iu}. This requirement arises in part because the observed outcome -- alive vs. dead -- is one step removed from the variable we ideally want to measure: $\lambda_i(t)$, the mortality (or `hazard`) rate for individual $i$ at time $t$. In classic survival analysis \cite{Kleinbaum:2012tn, Zens:2003jv}, the probability an individual dies between times $t_1$ and $t_2$ is a function of both $\lambda_i(t)$, and the amount of time lapsed:
 \begin{equation} \label{eq:mortality_model}
 p_{i,t_1\rightarrow t_2} = 1 - \exp\left(- \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t\right).
 \end{equation}
-Here $\int_{t_1}^{t_2} \lambda_i(t) {\rm d}t$ can be thought of as the cumulative hazard an individual obtains between $t_1$ and $t_2$\cite{Kleinbaum:2012tn}. The observed survival outcome $S_{i, t_1\rightarrow t_2}$ (0 = alive, 1 = died) is then a realisation of this cumulative hazard on a probability scale.
+Here $\int_{t_1}^{t_2} \lambda_i(t) {\rm d}t$ is the cumulative hazard an individual experiences from  $t_1$ and $t_2$\cite{Kleinbaum:2012tn}. The observed survival outcome $S_{i, t_1\rightarrow t_2}$ (0 = alive, 1 = died) is then a realisation of this cumulative hazard on a probability scale:
 \begin{equation}
 S_{i,t_1\rightarrow t_2} \sim \textrm{Bernoulli}(p_{i,t_1\rightarrow t_2}).
 \end{equation}
-
-As trees are long-lived and we are trying to estimate the shape of a continuous hazard function ($\lambda_i(t)$) from binary data, large sample sizes collected over long durations are required. Detailed studies of tree mortality have thus only recently become possible, with the accumulation of growth and survival data from repeat surveys spanning several decades in plots containing thousands of individuals \cite{Anderson-Teixeira-2015a}.
+Second, as trees are long-lived and we are estimating the shape of a continuous hazard function ($\lambda_i(t)$) from binary data, large sample sizes collected over long durations are required. Detailed studies of tree mortality have thus only recently become possible, with the accumulation of growth and survival data from repeat surveys spanning several decades in plots containing thousands of individuals \cite{Anderson-Teixeira-2015a}.
 
 \section*{Towards a unified model of tree mortality}
 
@@ -100,7 +99,7 @@ D) The predictive skill of alternative models was evaluated via 10-fold cross va
 
 Here, we develop a tree mortality model that not only reconciles the conflicting growth-mortality relationships observed among individuals and between species, but also explicitly accounts for carbon-dependent and carbon-independent hazards. We achieve this by evaluating the following unified hazard function that incorporates individual-, species-, and temporal effects:
 \begin{equation} \label{eq:model}
-\lambda_{i}(t) = \bigg(\overbrace{\gamma_{s[i]}}^{\text{Carbon independent}} + \overbrace{\alpha_{s[i]} \, \textrm{e}^{-\beta_{s[i]} \, X_i(t)}}^{\text{Carbon dependent}}\bigg) \times \overbrace{\delta_{t}}^{\text{Census}}.
+\lambda_{i}(t) = \bigg(\overbrace{\gamma_{s}}^{\text{Carbon independent}} + \overbrace{\alpha_{s} \, \textrm{e}^{-\beta_{s} \, X_{s,i}(t)}}^{\text{Carbon dependent}}\bigg) \times \overbrace{\delta_{t}}^{\text{Census}}.
 \end{equation}
 Eq. \ref{eq:model} allows for the additive, thus independent, effects of carbon-dependent and carbon-independent hazards, includes a negative exponential effect of individual's growth rate, and allows for mortality to vary among censuses, via the random effect $\delta_{t}$. Further, the parameters $\alpha_s$, $\beta_s$ and $\gamma_s$ vary by species, $s$. Here we include the effects of three species traits thought to be major drivers of inter-specific variation in tropical tree mortality -- wood density ($\rho$), light requirement ($\upsilon$) and maximum dbh ($\psi$). We also include species random effects in order to capture species-level differences that are not otherwise accounted for by species traits (for details see Methods).
 
@@ -115,7 +114,7 @@ In the remaining stages, we then take the most predictive hazard function and gr
 \section*{Results}
 
 \subsection*{Mortality over time}
-Comparing the three 5-year intervals between censuses from 1995 to 2010, we found average mortality rates declining over time. The highest proportion of tree death occurred between 1995\textendash 2000 (\Sexpr{prop_deaths(BCI_training_full, 1)}\%) followed by 2000\textendash 2005 (\Sexpr{prop_deaths(BCI_training_full, 2)}\%) and 2005\textendash 2010 (\Sexpr{prop_deaths(BCI_training_full, 3)}\%). Consequently, when we allowed hazard rates to be scaled by census (i.e. adding the term $\delta$) we observed a small increase in predictive skill (Fig. \ref{fig2}A). Individual census effects can be found in Table S1.
+Comparing the three 5-year intervals between censuses from 1995 to 2010, we found average mortality rates declining over time. The highest proportion of tree death occurred between 1995\textendash 2000 (\Sexpr{prop_deaths(BCI_training_full, 1)}\%) followed by 2000\textendash 2005 (\Sexpr{prop_deaths(BCI_training_full, 2)}\%) and 2005\textendash 2010 (\Sexpr{prop_deaths(BCI_training_full, 3)}\%). Consequently, when we allowed hazard rates to be scaled by census (i.e. adding the term $\delta$) we observed a small increase in predictive skill (Fig. \ref{fig2}A). Table S1 gives individual census effects.
 
 \begin{figure*}[!ht]
 \includegraphics{figures/fig2.pdf}
@@ -125,7 +124,7 @@ A) Six sequential stages of model selection with each stage increasing in comple
 \end{figure*}
 
 \subsection*{Hazard functions}
-Comparing the three hazard functions summarised in Fig. \ref{fig1}B, we found that the third function --- the function containing both growth-dependent and growth-independent hazard terms, i.e. $(\alpha e^{-\beta X_{i}} + \gamma)\delta_t$ --- significantly outperformed both the baseline hazard or growth-dependent only functions (Fig. \ref{fig2}). Moreover, we found that predictive skill was higher when using stem diameter growth over stem-area growth (Fig. \ref{fig2}A). A summary of hyper parameter estimates can be found in Table S1.
+Comparing the three hazard functions summarised in Fig. \ref{fig1}B, we found that the third function --- the function containing both growth-dependent and growth-independent hazard terms, i.e. $(\alpha e^{-\beta X_{i}} + \gamma)\delta_t$ --- significantly outperformed both the baseline hazard or growth-dependent only functions (Fig. \ref{fig2}). Moreover, we found that predictive skill was higher when using stem diameter growth over stem-area growth (Fig. \ref{fig2}A). Table S1 gives a summary of hyper parameter estimates.
 
 \begin{figure*}[ht!]
 \includegraphics{figures/fig3.pdf}
