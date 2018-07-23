@@ -55,7 +55,7 @@ Here we provide some further details on methods and additional results, suppleme
 
 \section{Estimating True Growth}
 
- Growth rates were estimated from field measurements of diameter, which inevitably include observation error. In our dataset, \Sexpr{prop_neg_growth(BCI_model_dataset_true_dbh)}\% of estimated growth rates were negative. To ensure our mortality model was not biased by these unlikely values we first applied a probabilistic model to estimate \textit{``true growth''}, taking into account measurement error and the distribution of growth rate across the community. To achieve this we used another dataset collected at BCI to explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
+ Growth rates were estimated from field measurements of diameter, which inevitably include observation error. In our dataset, \Sexpr{prop_neg_growth(BCI_training_full)}\% of estimated growth rates were negative. To ensure our mortality model was not biased by these unlikely values we first applied a probabilistic model to estimate \textit{``true growth''}, taking into account measurement error and the distribution of growth rate across the community. To achieve this we used another dataset collected at BCI to explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
 
 We modelled true growth by first estimating the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma(BCI_dbh_error_data)} (i.e. the observed measurement error):
 
@@ -100,9 +100,9 @@ Standard deviations associated with species random effects (i.e. $\sigma_{a0}$, 
 
 For models that did not include species random effects, single intercepts were estimated for each parameter using log normal distributions centered on zero with standard deviations of 2.5.
 
-We estimated wood density effects (i.e. $\alpha_1$, $\beta_1$ and $\gamma_1$) using normal priors centered on zero and a standard deviation of 2.5:
+Effects of species traits -- wood density, $\rho$, light demand, $\upsilon$ and maximum dbh, $\psi$ (i.e. $\alpha_{1-3}$, $\beta_{1-3}$ and $\gamma_{1-3}$) using normal priors centered on zero and a standard deviation of 2.5:
 \begin{equation} \label{eq:rho_effects}
-\alpha_1, \beta_1, \gamma_1 \sim \mathcal{N}\left(0, 2.5\right).\\
+\alpha_{1-3}, \beta_{1-3}, \gamma_{1-3} \sim \mathcal{N}\left(0, 2.5\right).\\
 \end{equation}
 
 We accounted for possible variation in mortality rates across different census periods by allowing $\lambda_i$ to be scaled by $\delta_t$ for each census $t$. We estimated $\delta_t$ as a random realization from a log-normal distribution centered on zero and a variance parameter $\sigma_{\delta}$ defines the variation in census effects:
@@ -131,10 +131,8 @@ If $S_i = 1  \rightarrow \mathcal{L}_i = \log(p) = \textrm{log1m\_exp}(-\Lambda)
 Models were implemented in the `Stan` framework, which uses its own specific syntax to encode models \cite{StanDevelopmentTeam:2015uz}.  Code for all models implemented are available in the supplied source code. As an example, we include here the code for the final model fit, including with species random effects, wood density effect and census effect.
 
 <<echo=FALSE, highlight=TRUE, comment = ''>>=
-task <- tasks_2_run("final_model")[1, ]
-chunks <- get_final_model_chunks(task)
-model <- make_stan_model(chunks)
-code <- gsub("\n      ", "\n", model$model_code)
+model <- final_model$fits[[1]]@stanmodel@model_code
+code <- gsub("\n      ", "\n", model)
 code <- strsplit(code, "\n")[[1]]
 writeLines(strwrap(code, width = 50, exdent = 10))
 @
@@ -145,7 +143,7 @@ writeLines(strwrap(code, width = 50, exdent = 10))
 \clearpage
 
 <<param-table,results="asis",center=TRUE, echo= FALSE>>= 
-hyperparam_table(final_model)
+tableS1(final_model)
 @
 
 \clearpage

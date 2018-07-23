@@ -27,16 +27,8 @@ targets:
       - data/bci_data_full.rds
       - all_model_diagnostics
       - ms/figures/fig1_tree.png
-      - ms/figures/fig1.pdf
-      - ms/figures/fig2.pdf
-      - ms/figures/fig3.pdf
-      - ms/figures/fig4.pdf
-      - ms/figures/supp_fig1.png
-      - ms/figures/supp_fig2.pdf
-      - ms/figures/supp_fig3.pdf
-      - ms/figures/supp_fig4.pdf
-      - ms/figures/supp_fig5.pdf
       - ms/manuscript.pdf
+      - ms/supplementary.pdf
       
   #------------- Download data ---------------------------
   downloads/bci.spptable.rdata:
@@ -287,3 +279,25 @@ targets:
       - ms/figures/fig3.pdf
       - ms/figures/fig4.pdf
     cleanup_level: tidy
+
+  ms/supplementary.tex:
+    depends:
+      - BCI_model_data
+      - BCI_dbh_error_data
+      - BCI_training_sets
+      - BCI_training_full
+      - logloss_summaries
+      - final_model
+    knitr: TRUE
+
+  ms/supplementary.pdf:
+    command: latex_build("ms/supplementary.tex", "ms/refs.bib", clean=TRUE)
+    depends:
+      - ms/pnas-new.cls
+      - ms/pnasresearcharticle.sty
+      - ms/widetext.sty
+      - ms/figures/supp_fig1.png
+      - ms/figures/supp_fig2.pdf
+      - ms/figures/supp_fig3.pdf
+      - ms/figures/supp_fig4.pdf
+      - ms/figures/supp_fig5.pdf
