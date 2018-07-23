@@ -129,8 +129,8 @@ table_1 <- function(model, data) {
   auc <- predictions %>%
     dplyr::select(-c(dead_next_census,sp, prop_died)) %>%
     dplyr::summarise_all(.funs = AUC, response =predictions$dead_next_census) %>%
-    tidyr::gather(Model, AUC) %>%
-    dplyr::mutate(AUC = round(AUC,3))
+    tidyr::gather(Model, AUROC) %>%
+    dplyr::mutate(AUROC = round(AUROC,3))
   
   dplyr::left_join(R2, auc, by="Model")
   

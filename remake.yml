@@ -272,6 +272,7 @@ targets:
       - BCI_training_full
       - logloss_summaries
       - final_model
+      - table1
     knitr: TRUE
     cleanup_level: tidy
 
