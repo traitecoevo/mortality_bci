@@ -53,13 +53,13 @@ tableS1 <- function(model) {
                                                 "Maximum dbh effect on $\\alpha$ ($\\alpha_3$)",
                                                 "Wood density effect on $\\beta$ ($\\beta_1$)",
                                                 "Light demand effect on $\\beta$ ($\\beta_2$)",
-                                                "Maximum dbh effect on $\\beta$ ($\\alpha_3$)",
+                                                "Maximum dbh effect on $\\beta$ ($\\beta_3$)",
                                                 "Wood density effect on $\\gamma$ ($\\gamma_1$)",
                                                 "Light demand effect on $\\gamma$ ($\\gamma_2$)",
                                                 "Maximum dbh effect on $\\gamma$ ($\\gamma_3$)",
-                                                "Average $\\gamma$ ($\\mu\\gamma$)",
-                                                "Average $\\beta$ ($\\mu\\beta$)",
-                                                "Average $\\alpha$ ($\\mu\\alpha$)")))
+                                                "Mean $\\gamma$ ($\\bar{\\gamma}$)",
+                                                "Mean $\\beta$ ($\\bar{\\beta}$)",
+                                                "Mean $\\alpha$ ($\\bar{\\alpha}$)")))
   
   Hmisc::latex(x, file = "", booktabs = TRUE, rowname = NULL,
                colnamesTexCmd="bfseries",
