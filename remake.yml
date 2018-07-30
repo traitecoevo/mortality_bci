@@ -17,6 +17,7 @@ packages:
   - png
   - gridBase
   - pROC
+  - GGally
 
 sources:
   - R
@@ -254,6 +255,14 @@ targets:
       width: 3.46
       height: 8
     cleanup_level: tidy
+    
+  ms/figures/supp_fig6.pdf:
+    command: plot_trait_cors(BCI_training_full)
+    plot:
+      width: 6
+      height: 6
+      onefile: FALSE
+    cleanup_level: tidy
 
   #------------- Manuscript ---------------------------
   ms/manuscript.tex:
@@ -288,6 +297,7 @@ targets:
       - BCI_training_full
       - logloss_summaries
       - final_model
+      - spp_params
     knitr: TRUE
 
   ms/supplementary.pdf:
@@ -301,3 +311,4 @@ targets:
       - ms/figures/supp_fig3.pdf
       - ms/figures/supp_fig4.pdf
       - ms/figures/supp_fig5.pdf
+      - ms/figures/supp_fig6.pdf

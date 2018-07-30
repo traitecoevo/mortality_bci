@@ -62,7 +62,7 @@ plot_fig2 <- function(logloss_summaries) {
     ggplot2::scale_x_discrete(labels=c("null_model_null_model_none" = expression(gamma),
                                        "function_growth_comparison_base_hazard_none" = expression(gamma~delta["t"]),
                                        "function_growth_comparison_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]})~delta["t"]),
-                                       "function_growth_comparison_base_growth_hazard_none" = expression((alpha*"e"^{-beta~"X"["i"]} + gamma)~delta["t"]),
+                                       "function_growth_comparison_base_growth_hazard_none" = expression((gamma + alpha*"e"^{-beta~"X"["i"]})~delta["t"]),
                                        "size_combinations_base_growth_hazard_abc" = expression("Max dbh"~(psi)),
                                        "rho_combinations_base_growth_hazard_abc" = expression("Wood density"~(rho)),
                                        "gap_combinations_base_growth_hazard_abc" = expression("Light index"~(upsilon)),
@@ -70,7 +70,7 @@ plot_fig2 <- function(logloss_summaries) {
                                        "rho_gap_all_base_growth_hazard_rho_gap_abc" = expression(rho + upsilon),
                                        "gap_size_all_base_growth_hazard_gap_size_abc" = expression(psi + upsilon),
                                        "multi_trait_all_base_growth_hazard_rho_gap_size_abc" = expression(psi + rho + upsilon),
-                                       "species_random_effects_base_growth_hazard_none" = expression((alpha[s]*"e"^{-beta[s]~"X"["i"]} + gamma[s])~delta["t"]))) +
+                                       "species_random_effects_base_growth_hazard_none" = expression((gamma + alpha[s]*"e"^{-beta[s]~"X"["i"]})~delta["t"]))) +
     ggplot2::facet_grid(.~stage + comparison, scales='free_x', drop=TRUE, space = "free_x", labeller = labeller(comparison = ggplot2::label_parsed, stage = ggplot2::label_parsed)) +
     plot_theme(strips = TRUE) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle=15, hjust = 1),

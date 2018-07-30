@@ -63,7 +63,7 @@ tableS1 <- function(model) {
   
   Hmisc::latex(x, file = "", booktabs = TRUE, rowname = NULL,
                colnamesTexCmd="bfseries",
-               col.just = c(rep("c", 4)), label = "table:1",
+               col.just = c("c",rep("l", 3)), label = "table:S1",
                where = "!h",
                caption ="Mean hyper-parameters and coefficients for both species trait and census effects as estimated from full model")
 }

@@ -1,8 +1,8 @@
-\documentclass[9pt,twocolumn,twoside]{pnas-new}
+\documentclass[9pt,singlecolumn,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
 % Note that the use of elements such as single-column equations
 % may affect the guide line number alignment. 
-
+\usepackage{longtable}
 \templatetype{pnasresearcharticle}
 
 \title{
@@ -43,7 +43,6 @@
 \begin{document}
 
 \maketitle
-
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\theequation}{S\arabic{equation}}
@@ -148,6 +147,12 @@ tableS1(final_model)
 
 \clearpage
 
+<<spp-table,results="asis",center=TRUE, echo= FALSE,>>= 
+tableS2(spp_params)
+@
+
+\clearpage
+
 \begin{figure*}[!hb]
 \centering
 \includegraphics[width=0.6\textheight]{figures/supp_fig1.png}
@@ -187,5 +192,11 @@ tableS1(final_model)
 \label{figS5}
 \end{figure*}
 
-
+\clearpage
+\begin{figure*}[!hb]
+\centering
+\includegraphics{figures/supp_fig6}
+\caption{Pairwise comparison between species' wood density, light demand and maximum dbh.}
+\label{figS6}
+\end{figure*}
 \end{document}

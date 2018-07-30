@@ -25,22 +25,20 @@ plot_fig1 <- function(file_alive, file_dead, file_crossval) {
     1-exp(-(0.13 * exp(-10 * x) + 0.03))
   }
   
+  # Plot hazard curves
+  hazard_plot <- function(f, text){
+    x <- seq(0,1,length.out = 50)
+    empty_plot()
+    lines(x, f(x), type='l', col="#d7301f")
+    text(0.1, 0.12, text, pos=4, xpd=NA)
+  }
+  
   # Function to add labels to panels
   my_label <- function(text, x=-0.1) label(x, 1.3, text)
   
   # Plot layout
-  layout(matrix(c(1,1,1,2,3,4,5,5,5,6,6,6), byrow=TRUE, ncol=3))
+  layout(matrix(c(1,2,3,4,4,4,5,5,5,6,6,6), byrow=TRUE, ncol=3))
   par(mar=c(1,1,2.5,1), oma=c(1,1,1,1), cex=0.5)
-  
-  # Tree growth diagram
-  plot(1:2, type='n', ann=FALSE, axes=FALSE, xlim=c(-1,1), ylim=c(-1,1))
-  my_label("A) Repeat census data", x=-0.06)
-  
-  # note we are only plotting to last viewport, but calls to other two needed to make figure work.
-  vps <- baseViewports()
-  pushViewport(vps$inner, vps$figure, vps$plot)
-  plot_tree_life(file_alive, file_dead)
-  popViewport(3)
   
   # Produce empty plot
   empty_plot <- function(){
@@ -50,17 +48,9 @@ plot_fig1 <- function(file_alive, file_dead, file_crossval) {
     axis(2, at = c(-1, 2),labels=NA)
   }
   
-  # Plot hazard curves
-  hazard_plot <- function(f, text){
-    x <- seq(0,1,length.out = 50)
-    empty_plot()
-    lines(x, f(x), type='l', col="#d7301f")
-    text(0.1, 0.12, text, pos=4, xpd=NA)
-  }
-  
   # Plot base hazard
   hazard_plot(base_only_haz, expression(gamma))
-  my_label("B) Alternative mortality functions", x=-0.36)
+  my_label("A) Alternative mortality functions", x=-0.36)
   mtext("Mortality rate", 2, line=1, cex=0.5)
   
   # Plot growth-dependent hazard
@@ -68,7 +58,17 @@ plot_fig1 <- function(file_alive, file_dead, file_crossval) {
   mtext("Growth rate", 1, line =1, cex=0.5)
   
   # Example full baseline + growth-dependent hazard
-  hazard_plot(base_growth_haz, expression(alpha*"e"^{-beta~"X"}+gamma))
+  hazard_plot(base_growth_haz, expression(gamma + alpha*"e"^{-beta~"X"}))
+  
+  # Tree growth diagram
+  plot(1:2, type='n', ann=FALSE, axes=FALSE, xlim=c(-1,1), ylim=c(-1,1))
+  my_label("B) Repeat census data", x=-0.10)
+  
+  # note we are only plotting to last viewport, but calls to other two needed to make figure work.
+  vps <- baseViewports()
+  pushViewport(vps$inner, vps$figure, vps$plot)
+  plot_tree_life(file_alive, file_dead)
+  popViewport(3)
   
   # Plot logloss curve
   par(mar=c(2.5,3,2,1))
