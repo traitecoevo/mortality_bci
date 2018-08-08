@@ -23,9 +23,48 @@
 
 Here we provide some further details on methods and additional results, supplementing those presented in the main text. Section ``S1-Estimating True Growth'' describes a probabilistic methods used to estimate individual growth from field measurements, taking into account measurement error and the distribution of growth rate across the community. Section ``S2-Parameter distributions'' describes the distributions applied to species-level random effects and priors put over parameters in the fitted model. Section ``S3-Numerical optimisation'' outlines some numerical concerns in estimating logloss, while Section ``S4-Example Stan code'' gives an example of the code fitted to the data. Code and data reproducing the results in this paper are available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}.
 
+\section*{An overview of methods for estimating mortality}
+
+While a variety of statistical methods have been applied to model tree mortality, these vary in two key ways. First, some methods model binary survival outcomes directly, while others seek to estimate the underlying (time-dependent) mortality rate experienced by a plant. Estimating hazard rates has the advantage that the model naturally incorporates census interval, and so can be used to make predictions across different time intervals. 
+
+Second, models differ in the way the hazard or survival curve responds to covariates. Some studies estimate average mortality rates for populations of each species, thereby quantifying differences between species but ignoring variation among individuals within each species. Most other studies use a model structure which in one way or another allows mortality or survival to decline to zero.
+
+Other studies, model hazard rates using either a proportional hazards structure, such as a Cox proportional-hazard model or complementary-log-log link binomial regression \cite{Kleinbaum:2012tn}, or otherwise directly as an negative exponential function of growth rate. In all these cases, large growth rates cause predicted mortality to decline to zero, such that fast growing individuals never die (Fig 1b). The third approach models survival outcomes rather mortality rates per se, using a logistic function (either via a logistic regression, or GLM with logit link). 
+
+
+
+Two difficulties arise when studying tree mortality in tropical rainforests. The first is that large population sizes and long periods of observation are required to make accurate inferences into how various factors affect tree mortality rates \cite{Poorter:2008iu}. This requirement arises in part because the observed outcome -- alive vs. dead -- is one step removed from the variable we ideally want to measure: $\lambda_i(t)$, the mortality (or `hazard`) rate for individual $i$ at time $t$. In classic survival analysis \cite{Kleinbaum:2012tn, Zens:2003jv}, the probability an individual dies between times $t_1$ and $t_2$ is a function of both $\lambda_i(t)$, and the amount of time lapsed:
+\begin{equation} \label{eq:mortality_model}
+p_{i,t_1\rightarrow t_2} = 1 - \exp\left(- \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t\right).
+\end{equation}
+Here $\int_{t_1}^{t_2} \lambda_i(t) {\rm d}t$ is the cumulative hazard an individual experiences from  $t_1$ and $t_2$\cite{Kleinbaum:2012tn}. The observed survival outcome $S_{i, t_1\rightarrow t_2}$ (0 = alive, 1 = died) is then a realisation of this cumulative hazard on a probability scale:
+\begin{equation}
+S_{i,t_1\rightarrow t_2} \sim \textrm{Bernoulli}(p_{i,t_1\rightarrow t_2}).
+\end{equation}
+Second, as trees are long-lived and we are estimating the shape of a continuous hazard function ($\lambda_i(t)$) from binary data, large sample sizes collected over long durations are required. Detailed studies of tree mortality have thus only recently become possible, with the accumulation of growth and survival data from repeat surveys spanning several decades in plots containing thousands of individuals \cite{Anderson-Teixeira-2015a}.
+
+
+outcomes are modelled using a logistic function (either via a logistic regression, or 
+
+
+An individual's total hazard at a given time point is therefore the sum of these two independent hazards. However, to date, most statistical models of tree mortality do not explicitly estimate the independent effects of these two fundamental hazards faced by plants. Instead, plant mortality is typically modelled using: 1) logistic regression (i.e. with logit link), which does not estimate a rate, but rather the log odds of death at a given time point; or 2) via a proportional hazards approach such as a Cox proportional-hazard model or complementary-log-log link binomial regression, both of which assume hazards are multiplicative, and therefore, not independent of one another \cite{Kleinbaum:2012tn}.
+
+While some methods (like logistic regression) model survival outcomes directly, it preferable to estimate a hazard rate, as these can be rescaled across different time intervals \cite{Kleinbaum:2012tn, Zens:2003jv}.
+
+
+Second, as trees are long-lived and we are estimating the shape of a continuous hazard function ($\lambda_i(t)$) from binary data, large sample sizes collected over long durations are required. Detailed studies of tree mortality have thus only recently become possible, with the accumulation of growth and survival data from repeat surveys spanning several decades in plots containing thousands of individuals \cite{Anderson-Teixeira-2015a}.
+
+
+Previous approaches for estimating $\lambda_i(t)$ have applied either an average rate per species, or a multiplicative model implying an decline to zero as growth rate 
+Various
+
+Second, as trees are long-lived and we are estimating the shape of a continuous hazard function ($\lambda_i(t)$) from binary data, large sample sizes collected over long durations are required. Detailed studies of tree mortality have thus only recently become possible, with the accumulation of growth and survival data from repeat surveys spanning several decades in plots containing thousands of individuals \cite{Anderson-Teixeira-2015a}.
+
+
+
 \section*{Estimating True Growth}
 
- Growth rates were estimated from field measurements of diameter, which inevitably include observation error. In our dataset, \Sexpr{prop_neg_growth(BCI_training_full)}\% of estimated growth rates were negative. To ensure our mortality model was not biased by these unlikely values we first applied a probabilistic model to estimate \textit{``true growth''}, taking into account measurement error and the distribution of growth rate across the community. To achieve this we used another dataset collected at BCI to explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
+Growth rates were estimated from field measurements of diameter, which inevitably include observation error. In our dataset, \Sexpr{prop_neg_growth(BCI_training_full)}\% of estimated growth rates were negative. To ensure our mortality model was not biased by these unlikely values we first applied a probabilistic model to estimate \textit{``true growth''}, taking into account measurement error and the distribution of growth rate across the community. To achieve this we used another dataset collected at BCI to explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
 
 We modelled true growth by first estimating the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma(BCI_dbh_error_data)} (i.e. the observed measurement error):
 
@@ -49,6 +88,12 @@ The final diameter measurement for each individual $i$, $D_{i,2}$ was estimated 
 where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centered on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm yr$^{-1}$.
 
 Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis. Fig. \ref{figS1} illustrates observed and estimated diameters, and growth rate estimated from raw data including measurement error and from the probabilistic model.
+
+\section*{Estimating species light demand}
+
+A species' light demand was calculated using annual canopy census data collected during 1985\textendash1990 and 1990\textendash1995. The canopy census recorded, in all 5 by 5 m subplots across the 50 ha plot, the presence of leaf in six height intervals (0-2,2-5,5-10,10-20,20-30, \textgreater 30 m). The light demand for each species was estimated as the mean light index encountered by new saplings appearing in the census, as described in SI Appendix (see also Fig. \ref{figS2}).
+
+For each subplot, we calculated the number of strata > 2 m containing vegetation; and then transformed this to a light index ranging from 0 (dense shade) to 1 (gap). As light may penetrate into a subplot from the edge of a subplot, we rescaled this index to account for values in the eight immediate neighbouring subplots. Specifically, we used a weighted sum approach whereby the central subplot is assigned a weight of 8 and the eight neighbouring subplots are assigned a weight of 1. This meant that the contribution of the central plot was equivalent to the combined effect of all eight neighbouring plots. These weighted values were then summed and rescaled between 0 and 1 by dividing by the maximum value estimated across all subplots. 
 
 \section*{Parameter distributions}
 
