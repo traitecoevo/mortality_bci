@@ -202,7 +202,7 @@ where $N_k$ refers to the number of observations in fold.
 
 \showmatmethods % Display the Materials and Methods section
 
-\acknow{We thank H. Muller-Landau and anonymous reviewers for feedback and B. Carpenter for technical advice. We acknowledge S. Hubbell, R. Foster, R. Pérez, S. Aguilar, S. Lao, S. Dolins, \& hundreds of field workers for their contribution; and the National Science Foundation, Smithsonian Tropical Research Institute, \& MacArthur Foundation for funding the design, collection, quality control and management of long-term growth data at BCI. Fig. 1a uses images by Tracey Saxby, IAN Image Library. J.S.C., R.G.F., L.M. and D.S. were supported by the Science and Industry Endowment Fund (SIEF; RP04-174). D.S.F. and M.W. were supported by fellowships from the Australian Research Council.}
+\acknow{We thank H. Muller-Landau and anonymous reviewers for feedback and B. Carpenter for technical advice. We acknowledge S. Hubbell, R. Foster, R. Pérez, S. Aguilar, S. Lao, S. Dolins, \& hundreds of field workers for their contribution; and the National Science Foundation, Smithsonian Tropical Research Institute, \& MacArthur Foundation for funding the design, collection, quality control and management of long-term growth data at BCI. Fig. 1b uses images by Tracey Saxby, IAN Image Library. J.S.C., R.G.F., L.M. and D.S. were supported by the Science and Industry Endowment Fund (SIEF; RP04-174). D.S.F. and M.W. were supported by fellowships from the Australian Research Council.}
 
 \showacknow % Display the acknowledgements section
 
