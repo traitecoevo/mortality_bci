@@ -22,7 +22,7 @@
 \SItext
 
 Here we provide some further details on methods and additional results, supplementing those presented in the main text. 
-The section ``Review of methods for estimating mortality'' 
+The section ``Review of methods for estimating mortality'' briefly describes the statistical approaches commonly used when estimating tree mortality and how they differ to the additive hazards model advocated in this manuscript.
 ``Estimating True Growth'' describes a probabilistic methods used to estimate individual growth from field measurements, taking into account measurement error and the distribution of growth rate across the community. 
 The section ``Parameter distributions'' describes the distributions applied to species-level random effects and priors put over parameters in the fitted model. 
 The section ``Numerical optimisation'' outlines some numerical concerns in estimating logloss, while 
@@ -32,13 +32,13 @@ the section ``Example Stan code'' gives an example of the code fitted to the dat
 
 While a variety of statistical methods have been applied to model tree mortality, these vary in two key ways. 
 
-First, is whether the time interval between census intervals is explicitly included in the model. Some methods model binary survival outcomes directly, while others seek to estimate the underlying mortality rate experienced by a population per unit time. Examples of the first group include logistic regression \cite[e.g.][]{monserud_modeling_1999, russo_interspecific_2008, vanMantgem:2009bi,dietze_tree_2011,}, generalized linear models with logit link \cite[e.g.][]{Visser_functional_2016}, and exponential or weibull models that don't explicitly include time \cite[e.g.][]{Kobe:1995tw, Wyckoff:2000un}. These methods are suitable for detecting significant correlations with predictors, or predicting survival over a fixed time interval. However, the second approach -- estimating hazard rates -- is generally preferable when formulating predictive survival models, as these models naturally incorporate census interval \cite{Kleinbaum:2012tn}. Models formulated around a hazard rate can therefore make predictions across different time intervals. Moreover, the hazard rate connects directly with the differential equations used to build process-based models of vegetation \cite[e.g.][]{Moorcroft:2001ws}. While a number of studies have directly estimated hazard rates, studies differ in the structure of the estimated hazard rate. Many studies estimate average hazard rates for populations of each species \cite[e.g.][]{Condit:2006, king:2006va, Kraft:2010kq, Wright:2010fl}. These studies are effective at quantifying differences between species but unable to explain variation among individuals within species. Others, seek to model variation in the hazard rate via a combination covariates \cite[e.g.][]{Ruger:2011cv} (see also main text).
+First, is whether the time interval between census intervals is explicitly included in the model. Some methods model binary survival outcomes directly, while others seek to estimate the underlying mortality rate experienced by a population per unit time. Examples of the first group include logistic regression \cite[e.g.][]{monserud_modeling_1999, russo_interspecific_2008, vanMantgem:2009bi,dietze_tree_2011}, generalized linear models with logit link \cite[e.g.][]{Visser_functional_2016}, and exponential or weibull models that don't explicitly include time \cite[e.g.][]{Kobe:1995tw, Wyckoff:2000un}. These methods are suitable for detecting significant correlations with predictors, or predicting survival over a fixed time interval. However, the second approach -- estimating hazard rates -- is generally preferable when formulating predictive survival models, as these models naturally incorporate census interval \cite{Zens:2003jv,Kleinbaum:2012tn}. Models formulated around a hazard rate can therefore make predictions across different time intervals. Moreover, the hazard rate connects directly with the differential equations used to build process-based models of vegetation \cite[e.g.][]{Moorcroft:2001ws}. While a number of studies have directly estimated hazard rates, studies differ in the structure of the estimated hazard rate. Many studies estimate average hazard rates for populations of each species \cite[e.g.][]{Condit:2006, king:2006va, Kraft:2010kq, Wright:2010fl}. These studies are effective at quantifying differences between species but unable to explain variation among individuals within species. Others, seek to model variation in the hazard rate via a combination covariates \cite[e.g.][]{Ruger:2011cv} (see also main text).
 
 The other way survival models may differ is in how the predicted survival curve responds to covariates. Both the hazard rate and survival models predict a relationship between covariates and the probability of death across a specified time period. In the main text, we argue that biologically, it makes sense for this probability to asymptote above zero. Yet, aside form the additive hazards model we present, the other methods that we have encountered will all drive probability of death to zero when growth rate is high (assuming growth rate is included as a covariate). In other words, the models behave like the centre panel in Fig 1b. 
 
 \subsection*{Logistic regression and Generalized linear models}
 
-Studies using logistic regression, or Generalized linear models with a logit link , all seek to predict he probability of death over a specified time interval via a model of the form:
+Studies using logistic regression, or Generalized linear models with a logit link, all seek to predict the probability of death over a specified time interval via a model of the form:
 \begin{equation} \label{eq:logistic_model}
 p_{i,t_1\rightarrow t_2} = \frac {1}{1+e^{ (\beta _{0} + \beta _{1}x_1 + \ldots )}},
 \end{equation}
@@ -215,7 +215,7 @@ tableS2(spp_params)
 \begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig6}
-\caption{Pairwise comparison between species' wood density, light demand and maximum dbh.}
+\caption{Pairwise comparison between species' wood density, light demand and maximum dbh. Correlations are pearson correlations}
 \label{figS6}
 \end{figure*}
 \end{document}
