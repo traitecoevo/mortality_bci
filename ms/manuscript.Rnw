@@ -18,7 +18,7 @@
 \author[e]{Daniel S Falster}
 
 \affil[a]{Department of Biological Sciences, Macquarie University, Sydney, New South Wales, Australia}
-\affil[b]{Field Museum of Natural History and Morton Arboretum, Chicago, Illinois, USA}
+\affil[b]{Field Museum of Natural History, Chicago, IL, USA and Morton Arboretum, Lisle, IL, USA}
 \affil[c]{Data61, CSIRO, Australia}
 \affil[d]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
 \affil[e]{Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, Sydney, New South Wales, Australia}
@@ -35,7 +35,7 @@
 
 \authordeclaration{The authors declare that they have no competing financial interests.\\
 
-Data deposition: Code reproducing the results in this paper is available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}. Data from BCI is available at DOIs \href{http://doi.org/10.5479/data.bci.20130603.}{10.5479/data.bci.20130603.}, \href{http://doi.org/10.5479/data.bci20140711}{10.5479/data.bci20140711}.
+Data deposition: Code reproducing the results in this paper is available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}. Data from BCI is available at DOIs \href{http://doi.org/10.5479/data.bci.20130603}{10.5479/data.bci.20130603}, \href{http://doi.org/10.5479/data.bci20140711}{10.5479/data.bci20140711}.
 }
 
 \correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: james.camac@gmail.com. Present address: Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Melbourne, Victoria, Australia
@@ -136,7 +136,7 @@ Each trait influenced tree mortality in different ways (Fig. \ref{fig3}-\ref{fig
 
 \begin{figure}[h!]
 \includegraphics{figures/fig4.pdf}
-\caption{Predicted changes in annual mortality probability with increasing growth rate. A) Estimated average curves for all 203 Barro Colorado Island species used in this study. B,C,D) represent average ($\pm$ 95\% credible intervals) curve for a high (red) and low (blue) trait values. B) wood density values 0.2 vs 0.8 (g cm$^{-3}$); C) maximum dbh values 3 vs 180 cm; D) light demand values 0.5 vs 0.8. Note that the intercept is the sum of $\alpha$ and $\gamma$ (i.e. the stochastic chance of death plus effect of low growth. Species with highest asymptote was \textit{Palicourea guianensis} where \Sexpr{subset(death_proportion(x), species =="Palicourea guianensis")[["n_deaths"]]} out of \Sexpr{subset(death_proportion(x), species =="Palicourea guianensis")[["n_total"]]} individuals died between 1995 and 2010.}
+\caption{Predicted changes in annual mortality probability with increasing growth rate. A) Estimated average curves for all 203 Barro Colorado Island species used in this study. B,C,D) represent average ($\pm$ 95\% credible intervals) curve for a high (red) and low (blue) trait values. B) wood density values 0.2 vs 0.8 (g cm$^{-3}$); C) maximum dbh values 3 vs 180 cm; D) light demand values 0.5 vs 0.8. Note that the intercept is the sum of $\alpha$ and $\gamma$ (i.e. the stochastic chance of death plus effect of low growth. Species with highest asymptote was \textit{Palicourea guianensis} where \Sexpr{subset(death_proportion(BCI_training_full), species =="Palicourea guianensis")[["n_deaths"]]} out of \Sexpr{subset(death_proportion(BCI_training_full), species =="Palicourea guianensis")[["n_total"]]} individuals died between 1995 and 2010.}
 \label{fig4}
 \end{figure}
 
