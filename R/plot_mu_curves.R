@@ -25,7 +25,7 @@ plot_mu_curves <- function(model,
   
   preds <- predict_mu_hazards_curves(model, growth_range, trait_name, trait_values, hazard_curve)
   
-  breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
+  breaks <- c(0.0001,0.01, 1, 100)
   labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
   
   p1 <- ggplot2::ggplot(preds, ggplot2::aes(x = dbh_growth,y = mean, group = type, colour = factor(trait_value), fill=factor(trait_value))) + 

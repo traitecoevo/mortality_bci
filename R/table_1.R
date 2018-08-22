@@ -105,8 +105,8 @@ table_1 <- function(model, data) {
       `Full minus max dbh` = full_minus_dbh,
       `Full minus species error` = full_minus_sppre,
       `Full minus species traits & species error` = full_minus_spp,
-      `Full minus carbon-dependent hazard` = full_minus_growthdep, 
-      `Full minus carbon-independent hazard` = full_minus_growthindep)
+      `Full minus growth-dependent hazard` = full_minus_growthdep, 
+      `Full minus growth-independent hazard` = full_minus_growthindep)
   
   
   # Calculate R2 relative to observed proportion of death per species

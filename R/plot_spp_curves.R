@@ -53,7 +53,7 @@ plot_spp_curves <- function(model,
     col_ramp <- ggplot2::scale_colour_manual(values = "black")
   }
   
-  breaks <- c(0.0001,0.001,0.01,0.1, 1, 10, 100)
+  breaks <- c(0.0001,0.01, 1, 100)
   labels <- sapply(log10(breaks),function(i) as.expression(bquote(10^ .(i))))
   
   if(hazard_curve ==FALSE) {

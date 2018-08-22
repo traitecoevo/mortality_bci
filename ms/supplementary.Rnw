@@ -91,11 +91,11 @@ The final diameter measurement for each individual $i$, $D_{i,2}$ was estimated 
 \end{equation}
 where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centered on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm yr$^{-1}$.
 
-Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis. Fig. \ref{figS1} illustrates observed and estimated diameters, and growth rate estimated from raw data including measurement error and from the probabilistic model.
+Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis. Fig. \ref{figS2} illustrates observed and estimated diameters, and growth rate estimated from raw data including measurement error and from the probabilistic model.
 
 \section*{Estimating species light demand}
 
-A species' light demand was calculated using annual canopy census data collected during 1985\textendash1990 and 1990\textendash1995. The canopy census recorded, in all 5 by 5 m subplots across the 50 ha plot, the presence of leaf in six height intervals (0-2,2-5,5-10,10-20,20-30, \textgreater 30 m). The light demand for each species was estimated as the mean light index encountered by new saplings appearing in the census (Fig. \ref{figS2}).
+A species' light demand was calculated using annual canopy census data collected during 1985\textendash1990 and 1990\textendash1995. The canopy census recorded, in all 5 by 5 m subplots across the 50 ha plot, the presence of leaf in six height intervals (0-2,2-5,5-10,10-20,20-30, \textgreater 30 m). The light demand for each species was estimated as the mean light index encountered by new saplings appearing in the census (Fig. \ref{figS3}).
 
 For each subplot, we calculated the number of strata > 2 m containing vegetation; and then transformed this to a light index ranging from 0 (dense shade) to 1 (gap). As light may penetrate into a subplot from the edge of a subplot, we rescaled this index to account for values in the eight immediate neighbouring subplots. Specifically, we used a weighted sum approach whereby the central subplot is assigned a weight of 8 and the eight neighbouring subplots are assigned a weight of 1. This meant that the contribution of the central plot was equivalent to the combined effect of all eight neighbouring plots. These weighted values were then summed and rescaled between 0 and 1 by dividing by the maximum value estimated across all subplots. 
 
@@ -147,7 +147,7 @@ If $S_i = 1  \rightarrow \mathcal{L}_i = \log(p) = \textrm{log1m\_exp}(-\Lambda)
 
 \section*{Example Stan code}
 
-Models were implemented in the `Stan` framework, which uses its own specific syntax to encode models \cite{StanDevelopmentTeam:2015uz}.  Code for all models implemented are available in the supplied source code. As an example, we include here the code for the final model fit, including with species random effects, wood density effect and census effect.
+Models were implemented in the `Stan` framework, which uses its own specific syntax to encode models \cite{StanDevelopmentTeam:2017uz}.  Code for all models implemented are available in the supplied source code. As an example, we include here the code for the final model fit, including with species random effects, wood density effect and census effect.
 
 <<echo=FALSE, highlight=TRUE, comment = ''>>=
 model <- final_model$fits[[1]]@stanmodel@model_code
@@ -172,34 +172,32 @@ tableS2(spp_params)
 
 \clearpage
 
-\begin{figure*}[!hb]
-\centering
-\includegraphics[width=0.6\textheight]{figures/supp_fig1.png}
-\caption{Observed vs predicted individual growth rates and stem diameters}
+\begin{figure}[h!]
+\includegraphics{figures/supp_fig1}
+\caption{Predicted changes in hazard with increasing growth rate. A) Estimated average curves for all 203 Barro Colorado Island species used in this study. B,C,D) represent the average ($\pm$ 95\% credible intervals) curve for a high (red) and low (blue) trait value. B) maximum dbh values 3 vs 180 cm; C) wood density values 0.2 vs 0.8 (g cm$^{-3}$); D) light demand values 0.5 vs 0.8. Note that the intercept is the sum of $\alpha$ and $\gamma$ (i.e. the stochastic chance of death plus effect of low growth. Species with highest asymptote in panel A was \textit{Palicourea guianensis} where \Sexpr{subset(death_proportion(BCI_training_full), species =="Palicourea guianensis")[["n_deaths"]]} out of \Sexpr{subset(death_proportion(BCI_training_full), species =="Palicourea guianensis")[["n_total"]]} individuals died between 1995 and 2010.}
 \label{figS1}
-\end{figure*}
+\end{figure}
 
-\clearpage
 \begin{figure*}[!hb]
 \centering
-\includegraphics[width=\textwidth]{figures/supp_fig2}
-\caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicate the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
+\includegraphics[width=0.6\textheight]{figures/supp_fig2.png}
+\caption{Observed vs predicted individual growth rates and stem diameters}
 \label{figS2}
 \end{figure*}
 
 \clearpage
 \begin{figure*}[!hb]
 \centering
-\includegraphics[height=0.8\textheight]{figures/supp_fig3}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
+\includegraphics[width=\textwidth]{figures/supp_fig3}
+\caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicate the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
 \label{figS3}
 \end{figure*}
 
 \clearpage
 \begin{figure*}[!hb]
 \centering
-\includegraphics{figures/supp_fig4}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
+\includegraphics[height=0.8\textheight]{figures/supp_fig4}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS4}
 \end{figure*}
 
@@ -207,7 +205,7 @@ tableS2(spp_params)
 \begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig5}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS5}
 \end{figure*}
 
@@ -215,7 +213,15 @@ tableS2(spp_params)
 \begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig6}
-\caption{Pairwise comparison between species' wood density, light demand and maximum dbh. Correlations are pearson correlations}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS6}
+\end{figure*}
+
+\clearpage
+\begin{figure*}[!hb]
+\centering
+\includegraphics{figures/supp_fig7}
+\caption{Pairwise comparison between species' wood density, light demand and maximum dbh. Correlations are pearson correlations}
+\label{figS7}
 \end{figure*}
 \end{document}
