@@ -95,7 +95,7 @@ Using this model we then used \texttt{rstan}'s \textit{optimizing} function to m
 
 \section*{Estimating species light demand}
 
-A species' light demand was calculated using annual canopy census data collected during 1985\textendash1990 and 1990\textendash1995. The canopy census recorded, in all 5 by 5 m subplots across the 50 ha plot, the presence of leaf in six height intervals (0-2,2-5,5-10,10-20,20-30, \textgreater 30 m). The light demand for each species was estimated as the mean light index encountered by new saplings appearing in the census, as described in SI Appendix (see also Fig. \ref{figS2}).
+A species' light demand was calculated using annual canopy census data collected during 1985\textendash1990 and 1990\textendash1995. The canopy census recorded, in all 5 by 5 m subplots across the 50 ha plot, the presence of leaf in six height intervals (0-2,2-5,5-10,10-20,20-30, \textgreater 30 m). The light demand for each species was estimated as the mean light index encountered by new saplings appearing in the census (Fig. \ref{figS2}).
 
 For each subplot, we calculated the number of strata > 2 m containing vegetation; and then transformed this to a light index ranging from 0 (dense shade) to 1 (gap). As light may penetrate into a subplot from the edge of a subplot, we rescaled this index to account for values in the eight immediate neighbouring subplots. Specifically, we used a weighted sum approach whereby the central subplot is assigned a weight of 8 and the eight neighbouring subplots are assigned a weight of 1. This meant that the contribution of the central plot was equivalent to the combined effect of all eight neighbouring plots. These weighted values were then summed and rescaled between 0 and 1 by dividing by the maximum value estimated across all subplots. 
 
@@ -133,11 +133,11 @@ We accounted for possible variation in mortality rates across different census p
 
 \section*{Numerical optimisation}
 
-To evaluate eq. 5 from the main text (log loss), we apply the following substitutions, to reduce the number of $\log$ and $\exp$ operations, and thereby maintain numerical accuracy. From the main text, equation 5 states that the log loss for a single data point is
+To evaluate eq. 4 from the main text (log loss), we apply the following substitutions, to reduce the number of $\log$ and $\exp$ operations, and thereby maintain numerical accuracy. From the main text, eq. 4 states that the log loss for a single data point is
 \begin{equation} \label{eq:logloss_i}
 \mathcal{L}_i = S_i\,\log(p_{i,t_2\rightarrow t_3}) + ( 1 - S_i)\,\log(1 - p_{i,t_2\rightarrow t_3}),
 \end{equation}
-where $p_{i,t_2\rightarrow t_3} = 1 - \exp\left(-\Lambda\right)$ is the probability an individual dies between times $t_2$ and $t_3$ (from eq. 1), $\Lambda$ is the cumulative hazard from $t_2\rightarrow t_3$, and $S_i$ is the observed outcome (0 = alive, 1 = died). Note that $\textrm{Pr}(S_i =0) = 1- p_{i,t_2\rightarrow t_3} = \exp\left(-\Lambda\right)$. Numerical calculations of log loss can then be simplified as follows:
+where $p_{i,t_2\rightarrow t_3} = 1 - \exp\left(-\Lambda\right)$ is the probability an individual dies between times $t_2$ and $t_3$ (from eq. 1), $\Lambda = \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t$ is the cumulative hazard from $t_2\rightarrow t_3$, and $S_i$ is the observed outcome (0 = alive, 1 = died). Note that $\textrm{Pr}(S_i =0) = 1- p_{i,t_2\rightarrow t_3} = \exp\left(-\Lambda\right)$. Numerical calculations of log loss can then be simplified as follows:
 
 If $S_i =0 \rightarrow \mathcal{L}_i = \log(1-p) = -\Lambda$.
 
