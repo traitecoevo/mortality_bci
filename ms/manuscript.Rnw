@@ -6,7 +6,7 @@
 
 \templatetype{pnasresearcharticle} % Choose template 
 
-\title{Partitioning growth-dependent from growth-independent influences on tropical tree mortality}
+\title{Partitioning mortality into growth-dependent and growth-independent hazards across 203 tropical tree species}
 
 \author[a,1]{James S Camac}
 \author[b]{Richard Condit}
