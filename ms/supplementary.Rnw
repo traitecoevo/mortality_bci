@@ -224,4 +224,14 @@ tableS2(spp_params)
 \caption{Pairwise comparison between species' wood density, light demand and maximum dbh. Correlations are pearson correlations}
 \label{figS7}
 \end{figure*}
+
+\clearpage
+\begin{figure*}[!hb]
+\centering
+\includegraphics[width=0.6\textheight]{figures/supp_fig8.png}
+\caption{Relationship between tree size and both diameter increment growth (A) and basal area growth (B)}
+\label{figS8}
+\end{figure*}
+
+
 \end{document}
