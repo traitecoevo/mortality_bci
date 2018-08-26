@@ -1,76 +1,5 @@
-## true growth model
-
-allowed_tasks <- function() {
-  c("null_model", "function_growth_comparison","rho_combinations", "gap_combinations", "size_combinations","species_random_effects",
-    "multi_trait_all","multi_trait_parsimony","rho_gap_all", "rho_size_all", "gap_size_all", "final_model","final_base_growth_hazard_re")
-}
-
-check_task_is_allowed <- function(task_name) {
-  if(! task_name %in% allowed_tasks())
-  stop(sprintf("invalid task name: %s, must be one of %s", task_name, paste(allowed_tasks(), collapse = ", ")))
-}
-
-run_true_dbh_model <- function(data) {
-  
-  stan_data <- list(
-    n_obs = nrow(data),
-    n_spp = length(unique(data$sp_id)),
-    spp = data$sp_id,
-    census = data$censusid,
-    census_length = data$census_interval,
-    obs_dbh1 = data$dbh_prev,
-    obs_dbh2 = data$dbh)
-  
-  true_dbh_model <-'
-    data {
-      int<lower=1> n_obs;
-      int<lower=1> n_spp;
-      int<lower=1> spp[n_obs];
-      int<lower=1> census[n_obs];
-      vector[n_obs] census_length;
-      vector[n_obs] obs_dbh1;
-      vector[n_obs] obs_dbh2;
-    }
-    
-    parameters {
-      real<lower=0> true_dbh1[n_obs];
-      real log_mu_true_dbh1;
-      real<lower=0> log_sigma_true_dbh1;
-      real<lower=0> true_growth_rate[n_obs];
-    }
-    
-    model {
-      real true_dbh2[n_obs];
-      
-      for (i in 1:n_obs) {
-        // Calculating true growth for fitted data
-        true_dbh2[i] = true_dbh1[i] + (true_growth_rate[i] * census_length[i]);
-      }
-      
-      // Observation error
-      obs_dbh1 ~ normal(true_dbh1, 0.75);
-      obs_dbh2 ~ normal(true_dbh2, 0.75);
-      
-      // Priors
-      true_dbh1 ~ lognormal(log_mu_true_dbh1, log_sigma_true_dbh1);
-      true_growth_rate ~ lognormal(0,1); 
-      }
-    
-     generated quantities {
-     real true_dbh2[n_obs];
-      
-      // Recalculate true_dbh2
-      for (i in 1:n_obs) {
-        true_dbh2[i] = true_dbh1[i] + (true_growth_rate[i] * census_length[i]);
-      }
-    }'
-  
-  
-  model <- stan_model(model_code = true_dbh_model)
-  
-  fit <- optimizing(model,
-                    data = stan_data, iter=50000, refresh=1000)
-}
+# This script contains various functions used to compile the various
+# stan models used in this manuscript
 
 # Null Model
 get_model_chunks_null <- function(tasks) {
@@ -331,7 +260,7 @@ get_model_chunks_growth_haz <- function(tasks) {
     }
         // Calculation of average negative log likelihood
         logloss_heldout = -sum_loglik_heldout/n_obs_heldout;"
-    )
+  )
 }
 
 ## base_growth hazard model
@@ -341,7 +270,7 @@ get_model_chunks_base_growth_haz <- function(tasks) {
     x[x=="none"] = ""
     sapply(seq_len(nchar(x)), function(i) substr(x, i, i))
   }
-
+  
   rho_combo <- f(tasks$rho_combo)
   gap_combo <- f(tasks$gap_combo)
   size_combo <- f(tasks$size_combo)
@@ -396,16 +325,16 @@ get_model_chunks_base_growth_haz <- function(tasks) {
       real raw_log_census_err[n_census];
       real<lower=0> sigma_log_census_err;
       %s%s%s%s%s%s%s%s%s",
-      ifelse("a" %in% rho_combo, "real a1;\n\t\t\t", ""),
-      ifelse("a" %in% gap_combo, "real a2;\n\t\t\t", ""),
-      ifelse("a" %in% size_combo, "real a3;\n\t\t\t", ""),
-      ifelse("b" %in% rho_combo, "real b1;\n\t\t\t", ""),
-      ifelse("b" %in% gap_combo, "real b2;\n\t\t\t", ""),
-      ifelse("b" %in% size_combo, "real b3;\n\t\t\t", ""),
-      ifelse("c" %in% rho_combo, "real c1;\n\t\t\t", ""),
-      ifelse("c" %in% gap_combo, "real c2;\n\t\t\t", ""),
-      ifelse("c" %in% size_combo, "real c3;\n", "")),
-                model = sprintf("
+                         ifelse("a" %in% rho_combo, "real a1;\n\t\t\t", ""),
+                         ifelse("a" %in% gap_combo, "real a2;\n\t\t\t", ""),
+                         ifelse("a" %in% size_combo, "real a3;\n\t\t\t", ""),
+                         ifelse("b" %in% rho_combo, "real b1;\n\t\t\t", ""),
+                         ifelse("b" %in% gap_combo, "real b2;\n\t\t\t", ""),
+                         ifelse("b" %in% size_combo, "real b3;\n\t\t\t", ""),
+                         ifelse("c" %in% rho_combo, "real c1;\n\t\t\t", ""),
+                         ifelse("c" %in% gap_combo, "real c2;\n\t\t\t", ""),
+                         ifelse("c" %in% size_combo, "real c3;\n", "")),
+    model = sprintf("
       real alpha[n_spp];
       real beta[n_spp];
       real gamma[n_spp];
@@ -440,25 +369,25 @@ get_model_chunks_base_growth_haz <- function(tasks) {
       raw_log_census_err ~ normal(0, 1);
       sigma_log_census_err ~ cauchy(0, 2.5);
       %s%s%s%s%s%s%s%s%s",
-      ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
-      ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
-      ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
-      ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
-      ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
-      ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
-      ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
-      ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
-      ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", ""),
-
-      ifelse("a" %in% rho_combo,  "a1 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("a" %in% gap_combo,  "a2 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("a" %in% size_combo, "a3 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("b" %in% rho_combo,  "b1 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("b" %in% gap_combo,  "b2 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("b" %in% size_combo, "b3 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("c" %in% rho_combo,  "c1 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("c" %in% gap_combo,  "c2 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("c" %in% size_combo, "c3 ~ normal(0,2.5);\n", "")),
+                    ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
+                    ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
+                    ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
+                    ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
+                    ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
+                    ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
+                    ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
+                    ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
+                    ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", ""),
+                    
+                    ifelse("a" %in% rho_combo,  "a1 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("a" %in% gap_combo,  "a2 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("a" %in% size_combo, "a3 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("b" %in% rho_combo,  "b1 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("b" %in% gap_combo,  "b2 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("b" %in% size_combo, "b3 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("c" %in% rho_combo,  "c1 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("c" %in% gap_combo,  "c2 ~ normal(0,2.5);\n\t\t\t", ""),
+                    ifelse("c" %in% size_combo, "c3 ~ normal(0,2.5);\n", "")),
     generated_quantities = sprintf("
       real census_err[n_census];
       real alpha[n_spp];
@@ -502,16 +431,16 @@ get_model_chunks_base_growth_haz <- function(tasks) {
       }
         // Calculation of average negative log likelihood
         logloss_heldout = -sum_loglik_heldout/n_obs_heldout;",
-      ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
-      ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
-      ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
-      ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
-      ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
-      ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
-      ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
-      ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
-      ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", "")
-      )
+                                   ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
+                                   ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
+                                   ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
+                                   ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
+                                   ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
+                                   ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
+                                   ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
+                                   ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
+                                   ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", "")
+    )
   )
 }
 
@@ -523,18 +452,18 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
     growth_measure = tasks$growth_measure,
     
     pars = if(full_data == FALSE) {
-            c("mu_log_alpha","sigma_log_alpha",
-             "mu_log_beta","sigma_log_beta",
-             "mu_log_gamma","sigma_log_gamma",
-             "census_err","sigma_log_census_err",
-             "logloss_heldout") 
+      c("mu_log_alpha","sigma_log_alpha",
+        "mu_log_beta","sigma_log_beta",
+        "mu_log_gamma","sigma_log_gamma",
+        "census_err","sigma_log_census_err",
+        "logloss_heldout") 
     }
     else {
-    c("mu_log_alpha","sigma_log_alpha",
-             "mu_log_beta","sigma_log_beta",
-             "mu_log_gamma","sigma_log_gamma",
-             "census_err","sigma_log_census_err",
-             "logloss")
+      c("mu_log_alpha","sigma_log_alpha",
+        "mu_log_beta","sigma_log_beta",
+        "mu_log_gamma","sigma_log_gamma",
+        "census_err","sigma_log_census_err",
+        "logloss")
     },
     data = if(full_data == FALSE) {"
         // Fitted data
@@ -556,7 +485,7 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
         vector[n_obs_heldout] census_length_heldout;
         vector[n_obs_heldout] growth_dt_heldout;
         int<lower=0, upper=1> y_heldout[n_obs_heldout];"
-      }
+    }
     else {"
         // Fitted data
         int<lower=1> n_obs;
@@ -567,7 +496,7 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
         vector[n_obs] census_length;
         vector[n_obs] growth_dt;
         int<lower=0, upper=1> y[n_obs];"
-      },
+    },
     parameters ="
       // Mortality model parameters
       real raw_log_alpha[n_spp];
@@ -632,7 +561,7 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
       raw_log_census_err ~ normal(0, 1);
       sigma_log_census_err ~ cauchy(0, 2.5);",
     generated_quantities =
-    if(full_data==FALSE) {"
+      if(full_data==FALSE) {"
       real alpha[n_spp];
       real beta[n_spp];
       real gamma[n_spp];
@@ -673,7 +602,7 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
     }
         // Calculation of average negative log likelihoods
         logloss_heldout = -sum_loglik_heldout/n_obs_heldout;"
-    }
+      }
     else {"
       real alpha[n_spp];
       real beta[n_spp];
@@ -716,7 +645,7 @@ get_model_chunks_base_growth_haz_re <- function(tasks, full_data = FALSE) {
     }
   )
 }
-  
+
 
 ## FINAL FULL FIT MODEL WITH RANDOM EFFECTS
 
@@ -726,7 +655,7 @@ get_final_model_chunks <- function(tasks) {
     x[x=="none"] = ""
     sapply(seq_len(nchar(x)), function(i) substr(x, i, i))
   }
-
+  
   rho_combo <- f(tasks$rho_combo)
   gap_combo <- f(tasks$gap_combo)
   size_combo <- f(tasks$size_combo)
@@ -777,15 +706,15 @@ get_final_model_chunks <- function(tasks) {
       real raw_log_census_err[n_census];
       real<lower=0> sigma_log_census_err;
       %s%s%s%s%s%s%s%s%s",
-      ifelse("a" %in% rho_combo, "real a1;\n\t\t\t", ""),
-      ifelse("a" %in% gap_combo, "real a2;\n\t\t\t", ""),
-      ifelse("a" %in% size_combo, "real a3;\n\t\t\t", ""),
-      ifelse("b" %in% rho_combo, "real b1;\n\t\t\t", ""),
-      ifelse("b" %in% gap_combo, "real b2;\n\t\t\t", ""),
-      ifelse("b" %in% size_combo, "real b3;\n\t\t\t", ""),
-      ifelse("c" %in% rho_combo, "real c1;\n\t\t\t", ""),
-      ifelse("c" %in% gap_combo, "real c2;\n\t\t\t", ""),
-      ifelse("c" %in% size_combo, "real c3;\n", "")),
+                        ifelse("a" %in% rho_combo, "real a1;\n\t\t\t", ""),
+                        ifelse("a" %in% gap_combo, "real a2;\n\t\t\t", ""),
+                        ifelse("a" %in% size_combo, "real a3;\n\t\t\t", ""),
+                        ifelse("b" %in% rho_combo, "real b1;\n\t\t\t", ""),
+                        ifelse("b" %in% gap_combo, "real b2;\n\t\t\t", ""),
+                        ifelse("b" %in% size_combo, "real b3;\n\t\t\t", ""),
+                        ifelse("c" %in% rho_combo, "real c1;\n\t\t\t", ""),
+                        ifelse("c" %in% gap_combo, "real c2;\n\t\t\t", ""),
+                        ifelse("c" %in% size_combo, "real c3;\n", "")),
     model =sprintf("
       // Declaring mortality parameters
       real alpha[n_spp];
@@ -832,25 +761,25 @@ get_final_model_chunks <- function(tasks) {
       raw_log_census_err ~ normal(0, 1);
       sigma_log_census_err ~ cauchy(0, 2.5);
       %s%s%s%s%s%s%s%s%s",
-      ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
-      ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
-      ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
-      ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
-      ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
-      ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
-      ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
-      ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
-      ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", ""),
-
-      ifelse("a" %in% rho_combo,  "a1 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("a" %in% gap_combo,  "a2 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("a" %in% size_combo, "a3 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("b" %in% rho_combo,  "b1 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("b" %in% gap_combo,  "b2 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("b" %in% size_combo, "b3 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("c" %in% rho_combo,  "c1 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("c" %in% gap_combo,  "c2 ~ normal(0,2.5);\n\t\t\t", ""),
-      ifelse("c" %in% size_combo, "c3 ~ normal(0,2.5);\n", "")),
+                   ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
+                   ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
+                   ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
+                   ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
+                   ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
+                   ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
+                   ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
+                   ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
+                   ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", ""),
+                   
+                   ifelse("a" %in% rho_combo,  "a1 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("a" %in% gap_combo,  "a2 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("a" %in% size_combo, "a3 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("b" %in% rho_combo,  "b1 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("b" %in% gap_combo,  "b2 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("b" %in% size_combo, "b3 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("c" %in% rho_combo,  "c1 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("c" %in% gap_combo,  "c2 ~ normal(0,2.5);\n\t\t\t", ""),
+                   ifelse("c" %in% size_combo, "c3 ~ normal(0,2.5);\n", "")),
     generated_quantities = sprintf("
       real alpha[n_spp];
       real beta[n_spp];
@@ -892,15 +821,15 @@ get_final_model_chunks <- function(tasks) {
     }
         // Calculation of average negative log likelihoods
         logloss = -sum_loglik/n_obs;",
-      ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
-      ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
-      ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
-      ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
-      ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
-      ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
-      ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
-      ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
-      ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", "")
+                                   ifelse("a" %in% rho_combo,  " * pow(rho_c[s], a1)", ""),
+                                   ifelse("a" %in% gap_combo,  " * pow(gap_index_c[s], a2)", ""),
+                                   ifelse("a" %in% size_combo, " * pow(dbh_95_c[s], a3)", ""),
+                                   ifelse("b" %in% rho_combo,  " * pow(rho_c[s], b1)", ""),
+                                   ifelse("b" %in% gap_combo,  " * pow(gap_index_c[s], b2)", ""),
+                                   ifelse("b" %in% size_combo, " * pow(dbh_95_c[s], b3)", ""),
+                                   ifelse("c" %in% rho_combo,  " * pow(rho_c[s], c1)", ""),
+                                   ifelse("c" %in% gap_combo,  " * pow(gap_index_c[s], c2)", ""),
+                                   ifelse("c" %in% size_combo, " * pow(dbh_95_c[s], c3)", "")
     )
   )
 }

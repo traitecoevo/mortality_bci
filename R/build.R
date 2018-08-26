@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 
+# This function is used to compile latex documents
 latex_build <- function(filename, bibliography=NULL,
                         chdir=TRUE, interaction="nonstopmode",
                         max_attempts=5L, clean=FALSE, engine="pdflatex") {

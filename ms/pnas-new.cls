@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% pnas-new.cls, v1.4, 2016/09/19
+% pnas-new.cls, v1.43, 2017/08/23
 %
 % This class file enables authors to prepare research 
 % articles for submission to PNAS.
@@ -23,7 +23,7 @@
 % to produce the PDF, not dvis -> ps -> pdf nor dvipdf
 % 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{pnas-new}[19/09/2016, v1.4]
+\ProvidesClass{pnas-new}[23/08/2017, v1.43]
 \AtEndOfClass{\RequirePackage{microtype}}
 % Option for line numbers
 \newif\if@pnaslineno
@@ -96,12 +96,16 @@
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
 
 %% Watermark 
-\usepackage[printwatermark]{xwatermark}
 \newboolean{displaywatermark}
 \setboolean{displaywatermark}{true} % Set to false to remove the watermark
 \AtBeginDocument{%
   \ifthenelse{\boolean{displaywatermark}}{%
-  \newwatermark[allpages,color=gray!20,angle=45,scale=3,xpos=0,ypos=0]{DRAFT}}{}
+  \RequirePackage{draftwatermark}
+  \SetWatermarkAngle{45}
+  \SetWatermarkColor{gray!20}
+  \SetWatermarkFontSize{3cm}
+  \SetWatermarkText{{\fontfamily{bch}\bfseries DRAFT}}
+}{}
 }
 
 %% Copyright statement (not used)
@@ -146,10 +150,25 @@
 %\definecolor{pnasbluetext}{RGB}{0,115,209} % Not used
 %\definecolor{pnasblueback}{RGB}{210,230,247} % Not used
 
-%% Bibliography    
-\RequirePackage[numbers,sort&compress,merge]{natbib}
+%% Bibliography
+%% v1.41 (15/11/2016)
+%% Use pnas-new.bst if available
+%% If not, try to use pnas2011.bst instead
+%% If both aren't available, fall back to
+%% unsrtnat
+\RequirePackage[numbers,sort&compress,merge,round]{natbib}
 \setlength{\bibsep}{0.0pt}
-\bibliographystyle{pnas2011}
+\IfFileExists{pnas-new.bst}{
+  \bibliographystyle{pnas-new}
+}{
+  \IfFileExists{pnas2011.bst}{
+    \bibliographystyle{pnas2011}
+    \PackageWarning{pnas-new}{pnas-new.bst not found; using pnas2011.bst instead}
+  }{
+    \bibliographystyle{unsrtnat}
+    \PackageWarning{pnas-new}{pnas-new.bst and pnas2011.bst not found; falling back to unsrtnat instead}
+  }
+}
 \renewcommand{\bibsection}{} % Remove header
 \renewcommand\bibfont{\normalfont\sffamily\fontsize{6}{8}\selectfont} % set font to be sans serif
 
@@ -191,19 +210,17 @@
 \def\leftlinenos{%
   \pgfmathtruncatemacro{\leftstartlineno}{2*(\thepage - 1)*62 + 1}%
   \pgfmathtruncatemacro{\leftendlineno}{(2*(\thepage - 1) + 1)*62}%
-  \foreach \x in {\leftstartlineno,...,\leftendlineno}{\noindent\x\\}%
+  \foreach \x in {\leftstartlineno,...,\leftendlineno}{\noindent\color{black!30}\x\\}%
 }
 \def\rightlinenos{%
   \pgfmathtruncatemacro{\rightstartlineno}{(2*(\thepage - 1) + 1)*62 + 1}%
   \pgfmathtruncatemacro{\rightendlineno}{(2*\thepage)*62}%
-  \foreach \x in {\rightstartlineno,...,\rightendlineno}{\noindent\x\\}%
+  \foreach \x in {\rightstartlineno,...,\rightendlineno}{\noindent\color{black!30}\x\\}%
 }
 
 \makeatletter
 \fancypagestyle{firststyle}{
-% This is a temporary replacement until paper is accepted/published elsewhere
-\fancyfoot[R]{\footerfont \textbf{\thepage\textendash\pageref{LastPage}}}
-%   \fancyfoot[R]{\footerfont PNAS\hspace{7pt}|\hspace{7pt}\textbf{\today}\hspace{7pt}|\hspace{7pt}vol. XXX\hspace{7pt}|\hspace{7pt}no. XX\hspace{7pt}|\hspace{7pt}\textbf{\thepage\textendash\pageref{LastPage}}}
+   \fancyfoot[R]{\footerfont PNAS\hspace{7pt}|\hspace{7pt}\textbf{\today}\hspace{7pt}|\hspace{7pt}vol. XXX\hspace{7pt}|\hspace{7pt}no. XX\hspace{7pt}|\hspace{7pt}\textbf{\thepage\textendash\pageref{LastPage}}}
    \fancyfoot[L]{\footerfont\@ifundefined{@doi}{}{\@doi}}
 }
 \makeatother
@@ -216,10 +233,8 @@
 \cfoot{}%
 \rfoot{}%
 \makeatletter
-\fancyfoot[LE]{\footerfont\textbf{\thepage}}%\hspace{7pt}|\hspace{7pt}\@ifundefined{@doi}{}{\@doi}}
-% TEMPORARY REPLACEMENT
-\fancyfoot[RO]{\footerfont \textbf{\thepage}}
-%\fancyfoot[RO]{\footerfont PNAS\hspace{7pt}|\hspace{7pt}\textbf{\today}\hspace{7pt}|\hspace{7pt}vol. XXXX\hspace{7pt}|\hspace{7pt}no. XX\hspace{7pt}|\hspace{7pt}\textbf{\thepage}}
+\fancyfoot[LE]{\footerfont\textbf{\thepage}\hspace{7pt}|\hspace{7pt}\@ifundefined{@doi}{}{\@doi}}
+\fancyfoot[RO]{\footerfont PNAS\hspace{7pt}|\hspace{7pt}\textbf{\today}\hspace{7pt}|\hspace{7pt}vol. XXX\hspace{7pt}|\hspace{7pt}no. XX\hspace{7pt}|\hspace{7pt}\textbf{\thepage}}
 \fancyfoot[RE,LO]{\footerfont\@ifundefined{@leadauthor}{}{\@leadauthor}\ifnum \value{authors} > 1\hspace{5pt}\textit{et al.}\fi}
 
 % Use footer routine for line numbers
@@ -244,6 +259,7 @@
 
 %% Section/subsection/paragraph set-up
 \RequirePackage[explicit]{titlesec}
+\setcounter{secnumdepth}{5}
 \renewcommand{\thesubsection}{\Alph{subsection}}
 
 \titleformat{\section}

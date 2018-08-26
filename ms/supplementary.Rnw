@@ -1,61 +1,74 @@
-\documentclass[9pt,twocolumn,twoside]{pnas-new}
+\documentclass[9pt,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
-% Note that the use of elements such as single-column equations
-% may affect the guide line number alignment. 
 
-\templatetype{pnasresearcharticle}
+\templatetype{pnassupportinginfo}
 
-\title{
-{\normalfont \fontsize{12pt}{16pt}
-{\color{black50} Supporting information for:}\\} \vskip6pt
-\fontsize{16pt}{20pt} Unifying intra- and inter-specific variation in tropical tree mortality
-}
+% Use the lineno option to display guide line numbers if required.
 
-\author[a,b,1]{James S Camac}
-\author[c]{Richard Condit}
-\author[d]{Richard G FitzJohn}
-\author[e]{Lachlan McCalman}
-\author[e]{Daniel Steinberg}
-\author[a]{Mark Westoby}
-\author[f]{S Joseph Wright}
-\author[a,g]{Daniel S Falster}
+\title{Partitioning mortality into growth-dependent and growth-independent hazards across 203 tropical tree species}
+\author{J.S. Camac, R. Condit, R.G. FitzJohn, L. McCalman, D. Steinberg, M. Westoby, S.J. Wright, D.S. Falster}
+\correspondingauthor{Corresponding James S Camac. E-mail: james.camac@gmail.com}
 
-\affil[a]{Department of Biological Sciences, Macquarie University, Sydney, New South Wales, Australia}
-\affil[b]{Current Address: Centre of Excellence for Biosecurity Risk Analysis, School of Biological Sciences, The University of Melbourne, Melbourne, Victoria, Australia}
-\affil[c]{Field Museum of Natural History and Morton Arboretum, Chicago, Illinois, USA}
-\affil[d]{Imperial College, London, United Kingdom}
-\affil[e]{Data61, CSIRO, Australia}
-\affil[f]{Smithsonian Tropical Research Institute, Apartado 0843–03092, Balboa, Panama}
-\affil[g]{Current Address: Evolution and Ecology Research Centre, School of Biological, Earth and Environmental Science, University of New South Wales, Sydney, New South Wales, Australia}
-
-% Please give the surname of the lead author for the running footer
-\leadauthor{Camac}
-
-\dates{This supplement was compiled on \today}
-\doi{\url{www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX}}
-
-\hypersetup{
-     linkcolor=pnasbluetext
-}
-
-\RequirePackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{longtable}
 
 \begin{document}
 
+%% Comment/remove this line before generating final copy for submission
+%%\instructionspage  
+
 \maketitle
 
-\renewcommand{\thefigure}{S\arabic{figure}}
-\renewcommand{\thetable}{S\arabic{table}}
-\renewcommand{\theequation}{S\arabic{equation}}
-\renewcommand{\thesection}{S\arabic{section}}
+%% Adds the main heading for the SI text. Comment out this line if you do not have any supporting information text.
+\SItext
 
-% \setcounter{secnumdepth}{0}
+Here we provide some further details on methods and additional results, supplementing those presented in the main text. 
+The section ``Review of methods for estimating mortality'' briefly describes the statistical approaches commonly used when estimating tree mortality and how they differ to the additive hazards model advocated in this manuscript.
+``Estimating True Growth'' describes a probabilistic methods used to estimate individual growth from field measurements, taking into account measurement error and the distribution of growth rate across the community. 
+The section ``Parameter distributions'' describes the distributions applied to species-level random effects and priors put over parameters in the fitted model. 
+The section ``Numerical optimisation'' outlines some numerical concerns in estimating logloss, while 
+the section ``Example Stan code'' gives an example of the code fitted to the data. Code and data reproducing the results in this paper are available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}.
 
-Here we provide some further details on methods and additional results, supplementing those presented in the main text. Section ``S1-Estimating True Growth'' describes a probabilistic methods used to estimate individual growth from field measurements, taking into account measurement error and the distribution of growth rate across the community. Section ``S2-Parameter distributions'' describes the distributions applied to species-level random effects and priors put over parameters in the fitted model. Section ``S3-Numerical optimisation'' outlines some numerical concerns in estimating logloss, while Section ``S4-Example Stan code'' gives an example of the code fitted to the data. Code and data reproducing the results in this paper are available at \href{https://github.com/traitecoevo/mortality_bci}{github.com/traitecoevo/mortality\_bci}.
+\section*{Review of methods for estimating mortality}
 
-\section{Estimating True Growth}
+While a variety of statistical methods have been applied to model tree mortality, these vary in two key ways. 
 
- Growth rates were estimated from field measurements of diameter, which inevitably include observation error. In our dataset, \Sexpr{prop_neg_growth(BCI_model_dataset_true_dbh)}\% of estimated growth rates were negative. To ensure our mortality model was not biased by these unlikely values we first applied a probabilistic model to estimate \textit{``true growth''}, taking into account measurement error and the distribution of growth rate across the community. To achieve this we used another dataset collected at BCI to explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
+First, is whether the time interval between census intervals is explicitly included in the model. Some methods model binary survival outcomes directly, while others seek to estimate the underlying mortality rate experienced by a population per unit time. Examples of the first group include logistic regression \cite[e.g.][]{monserud_modeling_1999, russo_interspecific_2008, vanMantgem:2009bi,dietze_tree_2011}, generalized linear models with logit link \cite[e.g.][]{Visser_functional_2016}, and exponential or weibull models that don't explicitly include time \cite[e.g.][]{Kobe:1995tw, Wyckoff:2000un}. These methods are suitable for detecting significant correlations with predictors, or predicting survival over a fixed time interval. However, the second approach -- estimating hazard rates -- is generally preferable when formulating predictive survival models, as these models naturally incorporate census interval \cite{Zens:2003jv,Kleinbaum:2012tn}. Models formulated around a hazard rate can therefore make predictions across different time intervals. Moreover, the hazard rate connects directly with the differential equations used to build process-based models of vegetation \cite[e.g.][]{Moorcroft:2001ws}. While a number of studies have directly estimated hazard rates, studies differ in the structure of the estimated hazard rate. Many studies estimate average hazard rates for populations of each species \cite[e.g.][]{Condit:2006, king:2006va, Kraft:2010kq, Wright:2010fl}. These studies are effective at quantifying differences between species but unable to explain variation among individuals within species. Others, seek to model variation in the hazard rate via a combination covariates \cite[e.g.][]{Ruger:2011cv} (see also main text).
+
+The other way survival models may differ is in how the predicted survival curve responds to covariates. Both the hazard rate and survival models predict a relationship between covariates and the probability of death across a specified time period. In the main text, we argue that biologically, it makes sense for this probability to asymptote above zero. Yet, aside form the additive hazards model we present, the other methods that we have encountered will all drive probability of death to zero when growth rate is high (assuming growth rate is included as a covariate). In other words, the models behave like the centre panel in Fig 1a. 
+
+\subsection*{Logistic regression and Generalized linear models}
+
+Studies using logistic regression, or Generalized linear models with a logit link, all seek to predict the probability of death over a specified time interval via a model of the form:
+\begin{equation} \label{eq:logistic_model}
+p_{i,t_1\rightarrow t_2} = \frac {1}{1+e^{ (\beta _{0} + \beta _{1}x_1 + \ldots )}},
+\end{equation}
+where $\beta_{0}, \beta _{1}, \dots$ are coefficients and $x_{1}, x_{2}, \dots$ are covariates. As increases in growth tend to decrease mortality risk, the coefficient for growth rate when used as a predictor will be positive. High growth rates will cause the exponential term to become large, and $p_{i,t_1\rightarrow t_2} \rightarrow 0$.
+
+\subsection*{Proportional-hazards models}
+
+Cox proportional-hazard models, or complementary-log-log link binomial regression \cite{Kleinbaum:2012tn}, both use a formulation for the hazard rate $\lambda_i(t)$ that takes the form 
+\begin{equation} \label{eq:Cox_model}
+\lambda_i(t)= e^{\beta _{0} + \beta _{1} x_1 + \ldots}.
+\end{equation}
+From eq 1 in the main text, the probability an individual dies is then
+\begin{equation} \label{eq:mortality_model}
+p_{i,t_1\rightarrow t_2} = 1 - \exp\left(- \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t\right).
+\end{equation}
+As increases in growth rate tend to decrease mortality risk, the coefficient for growth rate when used as a covariate in eq. \ref{eq:Cox_model} will be negative. High growth rates will therefore cause $\lambda_i(t) \rightarrow 0$ and thus $p_{i,t_1\rightarrow t_2} \rightarrow 0$.
+
+Another different but related approach has been to use a logistic function for $\lambda_i(t)$ \cite[e.g.][]{Ruger:2011cv}. This results in a similar outcome to the proportional-hazards models: high growth rates will cause $\lambda_i(t) \rightarrow 0$ and thus $p_{i,t_1\rightarrow t_2} \rightarrow 0$.
+
+\subsection*{Other approaches}
+
+Several papers model survival directly as an exponential function of form:
+\begin{equation} \label{eq:exp_model}
+p_{i,t_1\rightarrow t_2} = e^{\beta _{0} + \beta _{1} x_1 + \ldots},
+\end{equation}
+where $f$ is some function of covariates \cite[e.g.][]{Kobe:1995tw,Pacala:1996vm, Wyckoff:2000un, Hawkes:2000ib, Vieilledent:2010fv}. As increases in growth rate tend to decrease mortality risk, the coefficient for growth rate when used as a covariate in eq. \ref{eq:exp_model} will be negative. High growth rates then drive $p_{i,t_1\rightarrow t_2} \rightarrow 0$..
+
+\section*{Estimating True Growth}
+
+Growth rates were estimated from field measurements of diameter, which inevitably include observation error. In our dataset, \Sexpr{prop_neg_growth(BCI_training_full)}\% of estimated growth rates were negative. To ensure our mortality model was not biased by these unlikely values we first applied a probabilistic model to estimate \textit{``true growth''}, taking into account measurement error and the distribution of growth rate across the community. To achieve this we used another dataset collected at BCI to explicitly to examine observation errors\cite{Condit:2012nz}. This dataset consisted of \Sexpr{nobs_meas_err_data(BCI_dbh_error_data)} randomly selected trees that had their diameter measured twice within a 30 day period\cite{Condit:2012nz}. Assuming no growth occurred over this period, any discrepancy in measurements can be attributable to observation error. The standard deviation of these discrepancies was estimated to be \Sexpr{obs_error_sigma(BCI_dbh_error_data)}, meaning that 95\% of the measurement errors were within $\pm$ 1.47 cm of the true diameter. Having an estimate of observation error, we then used Bayesian point estimation to maximize the joint posterior of the \textit{``true''} initial and final diameter, and subsequently, \textit{``true growth''} for each individual.
 
 We modelled true growth by first estimating the observed initial ($D_{i,1}$) and final diameter ($D_{i,2}$) of each individual, $i$, as random realisations from a normal distribution centerd on their respective true estimates (i.e. $\widehat{D_{i,1}}$ and $\widehat{D_{i,2}}$), with the standard deviation fixed at \Sexpr{obs_error_sigma(BCI_dbh_error_data)} (i.e. the observed measurement error):
 
@@ -78,9 +91,15 @@ The final diameter measurement for each individual $i$, $D_{i,2}$ was estimated 
 \end{equation}
 where $\Delta D_{i,2}$ represents the annual true increase in diameter (cm) and $(t_2-t_1)$ represents the number of days between initial and final measurements divided by 365.25. We modelled $\Delta D_{i,2}$ as a random realisation from a log-normal distribution centered on zero and a standard deviation of 1. This prior conveyed our expectation that annual diameter growth could not be negative and is unlikely to be greater than 7 cm yr$^{-1}$.
 
-Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis. Fig. \ref{figS1} illustrates observed and estimated diameters, and growth rate estimated from raw data including measurement error and from the probabilistic model.
+Using this model we then used \texttt{rstan}'s \textit{optimizing} function to maximize the joint posterior and extract point estimates of true initial diameter, $\widehat{D}_{i,1}$, true final diameter, $\widehat{D}_{i,2}$, and true annual diameter growth $\Delta D_{i,2}$. We then used annual diameter growth, $\Delta D_{i,2}$, and annual basal area growth: $\frac{(\pi \, 0.25 \,\widehat{D}_{i,2}) - (\pi \, 0.25 \, \widehat{D}_{i,1})}{(t_2-t_1)}$ in the subsequent mortality analysis. Fig. \ref{figS2} illustrates observed and estimated diameters, and growth rate estimated from raw data including measurement error and from the probabilistic model.
 
-\section{Parameter distributions}
+\section*{Estimating species light demand}
+
+A species' light demand was calculated using annual canopy census data collected during 1985\textendash1990 and 1990\textendash1995. The canopy census recorded, in all 5 by 5 m subplots across the 50 ha plot, the presence of leaf in six height intervals (0-2,2-5,5-10,10-20,20-30, \textgreater 30 m). The light demand for each species was estimated as the mean light index encountered by new saplings appearing in the census (Fig. \ref{figS3}).
+
+For each subplot, we calculated the number of strata > 2 m containing vegetation; and then transformed this to a light index ranging from 0 (dense shade) to 1 (gap). As light may penetrate into a subplot from the edge of a subplot, we rescaled this index to account for values in the eight immediate neighbouring subplots. Specifically, we used a weighted sum approach whereby the central subplot is assigned a weight of 8 and the eight neighbouring subplots are assigned a weight of 1. This meant that the contribution of the central plot was equivalent to the combined effect of all eight neighbouring plots. These weighted values were then summed and rescaled between 0 and 1 by dividing by the maximum value estimated across all subplots. 
+
+\section*{Parameter distributions}
 
 We modelled species random effects as random realisations from log-normal distributions:
 \begin{equation}
@@ -100,9 +119,9 @@ Standard deviations associated with species random effects (i.e. $\sigma_{a0}$, 
 
 For models that did not include species random effects, single intercepts were estimated for each parameter using log normal distributions centered on zero with standard deviations of 2.5.
 
-We estimated wood density effects (i.e. $\alpha_1$, $\beta_1$ and $\gamma_1$) using normal priors centered on zero and a standard deviation of 2.5:
+Effects of species traits -- wood density, $\rho$, light demand, $\upsilon$ and maximum dbh, $\psi$ (i.e. $\alpha_{1-3}$, $\beta_{1-3}$ and $\gamma_{1-3}$) using normal priors centered on zero and a standard deviation of 2.5:
 \begin{equation} \label{eq:rho_effects}
-\alpha_1, \beta_1, \gamma_1 \sim \mathcal{N}\left(0, 2.5\right).\\
+\alpha_{1-3}, \beta_{1-3}, \gamma_{1-3} \sim \mathcal{N}\left(0, 2.5\right).\\
 \end{equation}
 
 We accounted for possible variation in mortality rates across different census periods by allowing $\lambda_i$ to be scaled by $\delta_t$ for each census $t$. We estimated $\delta_t$ as a random realization from a log-normal distribution centered on zero and a variance parameter $\sigma_{\delta}$ defines the variation in census effects:
@@ -112,13 +131,13 @@ We accounted for possible variation in mortality rates across different census p
 \sigma_{\delta} \sim \textrm{Cauchy+}\left(0, 2.5\right).
 \end{equation}
 
-\section{Numerical optimisation}
+\section*{Numerical optimisation}
 
-To evaluate eq. 5 from the main text (log loss), we apply the following substitutions, to reduce the number of $\log$ and $\exp$ operations, and thereby maintain numerical accuracy. From the main text, equation 5 states that the log loss for a single data point is
+To evaluate eq. 4 from the main text (log loss), we apply the following substitutions, to reduce the number of $\log$ and $\exp$ operations, and thereby maintain numerical accuracy. From the main text, eq. 4 states that the log loss for a single data point is
 \begin{equation} \label{eq:logloss_i}
 \mathcal{L}_i = S_i\,\log(p_{i,t_2\rightarrow t_3}) + ( 1 - S_i)\,\log(1 - p_{i,t_2\rightarrow t_3}),
 \end{equation}
-where $p_{i,t_2\rightarrow t_3} = 1 - \exp\left(-\Lambda\right)$ is the probability an individual dies between times $t_2$ and $t_3$ (from eq. 1), $\Lambda$ is the cumulative hazard from $t_2\rightarrow t_3$, and $S_i$ is the observed outcome (0 = alive, 1 = died). Note that $\textrm{Pr}(S_i =0) = 1- p_{i,t_2\rightarrow t_3} = \exp\left(-\Lambda\right)$. Numerical calculations of log loss can then be simplified as follows:
+where $p_{i,t_2\rightarrow t_3} = 1 - \exp\left(-\Lambda\right)$ is the probability an individual dies between times $t_2$ and $t_3$ (from eq. 1), $\Lambda = \int_{t_1}^{t_2} \lambda_i(t) {\rm d}t$ is the cumulative hazard from $t_2\rightarrow t_3$, and $S_i$ is the observed outcome (0 = alive, 1 = died). Note that $\textrm{Pr}(S_i =0) = 1- p_{i,t_2\rightarrow t_3} = \exp\left(-\Lambda\right)$. Numerical calculations of log loss can then be simplified as follows:
 
 If $S_i =0 \rightarrow \mathcal{L}_i = \log(1-p) = -\Lambda$.
 
@@ -126,58 +145,59 @@ If $S_i = 1  \rightarrow \mathcal{L}_i = \log(p) = \textrm{log1m\_exp}(-\Lambda)
 
 \noindent In Stan, the function $ \textrm{log1m\_exp}$ is defined so that $ \textrm{log1m\_exp}(x)$ has the same value as $\log(1.0-\exp(x))$, but the computation is faster, more accurate, and more stable \cite{StanDevelopmentTeam:2017uz}.
 
-\section{Example Stan code}
+\section*{Example Stan code}
 
-Models were implemented in the `Stan` framework, which uses its own specific syntax to encode models \cite{StanDevelopmentTeam:2015uz}.  Code for all models implemented are available in the supplied source code. As an example, we include here the code for the final model fit, including with species random effects, wood density effect and census effect.
+Models were implemented in the `Stan` framework, which uses its own specific syntax to encode models \cite{StanDevelopmentTeam:2017uz}.  Code for all models implemented are available in the supplied source code. As an example, we include here the code for the final model fit, including with species random effects, wood density effect and census effect.
 
 <<echo=FALSE, highlight=TRUE, comment = ''>>=
-task <- tasks_2_run("final_model")[1, ]
-chunks <- get_final_model_chunks(task)
-model <- make_stan_model(chunks)
-code <- gsub("\n      ", "\n", model$model_code)
+model <- final_model$fits[[1]]@stanmodel@model_code
+code <- gsub("\n      ", "\n", model)
 code <- strsplit(code, "\n")[[1]]
 writeLines(strwrap(code, width = 50, exdent = 10))
 @
 
-\section{References}
 \bibliography{refs.bib}
 
 \clearpage
 
 <<param-table,results="asis",center=TRUE, echo= FALSE>>= 
-hyperparam_table(final_model)
+tableS1(final_model)
 @
 
 \clearpage
 
-\begin{figure*}[!hb]
-\centering
-\includegraphics[width=0.6\textheight]{figures/supp_fig1.png}
-\caption{Observed vs predicted individual growth rates and stem diameters}
-\label{figS1}
-\end{figure*}
+<<spp-table,results="asis",center=TRUE, echo= FALSE,>>= 
+tableS2(spp_params)
+@
 
 \clearpage
+
+\begin{figure}[h!]
+\includegraphics{figures/supp_fig1}
+\caption{Predicted changes in hazard with increasing growth rate. A) Estimated average curves for all 203 Barro Colorado Island species used in this study. B,C,D) represent the average ($\pm$ 95\% credible intervals) curve for a high (red) and low (blue) trait value. B) maximum dbh values 3 vs 180 cm; C) wood density values 0.2 vs 0.8 (g cm$^{-3}$); D) light demand values 0.5 vs 0.8. Note that the intercept is the sum of $\alpha$ and $\gamma$ (i.e. the stochastic chance of death plus effect of low growth. Species with highest asymptote in panel A was \textit{Palicourea guianensis} where \Sexpr{subset(death_proportion(BCI_training_full), species =="Palicourea guianensis")[["n_deaths"]]} out of \Sexpr{subset(death_proportion(BCI_training_full), species =="Palicourea guianensis")[["n_total"]]} individuals died between 1995 and 2010.}
+\label{figS1}
+\end{figure}
+
 \begin{figure*}[!hb]
 \centering
-\includegraphics[width=\textwidth]{figures/supp_fig2}
-\caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicate the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
+\includegraphics[width=0.6\textheight]{figures/supp_fig2.png}
+\caption{Observed vs predicted individual growth rates and stem diameters}
 \label{figS2}
 \end{figure*}
 
 \clearpage
 \begin{figure*}[!hb]
 \centering
-\includegraphics[height=0.8\textheight]{figures/supp_fig3}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
+\includegraphics[width=\textwidth]{figures/supp_fig3}
+\caption{Map of BCI 50 ha plot showing tree recruits (red crosses) against gap index for censuses 1985\textendash 1990 and 1990\textendash 1995. Colour gradient indicate the minimum amount of canopy shading above 2 m in a 5 year census. Dark colours indicate dense canopy shading, light colours indicate little or no canopy shading above 2 m.}
 \label{figS3}
 \end{figure*}
 
 \clearpage
 \begin{figure*}[!hb]
 \centering
-\includegraphics{figures/supp_fig4}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
+\includegraphics[height=0.8\textheight]{figures/supp_fig4}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\alpha$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS4}
 \end{figure*}
 
@@ -185,8 +205,32 @@ hyperparam_table(final_model)
 \begin{figure*}[!hb]
 \centering
 \includegraphics{figures/supp_fig5}
-\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\beta$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
 \label{figS5}
+\end{figure*}
+
+\clearpage
+\begin{figure*}[!hb]
+\centering
+\includegraphics{figures/supp_fig6}
+\caption{Mean ($\pm$ 95\% Bayesian Credible Interval) log($\gamma$) for each species. Red = Model estimated hyper-distribution species effects were sampled from.}
+\label{figS6}
+\end{figure*}
+
+\clearpage
+\begin{figure*}[!hb]
+\centering
+\includegraphics{figures/supp_fig7}
+\caption{Pairwise comparison between species' wood density, light demand and maximum dbh. Correlations are pearson correlations}
+\label{figS7}
+\end{figure*}
+
+\clearpage
+\begin{figure*}[!hb]
+\centering
+\includegraphics[width=0.6\textheight]{figures/supp_fig8.png}
+\caption{Relationship between tree size and both diameter increment growth (A) and basal area growth (B)}
+\label{figS8}
 \end{figure*}
 
 

@@ -16,89 +16,22 @@ packages:
   - Hmisc
   - png
   - gridBase
+  - pROC
+  - GGally
 
 sources:
   - R
-  
-plot_options:
-  double_col_rectangle:
-    width: 6.6
-    height: 3
-    onefile: FALSE
-    
-  single_col_portrait_large:
-    width: 3.46
-    height: 5.25
-    onefile: FALSE   
-    
-  single_col_portrait:
-    width: 3.46
-    height: 4
-    onefile: FALSE
-    
-  single_col_portrait_extralong:
-    width: 3.46
-    height: 8
-
-  single_col_rectangle:
-    width: 3.46
-    height: 2.5
-    onefile: FALSE
-    
-  single_col_rectangle_narrow:
-    width: 3.46
-    height: 1.25
-    onefile: FALSE
-    
-  single_col_square:
-    width: 3.46
-    height: 3.46
-    onefile: FALSE
-
-  double_col_square:
-    width: 6
-    height: 6
-    onefile: FALSE
-
-  talk_3by8:
-    width: 8
-    height: 3
-
-  talk_2by4:
-    width: 4
-    height: 2
-
-  talk_2by5:
-    width: 5
-    height: 2
-
-  talk_3by6:
-    width: 6
-    height: 3
     
 targets:
   all:
     depends:
+      - data/bci_data_full.rds
+      - all_model_diagnostics
+      - ms/figures/fig1_tree.png
       - ms/manuscript.pdf
       - ms/supplementary.pdf
-
-  process_crossval:
-    depends:
-      - func_growth_diagnostics
-      - random_effect_diagnostics
-      - rho_comparisons_diagnostics
-      - logloss_summaries
-
-  process_final_model:
-    depends:
-      - final_model
-      - final_model_diagnostics
-      - final_spp_re_model
-      - final_spp_re_model_diagnostics
-      - predicted_mu_basehaz_by_rho
-      - spp_params_and_covs
       
-  #------------- download data ---------------------------
+  #------------- Download data ---------------------------
   downloads/bci.spptable.rdata:
     command: BCI_download_species_table(target_name)
     cleanup_level: never
@@ -120,16 +53,10 @@ targets:
     command: BCI_load_50ha_plot("downloads/bci.full.Rdata31Aug2012.zip")
     cleanup_level: purge
     
-  BCI_traits_wood:
-    command: load_trait_data("data/BCI_traits_20101220.csv")
+  BCI_wood_density:
+    command: BCI_load_wood_density("data/BCI_traits_20101220.csv")
     cleanup_level: purge
-
-  BCI_traits_dbh_95:
-    command: get_spp_dbh_95(BCI_50haplot)
-
-  BCI_traits_gap_index:
-    command: get_mean_spp_gap_index(recruit_gap_conditions)   
-
+    
   BCI_nomenclature:
     command: BCI_load_nomenclature("downloads/bci.spptable.rdata")
     cleanup_level: purge
@@ -144,113 +71,14 @@ targets:
   
   #------------- Process data  ----------------------------
   
-  BCI_cleaned:
+  BCI_demography_cleaned:
     command: BCI_clean(BCI_50haplot, BCI_nomenclature)
     cleanup_level: purge
-
-  BCI_model_dataset:
-    command: merge_BCI_data(BCI_cleaned, BCI_traits_wood, BCI_traits_dbh_95, BCI_traits_gap_index)
+    
+  BCI_dbh_95:
+    command: get_spp_dbh_95(BCI_50haplot)
     cleanup_level: purge
     
-  BCI_model_dataset_true_dbh:
-    command: add_true_growth(BCI_model_dataset, BCI_true_dbh_model)
-    cleanup_level: purge
-    
-  BCI_model_dataset_folds:
-    command: split_into_kfolds(BCI_model_dataset_true_dbh)
-    cleanup_level: purge
-    
-  BCI_training_full:
-    command: extract_trainheldout_set(BCI_model_dataset_folds, NA)
-    cleanup_level: purge
-    
-  BCI_training_sets:
-    command: make_trainheldout(BCI_model_dataset_folds)
-    cleanup_level: purge
-
-  #------------- data export ---------------------------
-
-  data/kfold_data/bci_data.rds:
-    command: export_data(BCI_training_sets, target_name)
-    cleanup_level: purge
-
-  data/bci_data_full.rds:
-    command: saveRDS(BCI_training_full, target_name)
-    cleanup_level: purge
-
-  #------------- Models ---------------------------
-  BCI_true_dbh_model:
-    command: run_true_dbh_model(BCI_model_dataset)
-    cleanup_level: never
-    check: exists  
-    
-  #------------- Process outputs -------------------
-  
-  # Diagnostics
-  func_growth_diagnostics:
-    command: model_diagnostics(I("function_growth_comparison"))
-    cleanup_level: tidy
-    
-  rho_comparisons_diagnostics:
-    command: model_diagnostics(I("rho_combinations"))
-    cleanup_level: tidy
-    
-  size_comparisons_diagnostics:
-    command: model_diagnostics(I("size_combinations"))
-    cleanup_level: tidy
-    
-  gap_comparisons_diagnostics:
-    command: model_diagnostics(I("gap_combinations"))
-    cleanup_level: tidy
-    
-  multi_trait_all_diagnostics:
-    command: model_diagnostics(I("multi_trait_all"))
-    cleanup_level: tidy
-    
-  multi_trait_parsimony_diagnostics:
-    command: model_diagnostics(I("multi_trait_parsimony"))
-    cleanup_level: tidy
-
-  random_effect_diagnostics:
-    command: model_diagnostics(I("species_random_effects"))
-    cleanup_level: tidy
-    
-  # Cross validation summary output
-  logloss_summaries:
-    command: combine_logloss_summaries()
-    cleanup_level: tidy
-
-  # Final model
-  final_model:
-    command: compile_models(I('final_model'))
-    cleanup_level: tidy
-
-  final_model_diagnostics:
-    command: model_diagnostics(I("final_model"))
-    cleanup_level: tidy
-    
-  # Final only random effect model
-  final_spp_re_model:
-    command: compile_models(I('final_base_growth_hazard_re'))
-    cleanup_level: tidy
-
-  final_spp_re_model_diagnostics:
-    command: model_diagnostics(I("final_base_growth_hazard_re"))
-    cleanup_level: tidy
-
-  spp_params:
-    command: summarise_spp_params(final_model, BCI_training_full)
-    cleanup_level: tidy
-
-  predicted_mu_basehaz_by_rho:
-    command: predict_mu_baseline_hazard_by_rho(final_model, BCI_training_full)
-    cleanup_level: tidy
-    
-  param_variance_explained:
-    command: get_param_variance_explained(final_model, BCI_training_full)
-    cleanup_level: tidy
-
-  #------------- Other covariates -------------------
   recruits:
     command: recruits_8595(BCI_50haplot)
     cleanup_level: tidy
@@ -262,12 +90,92 @@ targets:
   recruit_gap_conditions:
     command: get_recruit_gap_conditions(recruits, gap_index_raster)
     cleanup_level: tidy
-  
-  #------ Merging fitted species params with covariates -------
-  spp_params_and_covs:
-    command: merge_spp_params_covs(spp_params, recruit_gap_conditions, BCI_50haplot)
+
+  BCI_gap_index:
+    command: get_mean_spp_gap_index(recruit_gap_conditions)   
+    cleanup_level: purge
+
+  BCI_demography_traits:
+    command: merge_BCI_data(BCI_demography_cleaned, BCI_wood_density, BCI_dbh_95, BCI_gap_index)
+    cleanup_level: purge
+    
+  BCI_true_dbh_model:
+    command: run_true_dbh_model(BCI_demography_traits)
+    cleanup_level: never
+    check: exists  
+    
+  BCI_model_data:
+    command: add_true_growth(BCI_demography_traits, BCI_true_dbh_model)
+    cleanup_level: purge
+    
+  BCI_model_dataset_folds:
+    command: split_into_kfolds(BCI_model_data)
+    cleanup_level: purge
+    
+  BCI_training_full:
+    command: extract_trainheldout_set(BCI_model_dataset_folds, NA)
+    cleanup_level: purge
+    
+  BCI_training_sets:
+    command: make_trainheldout(BCI_model_dataset_folds)
+    cleanup_level: purge
+
+  #-------------Export data ---------------------------
+
+  data/kfold_data/bci_data.rds:
+    command: export_data(BCI_training_sets, target_name)
+    cleanup_level: purge
+
+  data/bci_data_full.rds:
+    command: saveRDS(BCI_training_full, target_name)
+    cleanup_level: purge
+    
+  #------------- Model diagnostics ------------------------
+  all_model_diagnostics:
+    command: model_diagnostics(I("null_model", 
+                                 "function_growth_comparison",
+                                 "rho_combinations", 
+                                 "gap_combinations", 
+                                 "size_combinations",
+                                 "species_random_effects",
+                                 "rho_gap_all",
+                                 "rho_size_all",
+                                 "gap_size_all",
+                                 "multi_trait_all",
+                                 "final_model",
+                                 "final_base_growth_hazard_re"))
+    cleanup_level: tidy
+    
+  #------------- Model outputs -------------------
+
+  # Cross validation statistics
+  logloss_summaries:
+    command: collate_logloss_summaries()
     cleanup_level: tidy
 
+  # Final model
+  final_model:
+    command: compile_models(I('final_model'))
+    cleanup_level: tidy
+    
+  # Final model with only species random effects only
+  final_spp_re_model:
+    command: compile_models(I('final_base_growth_hazard_re'))
+    cleanup_level: tidy
+    
+  # Final model parameter estimates
+  spp_params:
+    command: summarise_spp_params(final_model, BCI_training_full)
+    cleanup_level: tidy
+    
+  mu_param_trends_by_trait:
+    command: param_by_trait_mu_trends(final_model, BCI_training_full, I(c("wood_density","gap_index","dbh_95")))
+    cleanup_level: tidy
+
+  #------------- Tables ---------------------------
+  table1:
+    command: table_1(final_model, BCI_training_full)
+    cleanup_level: tidy
   #------------- Figures ---------------------------
   ms/figures/fig1_tree.png:
     download: http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-generic-tree-rainforest-3.png
@@ -276,7 +184,9 @@ targets:
 
   ms/figures/fig1.pdf:
     command: plot_fig1("ms/figures/fig1_tree.png", "ms/figures/dead_tree.png", "ms/figures/Fig1c.png")
-    plot: single_col_portrait
+    plot:
+      width: 3.46
+      height: 4
     cleanup_level: tidy
     packages:
       - png
@@ -286,31 +196,38 @@ targets:
     
   ms/figures/fig2.pdf:
     command: plot_fig2(logloss_summaries)
-    plot: double_col_square
+    plot:
+      width: 6.5
+      height: 2
+      onefile: FALSE
     cleanup_level: tidy
     
   ms/figures/fig3.pdf:
-    command: plot_fig3(spp_params_and_covs, predicted_mu_basehaz_by_rho)
-    plot: single_col_rectangle
+    command: plot_fig3(spp_params, mu_param_trends_by_trait)
+    plot:
+      width: 6.5
+      height: 3.5
+      onefile: FALSE
     cleanup_level: tidy
 
   ms/figures/fig4.pdf:
     command: plot_fig4(final_model, BCI_training_full)
-    plot: single_col_square
+    plot:
+      width: 3.46
+      height: 4
+      onefile: FALSE
     cleanup_level: tidy
-    
-  ms/figures/fig5.pdf:
-    command: plot_fig5(param_variance_explained)
-    plot: single_col_rectangle_narrow
+  
+  ms/figures/supp_fig1.pdf:
+    command: plot_fig4(final_model, BCI_training_full, hazard_curve =TRUE)
+    plot:
+      width: 5
+      height: 6
+      onefile: FALSE
     cleanup_level: tidy
-    
-  ms/figures/fig6.pdf:
-    command: plot_fig6(spp_params_and_covs)
-    plot: single_col_portrait_large
-    cleanup_level: tidy
-    
-  ms/figures/supp_fig1.png:
-    command: plot_figS1(BCI_model_dataset_true_dbh)
+  
+  ms/figures/supp_fig2.png:
+    command: plot_figS1(BCI_model_data)
     plot:
       width: 3.46
       height: 3.46
@@ -318,49 +235,64 @@ targets:
       res: 300
     cleanup_level: tidy
     
-  ms/figures/supp_fig2.pdf:
+  ms/figures/supp_fig3.pdf:
     command: plot_figS2(gap_index_raster, recruit_gap_conditions)
-    plot: double_col_square
+    plot:
+      width: 6
+      height: 6
+      onefile: FALSE
     cleanup_level: tidy
     
-  ms/figures/supp_fig3.pdf:
-    command: plot_spp_params(final_model, BCI_training_full, I("alpha"), I(expression(log(alpha))))
-    plot: single_col_portrait_extralong
-    cleanup_level: tidy
-
   ms/figures/supp_fig4.pdf:
-    command: plot_spp_params(final_model, BCI_training_full, I("beta"),I(expression(log(beta))))
-    plot: single_col_portrait_extralong
+    command: plot_spp_params(final_model, BCI_training_full, I("alpha"), I(expression(log(alpha))))
+    plot:
+      width: 3.46
+      height: 8
     cleanup_level: tidy
     
   ms/figures/supp_fig5.pdf:
-    command: plot_spp_params(final_model, BCI_training_full, I("gamma"), I(expression(log(gamma))))
-    plot: single_col_portrait_extralong
+    command: plot_spp_params(final_model, BCI_training_full, I("beta"), I(expression(log(beta))))
+    plot:
+      width: 3.46
+      height: 8
     cleanup_level: tidy
     
-  
-  #------------- Manuscript ---------------------------
+  ms/figures/supp_fig6.pdf:
+    command: plot_spp_params(final_model, BCI_training_full, I("gamma"), I(expression(log(gamma))))
+    plot:
+      width: 3.46
+      height: 8
+    cleanup_level: tidy
+    
+  ms/figures/supp_fig7.pdf:
+    command: plot_trait_cors(BCI_training_full)
+    plot:
+      width: 6
+      height: 6
+      onefile: FALSE
+    cleanup_level: tidy
+    
+  ms/figures/supp_fig8.png:
+    command: plot_figS8(BCI_training_full)
+    plot:
+      width: 3.46
+      height: 3.46
+      units: 'in'
+      res: 300
+    cleanup_level: tidy
 
+  #------------- Manuscript ---------------------------
   ms/manuscript.tex:
     depends:
-      - BCI_model_dataset_true_dbh
+      - BCI_model_data
       - BCI_dbh_error_data
       - BCI_training_sets
       - BCI_training_full
       - logloss_summaries
       - final_model
-      - param_variance_explained
+      - table1
     knitr: TRUE
-    
-  ms/supplementary.tex:
-    depends:
-      - BCI_model_dataset_true_dbh
-      - BCI_dbh_error_data
-      - BCI_training_sets
-      - BCI_training_full
-      - logloss_summaries
-      - final_model
-    knitr: TRUE
+    cleanup_level: tidy
 
   ms/manuscript.pdf:
     command: latex_build("ms/manuscript.tex", "ms/refs.bib", clean=TRUE)
@@ -372,81 +304,30 @@ targets:
       - ms/figures/fig2.pdf
       - ms/figures/fig3.pdf
       - ms/figures/fig4.pdf
-      - ms/figures/fig5.pdf
-      - ms/figures/fig6.pdf
+    cleanup_level: tidy
 
-      
+  ms/supplementary.tex:
+    depends:
+      - BCI_model_data
+      - BCI_dbh_error_data
+      - BCI_training_sets
+      - BCI_training_full
+      - logloss_summaries
+      - final_model
+      - spp_params
+    knitr: TRUE
+
   ms/supplementary.pdf:
     command: latex_build("ms/supplementary.tex", "ms/refs.bib", clean=TRUE)
     depends:
       - ms/pnas-new.cls
       - ms/pnasresearcharticle.sty
       - ms/widetext.sty
-      - ms/figures/supp_fig1.png
-      - ms/figures/supp_fig2.pdf
+      - ms/figures/supp_fig1.pdf
+      - ms/figures/supp_fig2.png
       - ms/figures/supp_fig3.pdf
       - ms/figures/supp_fig4.pdf
       - ms/figures/supp_fig5.pdf
-
-
- #------------- Talk ---------------------------
-  talk: 
-    depends:
-      - talk/cross-val.pdf
-      - talk/results1.pdf
-      - talk/results2.pdf
-      - talk/results3.pdf
-      - talk/results4.pdf
-      - talk/map1.png
-      - talk/hazards.pdf
-      - talk/Survival1.pdf
-      - talk/Survival2.pdf
-      - talk/Survival3.pdf
-      - talk/Survival4.pdf
-
-  talk/cross-val.pdf:
-    command: fig_talk_cross_val(I("ms/figures/Fig1c.png"))
-    plot: talk_3by8
- 
-  talk/results1.pdf:
-    command: plot_fig2a(logloss_summaries)
-    plot: talk_2by4
-
-  talk/results2.pdf:
-    command: plot_fig2b(logloss_summaries)
-    plot: talk_2by4
-
-  talk/results3.pdf:
-    command: fig_talk_fig45(final_model, BCI_training_full, param_variance_explained)
-    plot: talk_3by6
-
-  talk/results4.pdf:
-    command: fig_talk_spp_params(final_model, BCI_training_full)
-    plot: talk_2by5
-
-  talk/map1.png:
-    command: fig_talk_map(BCI_training_full)
-    plot:
-      height: 300
-      width: 900   
-
-  talk/hazards.pdf:
-    command: fig_talk_hazards()
-    plot: talk_3by8
-    
-  talk/Survival1.pdf:
-    command: fig_talk_survival_time(I(1))
-    plot: talk_3by8
-
-  talk/Survival2.pdf:
-    command: fig_talk_survival_time(I(2))
-    plot: talk_3by8
-
-  talk/Survival3.pdf:
-    command: fig_talk_survival_time(I(3))
-    plot: talk_3by8
-
-  talk/Survival4.pdf:
-    command: fig_talk_survival_time(I(4))
-    plot: talk_3by8
- 
+      - ms/figures/supp_fig6.pdf
+      - ms/figures/supp_fig7.pdf
+      - ms/figures/supp_fig8.png

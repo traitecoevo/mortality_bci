@@ -1,4 +1,4 @@
-# Unifying intra- and inter-specific variation in tropical tree mortality
+# Partitioning mortality into growth-dependent and growth-independent hazards across 203 tropical tree species
 *By:* James S Camac, Richard Condit, Richard G FitzJohn, Lachlan McCalman,
 Daniel Steinberg, Mark Westoby, Joe Wright, Daniel Falster
 
@@ -6,7 +6,7 @@ Daniel Steinberg, Mark Westoby, Joe Wright, Daniel Falster
 
 ## Background
 
-Tree death is a fundamental process driving population dynamics, nutrient cycling, and evolution within plant communities. While past research has identified factors influencing tree mortality across a variety of scales, these distinct drivers are yet to be integrated within a unified predictive framework. In this study, we use a cross-validated Bayesian framework coupled with classic survival analysis techniques to derive instantaneous mortality functions for 203 tropical rainforest tree species at Barro Colorado Island (BCI) Panama. Specifically, we develop mortality functions that not only integrate individual, species, and temporal effects, but also partition the contributions of growth-dependent and growth-independent effects on the overall instantaneous mortality rate.
+We present a model that partitions rates of tropical tree mortality into growth-dependent and growth-independent hazards. This creates the opportunity to examine the relative contributions of within-species and across-species variation on tropical tree mortality rates, but also, how species traits affect each hazard. We parameterize this model using >400,000 observed survival records collected over a 15-year period at Barro Colorado Island from more than 180,000 individuals across 203 species. We show that marginal carbon budgets are a major contributor to tree death on Barro Colorado Island. Moreover, we found that while species' light demand, maximum dbh and wood density affected tree mortality in different ways, they explained only a small fraction of the total variability observed among species.
 
 This repository contains the data and code required to reproduce our entire workflow from data cleaning, rerunning the analysis, producing figures and reproducing the manuscript. Details below instructions on how this work can be reproduced.
 
