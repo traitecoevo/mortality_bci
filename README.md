@@ -42,6 +42,8 @@ Each computer is different. Operating systems, software install and the versions
 ### Setting up Docker
 If you haven't installed docker please see [here](https://www.docker.com/products/overview).
 
+Because some of the data compilation is memory intensive. We suggest you allow docker to access at least 4GB of your systems RAM. This can easily be done within docker's settings and it's associated sliders.
+
 We can set up docker two ways. The recommended approach is to download the precompiled docker image by running the following in the terminal/shell:
 
 ```
