@@ -67,12 +67,13 @@ Now we are all set to reproduce this project!
 To be able to run the code, we interface with the Rstudio within the docker container by running the following in the terminal/shell:
 
 ```
-docker run -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 traitecoevo/mortality_bci
+docker run -e PASSWORD=password -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 traitecoevo/mortality_bci
 
 ```
 Now just open your web browser and go to the following: `localhost:8787/`
 
-The username and password is `rstudio`
+The username is `rstudio`
+The password is `password`
 
 ### Rerunning analysis from within docker
 Assuming the model fits have been downloaded (see above), one can now reproduce the outputs by running:
@@ -82,7 +83,7 @@ remake::make()
 ```
 
 ## Reproducing analysis without docker (Not recommended)
-This option is not recommended as R packages are constantly being updated and backwards compatibility broken. However, if you are adverse to using Docker you can run `remake` outside docker and willing by using the instructions below. Code was developed under R 3.4.1 (2017-06-30).
+This option is not recommended as R packages are constantly being updated and backwards compatibility broken. However, if you are adverse to using Docker you can run `remake` outside docker and willing by using the instructions below. Code was developed under R 3.5.1 (2018-09-01).
 
 ### Installing remake
 
@@ -107,7 +108,28 @@ Open a new R session with this project set as working directory. We use a number
 ```r
 remake::install_missing_packages()
 ```
+However, the above may not work if packages have been updated and backwards compatibility broken. The following package versions are known to work on R 3.5.1:
+- `readr` 1.1.1 (Note readr has a small bug that produces warnings, but doesn't affect results)
+- `RCurl` 1.95-4.11
+- `downloader` 0.4
+- `knitr` 1.20
+- `rmarkdown` 1.10
+- `sp` 1.3-1
+- `raster` 2.6-7
+- `rasterVis` 0.45
+- `dplyr` 0.7.6
+- `tidyr` 0.8.1
+- `rstan` 2.17.3
+- `ggplot2` 3.0.0
+- `cowplot` 0.9.3
+- `pbmcapply` 1.2.5
+- `Hmisc` 4.1-1
+- `png` 0.1-7
+- `gridBase` 0.4-7
+- `pROC` 1.12.1
+- `GGally` 1.4.0
 
+To rebuild the manuscript, you must also install a version of [LaTex](https://www.latex-project.org/get/).
 Run the following to generate all outputs (analysis, figures, table, manuscript):
 
 ```r
