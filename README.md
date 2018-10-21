@@ -67,13 +67,10 @@ Now we are all set to reproduce this project!
 To be able to run the code, we interface with the Rstudio within the docker container by running the following in the terminal/shell:
 
 ```
-docker run -e PASSWORD=password -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 traitecoevo/mortality_bci
+docker run -e DISABLE_AUTH=true -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 traitecoevo/mortality_bci
 
 ```
 Now just open your web browser and go to the following: `localhost:8787/`
-
-The username is `rstudio`
-The password is `password`
 
 ### Rerunning analysis from within docker
 Assuming the model fits have been downloaded (see above), one can now reproduce the outputs by running:
