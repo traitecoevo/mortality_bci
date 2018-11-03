@@ -64,12 +64,18 @@ docker build --rm --no-cache -t traitecoevo/mortality_bci .
 Now we are all set to reproduce this project!
 
 ### Rstudio from within docker
-To be able to run the code, we interface with the Rstudio within the docker container by running the following in the terminal/shell:
+To be able to run the code, we interface with the Rstudio within the docker container by running the following from within the repository directory via the terminal/shell:
 
 ```
-docker run -e DISABLE_AUTH=true -v /Users/path/to/repository/:/home/rstudio -p 8787:8787 traitecoevo/mortality_bci
+docker run -d -v $(pwd):/home/rstudio/ -p 127.0.0.1:8787:8787 \
+-e DISABLE_AUTH=true traitecoevo/mortality_bci
 
 ```
+
+**NOTE**
+On a windows machine one may need to replace the `$(pwd)` component above with the path to the downloaded repository.
+
+
 Now just open your web browser and go to the following: `localhost:8787/`
 
 ### Rerunning analysis from within docker
