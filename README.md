@@ -30,18 +30,9 @@ A preprint prior to submission to PNAS was released on [BioRxiv](https://doi.org
 We are committed to reproducible science. As such, this repository contains all the data and code necessary to fully reproduce our results. To facilitate the reproducibility of this work, we have created a docker image and set up the entire workflow using [remake](https://github.com/richfitz/remake). Below we outline the two approaches that can be taken to reproduce the analyses, figures and manuscript.
 
 ### Copy repository
-First copy the repository to your a desired directory on you local computer. 
+Running all model cross validations took approximately 2-months of computing time on a HPC machines. As the model fitting proceedure is not included in the remake workflow. We have however provided the model fits in a [FigShare repository](https://doi.org/10.6084/m9.figshare.7295486.v1). Please download this repository onto your computer. 
 
-This can either be done using the terminal (assuming git is installed)
-
-```
-git clone https://github.com/traitecoevo/mortality_bci.git
-```
-
-Or can be downloaded manually by clicking [here](https://github.com/traitecoevo/mortality_bci/archive/master.zip).
-
-### Download the model fits
-Running all model cross validations took approximately 2-months of computing time on a HPC machines. As the model fitting proceedure is not included in the remake workflow. We have however provided the model fits as a release [here](https://github.com/traitecoevo/mortality_bci/releases/tag/v1.0). The release contains a file called `results.zip`. This contains the chain fits from stan's MCMC sampler. The `result.zip` should be unpacked in the parent directory of the  mortality_bci. The file `remake.zip` contains cached files from using the package remake and should be moved (and unpacked) in the parent directory of mortality_bci. It is not essential to download the `.remake folder`. If you do, the code will reproduce the paper using cached calculations. If you don't the code will rerun all the preliminary calculations.
+**Note:** You may also clone the repository directly from github. However, doing so requires manually downloading the results from the [latest release](https://github.com/traitecoevo/mortality_bci/releases/tag/v1.0) and placing them into the repository following the release notes. This extra step is due to file size constraints currently implemented on GitHub. 
 
 ## Reproducing analysis with remake & docker (Recommended approach)
 
@@ -87,7 +78,7 @@ Windows users may need to replace `$(pwd)` with the path to the downloaded repos
 Now just open your web browser and go to the following: `localhost:8787/`
 
 ### Rerunning analysis from within docker
-Assuming the model fits have been downloaded (see above), one can now reproduce the outputs by running:
+One can now reproduce the outputs by running:
 
 ```
 remake::make()
@@ -149,4 +140,4 @@ remake::make()
 
 
 ## Problems?
-If you have any problems getting the workflow to run please create an issue and I will endevour to remedy it ASAP.
+If you have any problems getting the workflow to run please create an issue at our [github repository](https://github.com/traitecoevo/mortality_bci) and we will endevour to remedy it ASAP.
