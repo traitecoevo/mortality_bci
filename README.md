@@ -12,8 +12,13 @@ This repository contains the data and code required to reproduce our entire work
 
 
 ## Dataset
-This paper uses data from  Barro Colorado Island (BCI) Panama. 
+This paper uses three datasets collected from  Barro Colorado Island (BCI) Panama. 
+
 Condit, R., Lao, S., Pérez, R., Dolins, S.B., Foster, R.B. Hubbell, S.P. 2012. Barro Colorado Forest Census Plot Data, 2012 Version. DOI http://dx.doi.org/10.5479/data.bci.20130603
+
+Hubbell, S.P, Comita, L., Lao, S. Condit, R. 2014. Barro Colorado Fifty Hectare Plot Census of Canopy Density, 1983-2012. DOI http://dx.doi.org/10.5479/data.bci20140711.
+
+BCI Wood density data measured and collated by Joe Wright (included within this repository).
 
 ## Publication
 Camac, J.S., Condit, R., FitzJohn, R.G., McCalman, L., Steinberg, D., Westoby, M., Wright, S.J., Falster, D. (Accepted at PNAS) Partitioning mortality into growth-dependent and growth-independent hazards across 203 tropical tree species.
