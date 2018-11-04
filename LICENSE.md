@@ -1,6 +1,6 @@
 # Software licensed under MIT License
 
-Copyright (c) 2018 James Camac
+Copyright (c) 2018 James Camac, Daniel Falster & Joe Wright
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-# Raw data
-BCI demography or canopy data were published under the following citations.
+# BCI raw data not covered by MIT license
+BCI demography or canopy data are downloaded as part of this software from the following citations:
 
 Condit, R., Lao, S., Pérez, R., Dolins, S.B., Foster, R.B. Hubbell, S.P. 2012. Barro Colorado Forest Census Plot Data, 2012 Version. DOI http://dx.doi.org/10.5479/data.bci.20130603
 
 Hubbell, S.P, Comita, L., Lao, S. Condit, R. 2014. Barro Colorado Fifty Hectare Plot Census of Canopy Density, 1983-2012. DOI http://dx.doi.org/10.5479/data.bci20140711.
 
-These datasets contain separate conditions for use which are not covered by this MIT Licence.
+These datasets contain separate conditions for use which are not covered by this MIT Licence. Please see corresponding websites for conditions.
