@@ -15,8 +15,11 @@ This repository contains the data and code required to reproduce our entire work
 This paper uses data from  Barro Colorado Island (BCI) Panama. 
 Condit, R., Lao, S., Pérez, R., Dolins, S.B., Foster, R.B. Hubbell, S.P. 2012. Barro Colorado Forest Census Plot Data, 2012 Version. DOI http://dx.doi.org/10.5479/data.bci.20130603
 
+## Publication
+Camac, J.S., Condit, R., FitzJohn, R.G., McCalman, L., Steinberg, D., Westoby, M., Wright, S.J., Falster, D. (Accepted at PNAS) Partitioning mortality into growth-dependent and growth-independent hazards across 203 tropical tree species.
+
 ## Preprint
-A preprint of this project has been released on BioRxiv: https://doi.org/10.1101/228361
+A preprint prior to submission to PNAS was released on [BioRxiv](https://doi.org/10.1101/228361). This preprint uses a subset of the models that were eventually published in PNAS. These can be found in the first release of this project.
 
 ## Reproducing analysis
 We are committed to reproducible science. As such, this repository contains all the data and code necessary to fully reproduce our results. To facilitate the reproducibility of this work, we have created a docker image and set up the entire workflow using [remake](https://github.com/richfitz/remake). Below we outline the two approaches that can be taken to reproduce the analyses, figures and manuscript.
@@ -72,8 +75,8 @@ docker run -d -v $(pwd):/home/rstudio/ -p 127.0.0.1:8787:8787 \
 
 ```
 
-**NOTE**
-On a windows machine one may need to replace the `$(pwd)` component above with the path to the downloaded repository.
+**NOTE:**
+Windows users may need to replace `$(pwd)` with the path to the downloaded repository or possibly `%cd%`.
 
 
 Now just open your web browser and go to the following: `localhost:8787/`
