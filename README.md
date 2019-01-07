@@ -21,7 +21,7 @@ Hubbell, S.P, Comita, L., Lao, S. Condit, R. 2014. Barro Colorado Fifty Hectare 
 BCI Wood density data measured and collated by Joe Wright (included within this repository).
 
 ## Publication
-Camac, J.S., Condit, R., FitzJohn, R.G., McCalman, L., Steinberg, D., Westoby, M., Wright, S.J., Falster, D. (Accepted at PNAS) Partitioning mortality into growth-dependent and growth-independent hazards across 203 tropical tree species.
+Camac, J.S., Condit, R., FitzJohn, R.G., McCalman, L., Steinberg, D., Westoby, M., Wright, S.J., Falster, D. (2018) Partitioning mortality into growth-dependent and growth-independent hazards across 203 tropical tree species. 115 (49) 12459-12464. DOI https://doi.org/10.1073/pnas.1721040115
 
 ## Preprint
 A preprint prior to submission to PNAS was released on [BioRxiv](https://doi.org/10.1101/228361). This preprint uses a subset of the models that were eventually published in PNAS. These can be found in the first release of this project.
